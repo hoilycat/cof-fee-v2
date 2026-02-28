@@ -1,4 +1,6 @@
 import dayjs from "dayjs";
+import type { CaffeineLog } from './atoms';
+
 
 /**
  * @param mg 초기 섭취량 (mg)
@@ -35,14 +37,15 @@ export const getCharacterStatus = (totalCaffeine: number) => {
 };
 
 
-// 카페인 섭취 기록 인터페이스
-export interface CaffeineLog {
-  id: string;               // 고유 ID (예: UUID)
-  caffeineAmount: number;   //  섭취량 (mg)
-  intakeTime: string;   // 섭취 시간 (ISO string)   
-  beverageName: string;   // 음료 이름 (예: "아메리카노")
-  notes: string;     // 추가 메모 (예: "아침에 마심")   
-}
+
+// export interface CaffeineLog {
+//   id: string;             // 각각의 기록을 구별하는 번호
+//   caffeineAmount: number; // 마신 카페인 양 (mg)
+//   intakeTime: string;     // 마신 시간 (ISO 8601 형식 문자열)
+//   beverageName: string;   // 음료 이름
+//   notes?: string;         // 메모 (선택사항)
+// }
+
 
 //모든 기록의 현재 잔존량을 합치는 로직
 export const getTotalRemainingCaffeine = (logs: CaffeineLog[]) => {

@@ -1,0 +1,356 @@
+
+
+==================================================FILE:.\code_gather.py
+==================================================
+
+import os
+
+#모으고 싶은 확장자 설정
+extentions = ['.js','.jsx','.ts','.tsx','.css','.py']
+output_file = 'project_summary.txt'
+
+with open(output_file, 'w', encoding='utf-8') as f:
+    for root, dirs, files in os.walk('.'):
+
+        #제외할 폴더
+        if 'node_modules' in root or '.git' in root:
+            continue
+        for file in files:
+            if any(file.endswith(ext) for ext in extentions):
+                file_path = os.path.join(root, file)
+                f.write(f"\n\n{'='*50}")
+                f.write(f"FILE:{file_path}\n")
+                f.write(f"{'='*50}\n\n")
+                with open(file_path, 'r', encoding='utf-8') as code_f:
+                    f.write(code_f.read())
+                    
+print(f"모든 코드가{output_file}에 저장 되었습니다")
+
+==================================================FILE:.\eslint.config.js
+==================================================
+
+import js from '@eslint/js'
+import globals from 'globals'
+import reactHooks from 'eslint-plugin-react-hooks'
+import reactRefresh from 'eslint-plugin-react-refresh'
+import tseslint from 'typescript-eslint'
+import { defineConfig, globalIgnores } from 'eslint/config'
+
+export default defineConfig([
+  globalIgnores(['dist']),
+  {
+    files: ['**/*.{ts,tsx}'],
+    extends: [
+      js.configs.recommended,
+      tseslint.configs.recommended,
+      reactHooks.configs.flat.recommended,
+      reactRefresh.configs.vite,
+    ],
+    languageOptions: {
+      ecmaVersion: 2020,
+      globals: globals.browser,
+    },
+  },
+])
+
+
+==================================================FILE:.\postcss.config.js
+==================================================
+
+export default {
+  plugins: {
+    tailwindcss: {},
+    autoprefixer: {},
+  },
+}
+
+
+==================================================FILE:.\tailwind.config.js
+==================================================
+
+/** @type {import('tailwindcss').Config} */
+export default {
+  content: ["./index.html", "./src/**/*.{ts,tsx}"],
+  theme: { extend: {} },
+  plugins: [],
+}
+
+
+==================================================FILE:.\vite.config.ts
+==================================================
+
+import { defineConfig } from 'vite'
+import react from '@vitejs/plugin-react'
+
+// https://vite.dev/config/
+export default defineConfig({
+  plugins: [react()],
+})
+
+
+==================================================FILE:.\src\App.css
+==================================================
+
+#root {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 2rem;
+  text-align: center;
+}
+
+.logo {
+  height: 6em;
+  padding: 1.5em;
+  will-change: filter;
+  transition: filter 300ms;
+}
+.logo:hover {
+  filter: drop-shadow(0 0 2em #646cffaa);
+}
+.logo.react:hover {
+  filter: drop-shadow(0 0 2em #61dafbaa);
+}
+
+@keyframes logo-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  a:nth-of-type(2) .logo {
+    animation: logo-spin infinite 20s linear;
+  }
+}
+
+.card {
+  padding: 2em;
+}
+
+.read-the-docs {
+  color: #888;
+}
+
+
+==================================================FILE:.\src\App.tsx
+==================================================
+
+import { useState } from 'react'
+import reactLogo from './assets/react.svg'
+import viteLogo from '/vite.svg'
+import './App.css'
+
+function App() {
+  const [count, setCount] = useState(0)
+
+  return (
+    <>
+      <div>
+        <a href="https://vite.dev" target="_blank">
+          <img src={viteLogo} className="logo" alt="Vite logo" />
+        </a>
+        <a href="https://react.dev" target="_blank">
+          <img src={reactLogo} className="logo react" alt="React logo" />
+        </a>
+      </div>
+      <h1>Vite + React</h1>
+      <div className="card">
+        <button onClick={() => setCount((count) => count + 1)}>
+          count is {count}
+        </button>
+        <p>
+          Edit <code>src/App.tsx</code> and save to test HMR
+        </p>
+      </div>
+      <p className="read-the-docs">
+        Click on the Vite and React logos to learn more
+      </p>
+    </>
+  )
+}
+
+export default App
+
+
+==================================================FILE:.\src\index.css
+==================================================
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+
+  color-scheme: light dark;
+  color: rgba(255, 255, 255, 0.87);
+  background-color: #242424;
+
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+a {
+  font-weight: 500;
+  color: #646cff;
+  text-decoration: inherit;
+}
+a:hover {
+  color: #535bf2;
+}
+
+body {
+  margin: 0;
+  display: flex;
+  place-items: center;
+  min-width: 320px;
+  min-height: 100vh;
+}
+
+h1 {
+  font-size: 3.2em;
+  line-height: 1.1;
+}
+
+button {
+  border-radius: 8px;
+  border: 1px solid transparent;
+  padding: 0.6em 1.2em;
+  font-size: 1em;
+  font-weight: 500;
+  font-family: inherit;
+  background-color: #1a1a1a;
+  cursor: pointer;
+  transition: border-color 0.25s;
+}
+button:hover {
+  border-color: #646cff;
+}
+button:focus,
+button:focus-visible {
+  outline: 4px auto -webkit-focus-ring-color;
+}
+
+@media (prefers-color-scheme: light) {
+  :root {
+    color: #213547;
+    background-color: #ffffff;
+  }
+  a:hover {
+    color: #747bff;
+  }
+  button {
+    background-color: #f9f9f9;
+  }
+}
+
+
+==================================================FILE:.\src\main.tsx
+==================================================
+
+import { StrictMode } from 'react'
+import { createRoot } from 'react-dom/client'
+import './index.css'
+import App from './App.tsx'
+
+createRoot(document.getElementById('root')!).render(
+  <StrictMode>
+    <App />
+  </StrictMode>,
+)
+
+
+==================================================FILE:.\src\store\atoms.ts
+==================================================
+
+import { atom } from 'jotai';
+import { atomWithStorage } from 'jotai/utils';
+
+export interface CaffeineLog {
+  id: string;             // 각각의 기록을 구별하는 번호
+  caffeineAmount: number; // 마신 카페인 양 (mg)
+  intakeTime: string;     // 마신 시간 (ISO 8601 형식 문자열)
+  beverageName: string;   // 음료 이름
+  notes?: string;         // 메모 (선택사항)
+}
+
+// atomWithStorage를 사용해서 로컬 스토리지에 저장되는 atom을 만들기 (초기값은 빈 배열)
+export const caffeineLogsAtom = atomWithStorage<CaffeineLog[]>('caffeine-logs', []);
+
+// 목표치 바구니: "하루에 이만큼만 마시기로 약속!"
+export const dailyGoalAtom = atom<number>(200);
+
+==================================================FILE:.\src\store\calculator.ts
+==================================================
+
+import dayjs from "dayjs";
+
+/**
+ * @param mg 초기 섭취량 (mg)
+ * @param intakeTime 섭취 시간 (ISO string 또는 dayjs 객체)
+ * @param halfLife 반감기 (기본값 5시간)
+ */
+export const calculateCurrentCaffeine = (mg: number, intakeTime: string, halfLife = 5) => {
+  const now = dayjs();
+  const diffHours = now.diff(dayjs(intakeTime), "hour", true);
+  
+  if (diffHours < 0) return mg; // 미래 시간 입력 대비
+
+  // 반감기 공식: Remaining = Initial * 0.5 ^ (Elapsed / Half-life)
+  const remaining = mg * Math.pow(0.5, diffHours / halfLife);
+  return parseFloat(remaining.toFixed(2));
+};
+
+
+// 두통 위험군 판단 로직 
+export const getHeadacheWarning = (lastIntakeTime: string) => {
+  const hoursSinceLastDrink = dayjs().diff(dayjs(lastIntakeTime), "hour");
+  
+  return {
+    isWarning: hoursSinceLastDrink >= 12 && hoursSinceLastDrink <= 24,
+    message: "마지막 커피 후 12시간이 지났어요. 두통이 올 수 있으니 수분을 섭취하세요!"
+  };
+};
+
+export const getCharacterStatus = (totalCaffeine: number) => {
+  if (totalCaffeine === 0) return "IDLE";      // 평온
+  if (totalCaffeine < 100) return "ACTIVE";    // 열공
+  if (totalCaffeine < 250) return "ANXIOUS";   // 불안
+  return "DANGER";                             // 위험
+};
+
+
+// 카페인 섭취 기록 인터페이스
+export interface CaffeineLog {
+  id: string;               // 고유 ID (예: UUID)
+  caffeineAmount: number;   //  섭취량 (mg)
+  intakeTime: string;   // 섭취 시간 (ISO string)   
+  beverageName: string;   // 음료 이름 (예: "아메리카노")
+  notes: string;     // 추가 메모 (예: "아침에 마심")   
+}
+
+//모든 기록의 현재 잔존량을 합치는 로직
+export const getTotalRemainingCaffeine = (logs: CaffeineLog[]) => {
+  return logs.reduce((total, log) => {
+    // 각 기록의 현재 잔존량을 계산하여 누적
+    return total + calculateCurrentCaffeine(log.caffeineAmount, log.intakeTime);
+  }, 0);
+};
+
+// 수면 상태 판단 로직
+export const getSleepStatus = (totalCaffeine: number) => {
+  if (totalCaffeine < 50) return "GOOD";    // 🟢 꿀잠 가능
+  if (totalCaffeine < 100) return "FAIR";   // 🟡 조금 위험
+  return "BAD";                             // 🔴 말똥말똥 (수면 방해)
+};
+
+==================================================FILE:.\src\store\hooks.ts
+==================================================
+
