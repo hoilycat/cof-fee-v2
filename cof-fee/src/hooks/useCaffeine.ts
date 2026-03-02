@@ -1,6 +1,6 @@
 import {useAtomValue} from 'jotai';
-import {caffeineLogsAtom} from './atoms';
-import {getTotalRemainingCaffeine, getSleepStatus, getCharacterStatus} from './calculator';
+import {caffeineLogsAtom} from './useCaffeineStore';
+import {getTotalRemainingCaffeine, getSleepStatus, getCharacterStatus} from '../lib/utiles';
 
 export const useCaffeine = () => {
     const logs = useAtomValue(caffeineLogsAtom);

@@ -1,5 +1,5 @@
 import dayjs from "dayjs";
-import type { CaffeineLog } from './atoms';
+import type { CaffeineLog } from '../hooks/useCaffeineStore';
 
 
 /**
@@ -35,17 +35,6 @@ export const getCharacterStatus = (totalCaffeine: number) => {
   if (totalCaffeine < 250) return "ANXIOUS";   // 불안
   return "DANGER";                             // 위험
 };
-
-
-
-// export interface CaffeineLog {
-//   id: string;             // 각각의 기록을 구별하는 번호
-//   caffeineAmount: number; // 마신 카페인 양 (mg)
-//   intakeTime: string;     // 마신 시간 (ISO 8601 형식 문자열)
-//   beverageName: string;   // 음료 이름
-//   notes?: string;         // 메모 (선택사항)
-// }
-
 
 //모든 기록의 현재 잔존량을 합치는 로직
 export const getTotalRemainingCaffeine = (logs: CaffeineLog[]) => {

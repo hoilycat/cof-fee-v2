@@ -1,4 +1,4 @@
-import {useCaffeine} from '../../store/hooks';
+import {useCaffeine} from '../../hooks/useCaffeine';
 
 
 const Dashboard = () => { 
@@ -19,3 +19,5 @@ return(
     </div>
     );
 }
+
+export default Dashboard;

@@ -1,4 +1,3 @@
-import { atom } from 'jotai';
 import { atomWithStorage } from 'jotai/utils';
 
 export interface CaffeineLog {
@@ -13,4 +12,7 @@ export interface CaffeineLog {
 export const caffeineLogsAtom = atomWithStorage<CaffeineLog[]>('caffeine-logs', []);
 
 // 목표치 바구니: "하루에 이만큼만 마시기로 약속!"
-export const dailyGoalAtom = atom<number>(200);
+export const dailyGoalAtom = atomWithStorage<number>('daily-goal',200);
+
+// 닉네임 바구니: "내 이름은...?"
+export const nicknameAtom = atomWithStorage<string>('user-nickname','');
