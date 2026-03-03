@@ -1,6 +1,17 @@
 
 
-==================================================FILE:.\code_gather.py
+==================================================FILE:./tailwind.config.js
+==================================================
+
+/** @type {import('tailwindcss').Config} */
+export default {
+  content: ["./index.html", "./src/**/*.{ts,tsx}"],
+  theme: { extend: {} },
+  plugins: [],
+}
+
+
+==================================================FILE:./code_gather.py
 ==================================================
 
 import os
@@ -26,7 +37,7 @@ with open(output_file, 'w', encoding='utf-8') as f:
                     
 print(f"모든 코드가{output_file}에 저장 되었습니다")
 
-==================================================FILE:.\eslint.config.js
+==================================================FILE:./eslint.config.js
 ==================================================
 
 import js from '@eslint/js'
@@ -54,29 +65,7 @@ export default defineConfig([
 ])
 
 
-==================================================FILE:.\postcss.config.js
-==================================================
-
-export default {
-  plugins: {
-    tailwindcss: {},
-    autoprefixer: {},
-  },
-}
-
-
-==================================================FILE:.\tailwind.config.js
-==================================================
-
-/** @type {import('tailwindcss').Config} */
-export default {
-  content: ["./index.html", "./src/**/*.{ts,tsx}"],
-  theme: { extend: {} },
-  plugins: [],
-}
-
-
-==================================================FILE:.\vite.config.ts
+==================================================FILE:./vite.config.ts
 ==================================================
 
 import { defineConfig } from 'vite'
@@ -88,94 +77,23 @@ export default defineConfig({
 })
 
 
-==================================================FILE:.\src\App.css
+==================================================FILE:./postcss.config.js
 ==================================================
 
-#root {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 2rem;
-  text-align: center;
-}
-
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: filter 300ms;
-}
-.logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
-}
-.logo.react:hover {
-  filter: drop-shadow(0 0 2em #61dafbaa);
-}
-
-@keyframes logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-@media (prefers-reduced-motion: no-preference) {
-  a:nth-of-type(2) .logo {
-    animation: logo-spin infinite 20s linear;
-  }
-}
-
-.card {
-  padding: 2em;
-}
-
-.read-the-docs {
-  color: #888;
+export default {
+  plugins: {
+    tailwindcss: {},
+    autoprefixer: {},
+  },
 }
 
 
-==================================================FILE:.\src\App.tsx
+==================================================FILE:./types/caffeine.d.ts
 ==================================================
 
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
-
-function App() {
-  const [count, setCount] = useState(0)
-
-  return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
-}
-
-export default App
 
 
-==================================================FILE:.\src\index.css
+==================================================FILE:./styles/index.css
 ==================================================
 
 @tailwind base;
@@ -252,7 +170,24 @@ button:focus-visible {
 }
 
 
-==================================================FILE:.\src\main.tsx
+==================================================FILE:./src/App.tsx
+==================================================
+
+import Dashboard from './pages/Dashboard/Dashboard';
+import './App.css';
+
+function App(){
+  return (
+    <div className="App">
+      <Dashboard />
+    </div>
+  );
+}
+
+export default App;
+
+
+==================================================FILE:./src/main.tsx
 ==================================================
 
 import { StrictMode } from 'react'
@@ -267,10 +202,28 @@ createRoot(document.getElementById('root')!).render(
 )
 
 
-==================================================FILE:.\src\store\atoms.ts
+==================================================FILE:./src/hooks/useCaffeine.ts
 ==================================================
 
-import { atom } from 'jotai';
+import {useAtomValue} from 'jotai';
+import {caffeineLogsAtom} from './useCaffeineStore';
+import {getTotalRemainingCaffeine, getSleepStatus, getCharacterStatus} from '../lib/utiles';
+
+export const useCaffeine = () => {
+    const logs = useAtomValue(caffeineLogsAtom);
+    const totalCaffeine = getTotalRemainingCaffeine(logs);
+    const sleepStatus = getSleepStatus(totalCaffeine);
+    const characterStatus = getCharacterStatus(totalCaffeine);
+
+return{totalCaffeine, sleepStatus, characterStatus};
+
+};
+
+
+
+==================================================FILE:./src/hooks/useCaffeineStore.ts
+==================================================
+
 import { atomWithStorage } from 'jotai/utils';
 
 export interface CaffeineLog {
@@ -285,12 +238,23 @@ export interface CaffeineLog {
 export const caffeineLogsAtom = atomWithStorage<CaffeineLog[]>('caffeine-logs', []);
 
 // 목표치 바구니: "하루에 이만큼만 마시기로 약속!"
-export const dailyGoalAtom = atom<number>(200);
+export const dailyGoalAtom = atomWithStorage<number>('daily-goal',200);
 
-==================================================FILE:.\src\store\calculator.ts
+// 닉네임 바구니: "내 이름은...?"
+export const nicknameAtom = atomWithStorage<string>('user-nickname','');
+
+
+==================================================FILE:./src/lib/caffeineData.ts
+==================================================
+
+
+
+==================================================FILE:./src/lib/utiles.ts
 ==================================================
 
 import dayjs from "dayjs";
+import type { CaffeineLog } from '../hooks/useCaffeineStore';
+
 
 /**
  * @param mg 초기 섭취량 (mg)
@@ -326,16 +290,6 @@ export const getCharacterStatus = (totalCaffeine: number) => {
   return "DANGER";                             // 위험
 };
 
-
-// 카페인 섭취 기록 인터페이스
-export interface CaffeineLog {
-  id: string;               // 고유 ID (예: UUID)
-  caffeineAmount: number;   //  섭취량 (mg)
-  intakeTime: string;   // 섭취 시간 (ISO string)   
-  beverageName: string;   // 음료 이름 (예: "아메리카노")
-  notes: string;     // 추가 메모 (예: "아침에 마심")   
-}
-
 //모든 기록의 현재 잔존량을 합치는 로직
 export const getTotalRemainingCaffeine = (logs: CaffeineLog[]) => {
   return logs.reduce((total, log) => {
@@ -351,6 +305,72 @@ export const getSleepStatus = (totalCaffeine: number) => {
   return "BAD";                             // 🔴 말똥말똥 (수면 방해)
 };
 
-==================================================FILE:.\src\store\hooks.ts
+==================================================FILE:./src/lib/constants.ts
 ==================================================
 
+
+
+==================================================FILE:./src/pages/Settings/Settings.tsx
+==================================================
+
+import {useAtom} from 'jotai';
+import { dailyGoalAtom, nicknameAtom } from '../../hooks/useCaffeineStore';
+
+export const Settings = () => {
+    const [nickname, setNickname] = useAtom(nicknameAtom);
+    const [dailyGoal, setDailyGoal] = useAtom(dailyGoalAtom);
+
+    return(
+        <div className="p-4">
+            <h2>설정</h2>
+
+            {/*이름 수정 칸*/}
+            <div>
+            <label>닉네임: </label>
+            <input 
+                type="text" 
+                value={nickname} 
+                onChange={(e) => setNickname(e.target.value)} 
+            />
+            </div>
+    
+            {/*하루 목표 수정 칸*/}
+            <div>
+            <label>하루 목표 (mg): </label>
+            <input 
+                type="number" 
+                value={dailyGoal} 
+                onChange={(e) => setDailyGoal(Number(e.target.value))} 
+            />
+            </div>
+
+        </div>
+    );
+};
+
+==================================================FILE:./src/pages/Dashboard/Dashboard.tsx
+==================================================
+
+import {useCaffeine} from '../../hooks/useCaffeine';
+
+
+const Dashboard = () => { 
+    const {totalCaffeine, sleepStatus, characterStatus} = useCaffeine();
+
+
+return(
+    <div className="container">
+
+    <div className="Avatar-section">
+        <img src={`/assets/characters/${characterStatus}.png`} alt="Character Avatar" />
+    </div>
+    <div className="info-section">
+        <p>Total Caffeine: {totalCaffeine}mg</p>
+        <p>Sleep Status: {sleepStatus}</p>
+    </div>
+    <div className="status-section"></div>
+    </div>
+    );
+}
+
+export default Dashboard;
