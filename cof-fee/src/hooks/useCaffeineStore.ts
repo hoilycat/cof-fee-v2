@@ -1,18 +1,51 @@
 import { atomWithStorage } from 'jotai/utils';
 
-export interface CaffeineLog {
-  id: string;             // 각각의 기록을 구별하는 번호
-  caffeineAmount: number; // 마신 카페인 양 (mg)
-  intakeTime: string;     // 마신 시간 (ISO 8601 형식 문자열)
-  beverageName: string;   // 음료 이름
-  notes?: string;         // 메모 (선택사항)
+// 1. 사용자 정보 (기획서 반영)
+export interface UserProfile {
+  nickname: string;
+  weight: number;         // 몸무게 (권장량 및 반감기 계산용)
+  gender: 'M' | 'F' | ''; // 성별 (여성 건강 케어 연동용)
+  dsm5Score: number;      // 카페인 사용 장애(CUD) 진단 점수 (0~9)
+  isTapering: boolean;    // 4주 감량 챌린지(이별 트랙) 진행 여부
+  taperingWeek: number;   // 현재 감량 주차 (1~4)
+  baseIntake: number;     // 평소 하루 평균 섭취량
+  hasCompletedOnboarding: boolean; // 온보딩(진단) 완료 여부
 }
 
-// atomWithStorage를 사용해서 로컬 스토리지에 저장되는 atom을 만들기 (초기값은 빈 배열)
-export const caffeineLogsAtom = atomWithStorage<CaffeineLog[]>('caffeine-logs', []);
+// 2. 카페인 섭취 기록
+export interface CaffeineLog {
+  id: string;
+  caffeineAmount: number;
+  intakeTime: string;
+  beverageName: string;
+  isFasting: boolean;
+  price: number;
+}
 
-// 목표치 바구니: "하루에 이만큼만 마시기로 약속!"
-export const dailyGoalAtom = atomWithStorage<number>('daily-goal',200);
+// 3. 신체 증상 기록 (두통, 콧물 등)
+export interface SymptomLog {
+  id: string;
+  type: 'HEADACHE' | 'RUNNY_NOSE' | 'CRAMPS' | 'FATIGUE';
+  recordTime: string;
+  severity: 1 | 2 | 3 | 4 | 5;
+}
 
-// 닉네임 바구니: "내 이름은...?"
-export const nicknameAtom = atomWithStorage<string>('user-nickname','');
+// ==========================================
+// Jotai Atoms (로컬 스토리지에 자동 저장됨)
+// ==========================================
+
+export const userProfileAtom = atomWithStorage<UserProfile>('cof-fee-user', {
+  nickname: '',
+  weight: 60, 
+  gender: '',
+  dsm5Score: 0,
+  isTapering: false,
+  taperingWeek: 0,
+  baseIntake: 0,
+  hasCompletedOnboarding: false, // 처음 켜면 false
+});
+
+export const caffeineLogsAtom = atomWithStorage<CaffeineLog[]>('caffeine-logs',[]);
+export const symptomLogsAtom = atomWithStorage<SymptomLog[]>('symptom-logs',[]);
+
+export const dailyGoalAtom = atomWithStorage<number>('daily-goal', 400);

@@ -1,9 +1,15 @@
 import { useAtom } from 'jotai';
-import { dailyGoalAtom, nicknameAtom } from '../../hooks/useCaffeineStore';
+import { dailyGoalAtom, userProfileAtom } from '../../hooks/useCaffeineStore';
 
 export const Settings = () => {
-    const[nickname, setNickname] = useAtom(nicknameAtom);
+    // userProfileAtom을 사용하여 전체 유저 정보를 가져오기.
+    const [userProfile, setUserProfile] = useAtom(userProfileAtom);
     const [dailyGoal, setDailyGoal] = useAtom(dailyGoalAtom);
+
+    // 닉네임만 따로 업데이트하기 위한 함수
+    const setNickname = (newName: string) => {
+        setUserProfile((prev) => ({ ...prev, nickname: newName }));
+    };
 
     return (
         <div className="flex flex-col min-h-full px-6 py-12 max-w-2xl mx-auto">
@@ -23,7 +29,7 @@ export const Settings = () => {
                     </label>
                     <input 
                         type="text" 
-                        value={nickname} 
+                        value={userProfile.nickname} 
                         onChange={(e) => setNickname(e.target.value)} 
                         placeholder="이름을 입력해주세요"
                         className="w-full p-4 bg-white rounded-2xl text-gray-800 font-bold focus:outline-none focus:ring-4 focus:ring-[#F08B46]/30 transition-all border-none shadow-sm"
@@ -50,7 +56,7 @@ export const Settings = () => {
                 </div>
             </div>
 
-            {/* 초기화 버튼 (콰블의 둥근 버튼 스타일) */}
+            {/* 초기화 버튼 */}
             <div className="mt-12">
                 <button 
                     className="w-full py-5 rounded-full font-bold text-lg bg-[#FFEAE8] text-[#E05252] hover:bg-[#FFD8D6] active:scale-[0.98] transition-all shadow-sm"

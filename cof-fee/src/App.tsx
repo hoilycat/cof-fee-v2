@@ -1,7 +1,11 @@
 import { BrowserRouter, Routes, Route, Link, useLocation } from 'react-router-dom';
+import { useAtomValue } from 'jotai';
+import { userProfileAtom } from './hooks/useCaffeineStore';
+
 import Dashboard from './pages/Dashboard/Dashboard';
 import { AddDrink } from './pages/AddDrink/AddDrink';
 import { Settings } from './pages/Settings/Settings';
+import Onboarding from './pages/Onboarding/Onboarding';
 
 const BottomNav = () => {
   const location = useLocation();
@@ -16,7 +20,6 @@ const BottomNav = () => {
   ];
 
   return (
-    /* 화면 끝에서 끝까지 꽉 차는 하단 바 (max-w 제한 해제) */
     <nav className="fixed bottom-0 left-0 w-full bg-white border-t border-gray-200 pb-safe pt-2 px-6 flex justify-around items-center z-50">
       {navItems.map((item) => {
         const isActive = currentPath === item.path;
@@ -36,9 +39,15 @@ const BottomNav = () => {
 };
 
 function App() {
+  const userProfile = useAtomValue(userProfileAtom);
+
+  // ⭐️ 진단을 안 받았다면 무조건 온보딩 화면으로!
+  if (!userProfile.hasCompletedOnboarding) {
+    return <Onboarding />;
+  }
+
   return (
     <BrowserRouter>
-      {/* 좁은 박스(칸)를 없애고 전체 화면을 사용하기. */}
       <div className="w-full min-h-screen bg-[#FDFAF6] text-gray-900 font-sans pb-28">
         <Routes>
           <Route path="/" element={<Dashboard />} />
