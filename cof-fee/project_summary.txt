@@ -173,30 +173,75 @@ button:focus-visible {
 ==================================================FILE:./src/App.tsx
 ==================================================
 
+import { BrowserRouter, Routes, Route, Link, useLocation } from 'react-router-dom';
 import Dashboard from './pages/Dashboard/Dashboard';
-import { COFFEE_BRANDS } from './lib/caffeineData';
+import { AddDrink } from './pages/AddDrink/AddDrink';
+import { Settings } from './pages/Settings/Settings';
 
+// 현재 경로에 따라 탭 색상을 바꾸기 위한 컴포넌트
+const BottomNav = () => {
+  const location = useLocation();
+  const currentPath = location.pathname;
 
-import './App.css';
+  const navItems =[
+    { path: '/', icon: '🏠', label: '홈' },
+    { path: '/history', icon: '📋', label: '기록' }, // 아직 없는 페이지 (임시)
+    { path: '/goals', icon: '🎯', label: '목표' },   // 아직 없는 페이지 (임시)
+    { path: '/stats', icon: '📊', label: '통계' },   // 아직 없는 페이지 (임시)
+    { path: '/settings', icon: '⚙️', label: '설정' },
+  ];
 
-function App(){
-  console.log(COFFEE_BRANDS);
   return (
-    <div className="App">
-      <Dashboard />
-    </div>
+    <nav className="fixed bottom-0 w-full max-w-md mx-auto bg-white border-t border-gray-100 pb-safe pt-2 px-4 flex justify-between items-center shadow-[0_-4px_20px_rgba(0,0,0,0.02)] z-50">
+      {navItems.map((item) => {
+        const isActive = currentPath === item.path;
+        return (
+          <Link 
+            key={item.label} 
+            to={item.path} 
+            className={`flex flex-col items-center p-2 w-16 transition-colors ${isActive ? 'text-orange-500' : 'text-gray-400 hover:text-gray-600'}`}
+          >
+            <span className="text-xl mb-1">{item.icon}</span>
+            <span className={`text-[10px] ${isActive ? 'font-bold' : 'font-medium'}`}>{item.label}</span>
+          </Link>
+        );
+      })}
+    </nav>
+  );
+};
+
+function App() {
+  return (
+    <BrowserRouter>
+      {/* 배경을 아주 밝은 회색으로 주어 모바일 앱 느낌 강조 */}
+      <div className="App min-h-screen bg-gray-50 text-gray-900 font-sans flex justify-center">
+        {/* 모바일 화면처럼 보이기 위해 max-w-md 적용 및 그림자 */}
+        <div className="w-full max-w-md bg-gray-50 min-h-screen relative shadow-2xl overflow-hidden pb-24">
+          <Routes>
+            <Route path="/" element={<Dashboard />} />
+            <Route path="/add" element={<AddDrink />} />
+            <Route path="/settings" element={<Settings />} />
+            {/* 빈 페이지 라우팅 임시 처리 */}
+            <Route path="/history" element={<div className="p-6 text-center mt-20">기록 페이지 준비중 🛠️</div>} />
+            <Route path="/goals" element={<div className="p-6 text-center mt-20">목표 페이지 준비중 🛠️</div>} />
+            <Route path="/stats" element={<div className="p-6 text-center mt-20">통계 페이지 준비중 🛠️</div>} />
+          </Routes>
+          
+          <BottomNav />
+        </div>
+      </div>
+    </BrowserRouter>
   );
 }
 
 export default App;
-
 
 ==================================================FILE:./src/main.tsx
 ==================================================
 
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
-import './index.css'
+import '../styles/index.css'
 import App from './App.tsx'
 
 createRoot(document.getElementById('root')!).render(
@@ -1779,37 +1824,61 @@ export const getSleepStatus = (totalCaffeine: number) => {
 ==================================================FILE:./src/pages/Settings/Settings.tsx
 ==================================================
 
-import {useAtom} from 'jotai';
+import { useAtom } from 'jotai';
 import { dailyGoalAtom, nicknameAtom } from '../../hooks/useCaffeineStore';
 
 export const Settings = () => {
-    const [nickname, setNickname] = useAtom(nicknameAtom);
+    const[nickname, setNickname] = useAtom(nicknameAtom);
     const [dailyGoal, setDailyGoal] = useAtom(dailyGoalAtom);
 
-    return(
-        <div className="p-4">
-            <h2>설정</h2>
+    return (
+        <div className="p-6 max-w-md mx-auto">
+            <h2 className="text-2xl font-bold mb-6 text-white">⚙️ 설정</h2>
 
-            {/*이름 수정 칸*/}
-            <div>
-            <label>닉네임: </label>
-            <input 
-                type="text" 
-                value={nickname} 
-                onChange={(e) => setNickname(e.target.value)} 
-            />
-            </div>
-    
-            {/*하루 목표 수정 칸*/}
-            <div>
-            <label>하루 목표 (mg): </label>
-            <input 
-                type="number" 
-                value={dailyGoal} 
-                onChange={(e) => setDailyGoal(Number(e.target.value))} 
-            />
+            <div className="bg-gray-800 p-6 rounded-xl border border-gray-700 shadow-lg">
+                {/* 닉네임 수정 칸 */}
+                <div className="mb-6">
+                    <label className="block mb-2 text-sm font-medium text-gray-400">
+                        닉네임
+                    </label>
+                    <input 
+                        type="text" 
+                        value={nickname} 
+                        onChange={(e) => setNickname(e.target.value)} 
+                        placeholder="이름을 입력해주세요"
+                        className="w-full p-3 bg-gray-900 rounded-lg border border-gray-700 text-white focus:outline-none focus:border-green-500 transition-colors"
+                    />
+                </div>
+        
+                {/* 하루 목표 수정 칸 */}
+                <div>
+                    <label className="block mb-2 text-sm font-medium text-gray-400">
+                        하루 목표 (mg)
+                    </label>
+                    <div className="relative">
+                        <input 
+                            type="number" 
+                            value={dailyGoal} 
+                            onChange={(e) => setDailyGoal(Number(e.target.value))} 
+                            className="w-full p-3 bg-gray-900 rounded-lg border border-gray-700 text-white focus:outline-none focus:border-green-500 transition-colors"
+                        />
+                        <span className="absolute right-4 top-3 text-gray-500 font-bold">mg</span>
+                    </div>
+                    <p className="mt-2 text-xs text-gray-500">
+                        💡 성인 일일 카페인 최대 권장량은 400mg 입니다.
+                    </p>
+                </div>
             </div>
 
+            {/* 초기화 버튼 (나중을 위한 자리) */}
+            <div className="mt-8">
+                <button 
+                    className="w-full py-4 rounded-xl font-bold text-lg bg-gray-800 border border-gray-700 text-red-400 hover:bg-gray-700 transition-colors"
+                    onClick={() => alert("나중에 초기화 기능을 연결할게요!")}
+                >
+                    모든 기록 초기화
+                </button>
+            </div>
         </div>
     );
 };
@@ -1817,44 +1886,222 @@ export const Settings = () => {
 ==================================================FILE:./src/pages/Dashboard/Dashboard.tsx
 ==================================================
 
-import {useCaffeine} from '../../hooks/useCaffeine';
-import { useSetAtom } from 'jotai';
-import { caffeineLogsAtom } from '../../hooks/useCaffeineStore';
-import { COFFEE_BRANDS } from '../../lib/caffeineData';
+import { useNavigate } from 'react-router-dom';
+import { useCaffeine } from '../../hooks/useCaffeine';
+import { useAtomValue } from 'jotai'; 
+import { dailyGoalAtom } from '../../hooks/useCaffeineStore';
 
 const Dashboard = () => { 
-    const {totalCaffeine, sleepStatus, characterStatus} = useCaffeine();
+  const navigate = useNavigate();
+  const { totalCaffeine, sleepStatus, characterStatus } = useCaffeine();
+  const dailyGoal = useAtomValue(dailyGoalAtom);
 
-const setLogs = useSetAtom(caffeineLogsAtom);
-const addCoffee = (amount: number, name: string) =>{
-    const newLog = {
-        id: Date.now().toString(),
-        caffeineAmount: amount,
-        intakeTime: new Date().toISOString(),
-        beverageName:name
-    };
-    setLogs((prev) => [...prev, newLog]);
-};
+  const percentage = Math.min((totalCaffeine / dailyGoal) * 100, 100);
 
+  // 진행률 원형 바(SVG)를 위한 계산
+  const radius = 60;
+  const circumference = 2 * Math.PI * radius;
+  const strokeDashoffset = circumference - (percentage / 100) * circumference;
 
-return(
-    <div className="container">
+  return (
+    <div className="flex flex-col h-full relative">
+      {/* 1. 상단 헤더 로고 영역 */}
+      <header className="flex flex-col items-center pt-10 pb-4">
+        <h1 className="text-2xl font-black text-amber-900 tracking-tighter">
+          cof/fee
+        </h1>
+        <p className="text-xs text-gray-500 mt-1">안전하게 즐기는 커피 생활</p>
+      </header>
 
-    <div className="Avatar-section">
-        <img src={`/assets/characters/${characterStatus}.png`} alt="Character Avatar" />
-    </div>
-    <div className="info-section">
-        <p>Total Caffeine: {totalCaffeine}mg</p>
-        <p>Sleep Status: {sleepStatus}</p>
+      {/* 2. 상태 메시지 */}
+      <div className="text-center mt-4">
+        <h2 className="text-lg font-bold text-gray-800 flex items-center justify-center gap-1">
+          {characterStatus === 'DANGER' ? '⚠️ 카페인이 좀 많아요!' : '🌿 오늘 카페인 아직 괜찮아요!'}
+        </h2>
+        <p className="text-sm text-gray-500 mt-1">
+          💤 {sleepStatus === 'GOOD' ? '오늘 밤 꿀잠 예약!' : '조금 후면 푹 쉴 수 있어요'}
+        </p>
+      </div>
 
-        {/*커피 추가 버튼*/}
-        <button onClick={() => addCoffee(150, '아메리카노')}>
-        아메리카노 추가
+      {/* 3. 메인 원형 게이지 & 섭취량 */}
+      <div className="flex justify-center items-center my-10 relative">
+        <svg className="w-48 h-48 transform -rotate-90">
+          {/* 배경 원 */}
+          <circle
+            cx="96" cy="96" r={radius}
+            fill="transparent"
+            stroke="#f3f4f6" // gray-100
+            strokeWidth="12"
+          />
+          {/* 차오르는 원 (초록색) */}
+          <circle
+            cx="96" cy="96" r={radius}
+            fill="transparent"
+            stroke={characterStatus === 'DANGER' ? '#ef4444' : '#10b981'} // 위험하면 빨간색, 아니면 초록색
+            strokeWidth="12"
+            strokeLinecap="round"
+            strokeDasharray={circumference}
+            strokeDashoffset={strokeDashoffset}
+            className="transition-all duration-1000 ease-out"
+          />
+        </svg>
+        {/* 원 안의 텍스트 */}
+        <div className="absolute flex flex-col items-center justify-center">
+          <span className="text-4xl font-black text-gray-800 tracking-tight">
+            {Math.floor(totalCaffeine)}<span className="text-lg font-bold ml-0.5">mg</span>
+          </span>
+          <span className="text-sm text-gray-400 font-medium mt-1">
+            / {dailyGoal}mg
+          </span>
+        </div>
+      </div>
+
+      {/* 4. 음료 추가 버튼 (프로토타입의 오렌지 버튼) */}
+      <div className="px-6 mb-8 z-10">
+        <button 
+          onClick={() => navigate('/add')}
+          className="w-full bg-[#E57B3E] hover:bg-[#d66b2d] active:scale-[0.98] transition-all text-white py-4 rounded-2xl font-bold text-lg shadow-[0_4px_14px_rgba(229,123,62,0.4)] flex justify-center items-center gap-2"
+        >
+          <span>+</span> 커피/음료 추가하기
         </button>
+      </div>
+
+      {/* 5. 캐릭터 영역 */}
+      <div className="flex-1 flex flex-col items-center justify-center -mt-4">
+        <div className="text-7xl animate-bounce mb-4 drop-shadow-md">
+          {/* 프로토타입처럼 커피콩 모양 이미지/이모지 사용 (현재는 대체 이모지) */}
+          {characterStatus === 'DANGER' ? '🤯' : '🥔'} 
+        </div>
+        <p className="text-xs text-gray-400 font-medium bg-gray-100 px-3 py-1.5 rounded-full">
+          음료 마시기 전에 나 한번 보라구~!!!
+        </p>
+      </div>
+
+      {/* 6. 하단 현재 체내 카페인 정보 (플로팅 카드 느낌) */}
+      <div className="absolute bottom-6 left-6 right-6 bg-white p-5 rounded-2xl shadow-[0_8px_30px_rgba(0,0,0,0.04)] border border-gray-100 flex flex-col items-center justify-center">
+        <p className="text-xs text-gray-500 mb-1">현재 체내 카페인</p>
+        <div className="text-2xl font-bold text-gray-800">
+          {Math.floor(totalCaffeine)}<span className="text-sm ml-1">mg</span>
+        </div>
+        <p className="text-[10px] text-gray-400 mt-1">반감기(5시간)를 적용한 실시간 잔존량</p>
+      </div>
     </div>
-    <div className="status-section"></div>
-    </div>
-    );
+  );
 }
 
 export default Dashboard;
+
+==================================================FILE:./src/pages/AddDrink/AddDrink.tsx
+==================================================
+
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useSetAtom } from 'jotai';
+import { caffeineLogsAtom } from '../../hooks/useCaffeineStore';
+import { COFFEE_BRANDS, type BrandData, type CoffeeMenu, type SizeOption } from '../../lib/caffeineData';
+export const AddDrink = () => {
+  const navigate = useNavigate();
+  const setLogs = useSetAtom(caffeineLogsAtom);
+
+  // 선택 상태 관리
+  const [selectedBrand, setSelectedBrand] = useState<BrandData | null>(null);
+  const [selectedMenu, setSelectedMenu] = useState<CoffeeMenu | null>(null);
+  const [selectedSize, setSelectedSize] = useState<SizeOption | null>(null);
+
+  // 저장 핸들러
+  const handleAddCoffee = () => {
+    if (!selectedMenu || !selectedSize) return;
+
+    const newLog = {
+      id: Date.now().toString(),
+      caffeineAmount: selectedSize.caffeine, // 데이터에서 가져온 카페인 양
+      intakeTime: new Date().toISOString(),
+      beverageName: `${selectedBrand?.brand} ${selectedMenu.name} (${selectedSize.label})`,
+    };
+
+    setLogs((prev) => [...prev, newLog]);
+    alert(`${newLog.beverageName} 기록 완료! ☕️`);
+    navigate('/'); // 홈으로 이동
+  };
+
+  return (
+    <div className="p-6 max-w-md mx-auto">
+      <h2 className="text-2xl font-bold mb-6">음료 기록하기</h2>
+
+      {/* 1. 브랜드 선택 */}
+      <div className="mb-6">
+        <label className="block mb-2 text-gray-400">브랜드</label>
+        <select 
+          className="w-full p-3 bg-gray-800 rounded border border-gray-700"
+          onChange={(e) => {
+            const brand = COFFEE_BRANDS.find(b => b.id === e.target.value) || null;
+            setSelectedBrand(brand);
+            setSelectedMenu(null); // 브랜드 바뀌면 메뉴 초기화
+            setSelectedSize(null);
+          }}
+        >
+          <option value="">브랜드를 선택하세요</option>
+          {COFFEE_BRANDS.map(brand => (
+            <option key={brand.id} value={brand.id}>{brand.brand}</option>
+          ))}
+        </select>
+      </div>
+
+      {/* 2. 메뉴 선택 (브랜드 선택 시 활성화) */}
+      {selectedBrand && (
+        <div className="mb-6">
+          <label className="block mb-2 text-gray-400">메뉴</label>
+          <select 
+            className="w-full p-3 bg-gray-800 rounded border border-gray-700"
+            onChange={(e) => {
+              const menu = selectedBrand.menus.find(m => m.id === e.target.value) || null;
+              setSelectedMenu(menu);
+              setSelectedSize(null); // 메뉴 바뀌면 사이즈 초기화
+            }}
+          >
+            <option value="">메뉴를 선택하세요</option>
+            {selectedBrand.menus.map(menu => (
+              <option key={menu.id} value={menu.id}>{menu.name}</option>
+            ))}
+          </select>
+        </div>
+      )}
+
+      {/* 3. 사이즈 선택 (메뉴 선택 시 활성화) */}
+      {selectedMenu && (
+        <div className="mb-8">
+          <label className="block mb-2 text-gray-400">사이즈</label>
+          <div className="grid grid-cols-2 gap-2">
+            {selectedMenu.sizes.map((size, idx) => (
+              <button
+                key={idx}
+                className={`p-3 rounded border ${
+                  selectedSize === size 
+                    ? 'bg-green-600 border-green-500 text-white' 
+                    : 'bg-gray-800 border-gray-700 text-gray-300'
+                }`}
+                onClick={() => setSelectedSize(size)}
+              >
+                <div className="font-bold">{size.label}</div>
+                <div className="text-sm opacity-80">{size.caffeine}mg</div>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* 저장 버튼 */}
+      <button 
+        disabled={!selectedSize}
+        onClick={handleAddCoffee}
+        className={`w-full py-4 rounded-xl font-bold text-lg transition-colors ${
+          selectedSize 
+            ? 'bg-green-500 hover:bg-green-400 text-black' 
+            : 'bg-gray-700 text-gray-500 cursor-not-allowed'
+        }`}
+      >
+        기록하기
+      </button>
+    </div>
+  );
+};
