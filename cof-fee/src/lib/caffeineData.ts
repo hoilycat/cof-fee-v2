@@ -1459,5 +1459,23 @@ export const COFFEE_BRANDS: BrandData[] = [
         ]
       }
     ],
-  }
+  },
+  {
+    id: 'manual',
+    brand: '직접 입력',
+    menus: [
+      {
+        id: 'manual_shot',
+        name: '에스프레소 1샷',
+        category: 'Espresso',
+        sizes: [{ label: '1잔', ml: 30, caffeine: 75 }]
+      },
+      {
+        id: 'manual_drip',
+        name: '드립 커피',
+        category: 'Espresso',
+        sizes: [{ label: '1잔', ml: 200, caffeine: 100 }]
+      }
+    ]
+  } 
 ];

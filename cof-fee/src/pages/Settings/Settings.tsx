@@ -1,10 +1,20 @@
-import { useAtom } from 'jotai';
-import { dailyGoalAtom, userProfileAtom } from '../../hooks/useCaffeineStore';
+import { useAtom, useSetAtom } from 'jotai';
+import { dailyGoalAtom, userProfileAtom, caffeineLogsAtom } from '../../hooks/useCaffeineStore';
 
 export const Settings = () => {
     // userProfileAtom을 사용하여 전체 유저 정보를 가져오기.
     const [userProfile, setUserProfile] = useAtom(userProfileAtom);
     const [dailyGoal, setDailyGoal] = useAtom(dailyGoalAtom);
+    const setLogs = useSetAtom(caffeineLogsAtom);
+
+
+        // 초기화 함수
+    const handleResetAll = () => {
+        if (confirm("정말로 모든 카페인 기록을 삭제할까요? 이 작업은 되돌릴 수 없습니다.")) {
+            setLogs([]); // 기록 배열을 빈 배열로 초기화
+            alert("모든 기록이 초기화되었습니다.");
+        }
+    };
 
     // 닉네임만 따로 업데이트하기 위한 함수
     const setNickname = (newName: string) => {
@@ -59,8 +69,8 @@ export const Settings = () => {
             {/* 초기화 버튼 */}
             <div className="mt-12">
                 <button 
-                    className="w-full py-5 rounded-full font-bold text-lg bg-[#FFEAE8] text-[#E05252] hover:bg-[#FFD8D6] active:scale-[0.98] transition-all shadow-sm"
-                    onClick={() => alert("나중에 초기화 기능을 연결할게요!")}
+                    className="w-full py-5 rounded-3xl font-black text-lg bg-[#FFEAE8] text-[#E05252] hover:bg-[#FFD8D6] active:scale-[0.98] transition-all shadow-sm"
+                    onClick={handleResetAll} // 함수 연결
                 >
                     모든 기록 초기화하기
                 </button>

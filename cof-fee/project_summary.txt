@@ -125,6 +125,9 @@ import Dashboard from './pages/Dashboard/Dashboard';
 import { AddDrink } from './pages/AddDrink/AddDrink';
 import { Settings } from './pages/Settings/Settings';
 import Onboarding from './pages/Onboarding/Onboarding';
+import { History } from './pages/History/History'; 
+import { Goals } from './pages/Goals/Goals';
+import { Stats } from './pages/Stats/Stats';
 
 const BottomNav = () => {
   const location = useLocation();
@@ -160,7 +163,7 @@ const BottomNav = () => {
 function App() {
   const userProfile = useAtomValue(userProfileAtom);
 
-  // ⭐️ 진단을 안 받았다면 무조건 온보딩 화면으로!
+  // 진단을 안 받았다면 무조건 온보딩 화면으로!
   if (!userProfile.hasCompletedOnboarding) {
     return <Onboarding />;
   }
@@ -172,9 +175,9 @@ function App() {
           <Route path="/" element={<Dashboard />} />
           <Route path="/add" element={<AddDrink />} />
           <Route path="/settings" element={<Settings />} />
-          <Route path="/history" element={<div className="p-10 text-center mt-20 text-gray-400 font-bold">기록 페이지 준비중 🛠️</div>} />
-          <Route path="/goals" element={<div className="p-10 text-center mt-20 text-gray-400 font-bold">목표 페이지 준비중 🛠️</div>} />
-          <Route path="/stats" element={<div className="p-10 text-center mt-20 text-gray-400 font-bold">통계 페이지 준비중 🛠️</div>} />
+          <Route path="/history" element={<History />} />
+          <Route path="/goals" element={<Goals/>} />
+          <Route path="/stats" element={<Stats />} />
         </Routes>
         <BottomNav />
       </div>
@@ -202,20 +205,34 @@ createRoot(document.getElementById('root')!).render(
 ==================================================FILE:./src/hooks/useCaffeine.ts
 ==================================================
 
-import {useAtomValue} from 'jotai';
-import {caffeineLogsAtom} from './useCaffeineStore';
-import {getTotalRemainingCaffeine, getSleepStatus, getCharacterStatus} from '../lib/utiles';
+// src/hooks/useCaffeine.ts
+import { useAtomValue } from 'jotai';
+import { caffeineLogsAtom, dailyGoalAtom, userProfileAtom } from './useCaffeineStore'; // dailyGoalAtom 추가
+import { getTotalRemainingCaffeine, getSleepStatus, getCharacterStatus, getPersonalizedGoal  } from '../lib/utiles';
 
 export const useCaffeine = () => {
     const logs = useAtomValue(caffeineLogsAtom);
+    const user = useAtomValue(userProfileAtom); // 1. 유저 정보를 가져오기.
+    const dailyGoal = useAtomValue(dailyGoalAtom); // 사용자가 설정한 일반 목표량
+    
     const totalCaffeine = getTotalRemainingCaffeine(logs);
+    
+    // 2. '이별 트랙'이면 감량 목표를, 아니면 일반 목표를 사용하도록 계산
+    const currentGoal = user.isTapering ? getPersonalizedGoal(user) : dailyGoal;
+    
     const sleepStatus = getSleepStatus(totalCaffeine);
-    const characterStatus = getCharacterStatus(totalCaffeine);
+    
+    // 3. characterStatus 계산 시 계산된 currentGoal을 전달
+    const characterStatus = getCharacterStatus(totalCaffeine, currentGoal);
 
-return{totalCaffeine, sleepStatus, characterStatus};
-
+    return { 
+        totalCaffeine, 
+        goal: currentGoal, // UI에서 보여줄 현재 목표
+        sleepStatus, 
+        characterStatus, 
+        isTapering: user.isTapering 
+    };
 };
-
 
 
 ==================================================FILE:./src/hooks/useCaffeineStore.ts
@@ -1737,7 +1754,25 @@ export const COFFEE_BRANDS: BrandData[] = [
         ]
       }
     ],
-  }
+  },
+  {
+    id: 'manual',
+    brand: '직접 입력',
+    menus: [
+      {
+        id: 'manual_shot',
+        name: '에스프레소 1샷',
+        category: 'Espresso',
+        sizes: [{ label: '1잔', ml: 30, caffeine: 75 }]
+      },
+      {
+        id: 'manual_drip',
+        name: '드립 커피',
+        category: 'Espresso',
+        sizes: [{ label: '1잔', ml: 200, caffeine: 100 }]
+      }
+    ]
+  } 
 ];
 
 ==================================================FILE:./src/lib/utiles.ts
@@ -1774,10 +1809,11 @@ export const getPersonalizedGoal = (user: UserProfile) => {
 
   // [이별 트랙] 4주 점진적 감량 로직 (75-50-25-12.5 법칙)
   if (user.isTapering && user.baseIntake > 0) {
-    if (user.taperingWeek === 1) goal = user.baseIntake * 0.75;
-    else if (user.taperingWeek === 2) goal = user.baseIntake * 0.50;
-    else if (user.taperingWeek === 3) goal = user.baseIntake * 0.25;
-    else if (user.taperingWeek >= 4) goal = user.baseIntake * 0.125;
+    const week = user.taperingWeek;
+    if (week === 1) goal = user.baseIntake * 0.75;
+    else if (week === 2) goal = user.baseIntake * 0.50;
+    else if (week === 3) goal = user.baseIntake * 0.25;
+    else if (week >= 4) goal = user.baseIntake * 0.125;
   }
   return Math.round(goal);
 };
@@ -1831,6 +1867,7 @@ export const getSleepStatus = (totalCaffeine: number) => {
   return "BAD";                             // 수면 방해
 };
 
+//카페인 함량에 따른 상태
 export const getCharacterStatus = (totalCaffeine: number, goal: number) => {
   const percentage = (totalCaffeine / goal) * 100;
   if (percentage === 0) return "IDLE";
@@ -1838,6 +1875,8 @@ export const getCharacterStatus = (totalCaffeine: number, goal: number) => {
   if (percentage <= 80) return "WARNING";
   return "DANGER";
 };
+
+
 
 ==================================================FILE:./src/lib/constants.ts
 ==================================================
@@ -1847,13 +1886,23 @@ export const getCharacterStatus = (totalCaffeine: number, goal: number) => {
 ==================================================FILE:./src/pages/Settings/Settings.tsx
 ==================================================
 
-import { useAtom } from 'jotai';
-import { dailyGoalAtom, userProfileAtom } from '../../hooks/useCaffeineStore';
+import { useAtom, useSetAtom } from 'jotai';
+import { dailyGoalAtom, userProfileAtom, caffeineLogsAtom } from '../../hooks/useCaffeineStore';
 
 export const Settings = () => {
     // userProfileAtom을 사용하여 전체 유저 정보를 가져오기.
     const [userProfile, setUserProfile] = useAtom(userProfileAtom);
     const [dailyGoal, setDailyGoal] = useAtom(dailyGoalAtom);
+    const setLogs = useSetAtom(caffeineLogsAtom);
+
+
+        // 초기화 함수
+    const handleResetAll = () => {
+        if (confirm("정말로 모든 카페인 기록을 삭제할까요? 이 작업은 되돌릴 수 없습니다.")) {
+            setLogs([]); // 기록 배열을 빈 배열로 초기화
+            alert("모든 기록이 초기화되었습니다.");
+        }
+    };
 
     // 닉네임만 따로 업데이트하기 위한 함수
     const setNickname = (newName: string) => {
@@ -1908,14 +1957,50 @@ export const Settings = () => {
             {/* 초기화 버튼 */}
             <div className="mt-12">
                 <button 
-                    className="w-full py-5 rounded-full font-bold text-lg bg-[#FFEAE8] text-[#E05252] hover:bg-[#FFD8D6] active:scale-[0.98] transition-all shadow-sm"
-                    onClick={() => alert("나중에 초기화 기능을 연결할게요!")}
+                    className="w-full py-5 rounded-3xl font-black text-lg bg-[#FFEAE8] text-[#E05252] hover:bg-[#FFD8D6] active:scale-[0.98] transition-all shadow-sm"
+                    onClick={handleResetAll} // 함수 연결
                 >
                     모든 기록 초기화하기
                 </button>
             </div>
         </div>
     );
+};
+
+==================================================FILE:./src/pages/Goals/Goals.tsx
+==================================================
+
+import { useAtom } from 'jotai';
+import { userProfileAtom } from '../../hooks/useCaffeineStore';
+
+export const Goals = () => {
+  const [user, setUser] = useAtom(userProfileAtom);
+
+  const updateWeek = (week: number) => {
+    setUser({ ...user, taperingWeek: Math.max(1, Math.min(week, 4)) });
+  };
+
+  return (
+    <div className="p-6 pb-28 max-w-2xl mx-auto bg-[#FDFAF6] min-h-screen">
+      <h2 className="text-3xl font-black text-[#5C3D2E] mb-8">목표 관리</h2>
+      
+      {/* 챌린지 카드 */}
+      <div className="bg-white p-8 rounded-[30px] shadow-sm border border-gray-100 text-center">
+        <p className="text-sm font-bold text-[#E57B3E] mb-2">4주 카페인 감량 챌린지</p>
+        <h3 className="text-2xl font-black mb-6">{user.taperingWeek}주차 진행 중</h3>
+        
+        {/* 진행률 시각화 */}
+        <div className="w-full h-4 bg-gray-100 rounded-full overflow-hidden mb-8">
+          <div className="h-full bg-[#E57B3E] transition-all" style={{ width: `${(user.taperingWeek / 4) * 100}%` }} />
+        </div>
+
+        <div className="flex justify-center gap-4">
+          <button onClick={() => updateWeek(user.taperingWeek - 1)} className="px-6 py-2 bg-gray-100 rounded-full font-bold">이전 주</button>
+          <button onClick={() => updateWeek(user.taperingWeek + 1)} className="px-6 py-2 bg-[#5C3D2E] text-white rounded-full font-bold">다음 주</button>
+        </div>
+      </div>
+    </div>
+  );
 };
 
 ==================================================FILE:./src/pages/Dashboard/Dashboard.tsx
@@ -1928,7 +2013,7 @@ import { dailyGoalAtom } from '../../hooks/useCaffeineStore';
 
 const Dashboard = () => { 
   const navigate = useNavigate();
-  const { totalCaffeine, sleepStatus, characterStatus } = useCaffeine();
+  const { totalCaffeine, goal, sleepStatus, characterStatus, isTapering } = useCaffeine();
   const dailyGoal = useAtomValue(dailyGoalAtom);
 
   const percentage = Math.min((totalCaffeine / dailyGoal) * 100, 100);
@@ -1949,6 +2034,27 @@ const Dashboard = () => {
         </h1>
         <p className="text-sm text-gray-500 mt-2 font-medium">안전하게 즐기는 커피 생활</p>
       </header>
+
+      {/* 1. 상단 트랙 배지 */}
+      <div className="text-center mb-4">
+        <span className={`px-4 py-1 rounded-full text-xs font-bold ${isTapering ? 'bg-[#5C3D2E] text-white' : 'bg-green-100 text-green-700'}`}>
+          {isTapering ? '👋 이별 트랙 진행 중' : '🌿 안전 트랙 유지 중'}
+        </span>
+      </div>
+
+      {/* 2. 상태 메시지 분기 */}
+      <div className="text-center mb-12">
+        {isTapering ? (
+          <h2 className="text-xl font-bold text-[#5C3D2E]">
+            {totalCaffeine > goal ? "오늘은 목표보다 조금 많아요!" : "훌륭해요! 감량 목표를 잘 지키고 있어요."}
+          </h2>
+        ) : (
+          <h2 className="text-xl font-bold text-gray-800">
+            {totalCaffeine > goal ? "⚠️ 권장량을 초과했어요!" : "오늘도 안전한 범위 내예요!"}
+          </h2>
+        )}
+      </div>
+
 
       {/* 2. 상태 메시지 */}
       <div className="text-center mb-12">
@@ -2027,15 +2133,23 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSetAtom } from 'jotai';
 import { caffeineLogsAtom } from '../../hooks/useCaffeineStore';
+import { useAtomValue } from 'jotai';
+import { userProfileAtom } from '../../hooks/useCaffeineStore';
 import { COFFEE_BRANDS, type BrandData, type CoffeeMenu, type SizeOption } from '../../lib/caffeineData';
+
+
 export const AddDrink = () => {
   const navigate = useNavigate();
   const setLogs = useSetAtom(caffeineLogsAtom);
+  const user = useAtomValue(userProfileAtom);
 
   // 선택 상태 관리
   const [selectedBrand, setSelectedBrand] = useState<BrandData | null>(null);
   const [selectedMenu, setSelectedMenu] = useState<CoffeeMenu | null>(null);
   const [selectedSize, setSelectedSize] = useState<SizeOption | null>(null);
+
+  // 경고 표시 여부 (예: 선택한 카페인이 150mg 이상이거나, 이별 트랙 중일 때)
+  const isHighCaffeine = selectedSize ? selectedSize.caffeine > 150 : false;
 
   // 저장 핸들러
   const handleAddCoffee = () => {
@@ -2046,6 +2160,8 @@ export const AddDrink = () => {
       caffeineAmount: selectedSize.caffeine, // 데이터에서 가져온 카페인 양
       intakeTime: new Date().toISOString(),
       beverageName: `${selectedBrand?.brand} ${selectedMenu.name} (${selectedSize.label})`,
+      isFasting: false, // 기본값 설정
+      price: 0,         // 기본값 설정
     };
 
     setLogs((prev) => [...prev, newLog]);
@@ -2055,7 +2171,23 @@ export const AddDrink = () => {
 
   return (
     <div className="p-6 max-w-md mx-auto">
+
       <h2 className="text-2xl font-bold mb-6">음료 기록하기</h2>
+      {/* 1. 디카페인 추천 배지 (브랜드 선택 시) */}
+      {selectedBrand && (
+        <div className="mb-4 p-4 bg-[#EFEBE4] rounded-2xl text-sm font-bold text-[#5C3D2E]">
+          {user.isTapering 
+            ? "☕️ 감량 중이에요! 디카페인 메뉴를 선택해 보시는 건 어떨까요?" 
+            : "오늘 컨디션은 어떠신가요?"}
+        </div>
+      )}
+
+      {/* 2. 고카페인 경고 알림 */}
+      {isHighCaffeine && (
+        <div className="mb-4 p-4 bg-[#FFEAE8] rounded-2xl text-sm font-bold text-[#E05252]">
+          ⚠️ 주의: 이 음료는 카페인 함량이 높습니다!
+        </div>
+      )}
 
       {/* 1. 브랜드 선택 */}
       <div className="mb-6">
@@ -2135,6 +2267,147 @@ export const AddDrink = () => {
   );
 };
 
+==================================================FILE:./src/pages/History/History.tsx
+==================================================
+
+import { useAtom } from 'jotai'; // useState는 사용하지 않으면 지워도 됩니다
+import { caffeineLogsAtom } from '../../hooks/useCaffeineStore';
+import { calculateCurrentCaffeine } from '../../lib/utiles';
+import dayjs from 'dayjs';
+import 'dayjs/locale/ko';
+
+dayjs.locale('ko');
+
+export const History = () => {
+  const [logs, setLogs] = useAtom(caffeineLogsAtom);
+
+  // 삭제 함수 (로그 ID를 받아 필터링)
+  const deleteLog = (id: string) => {
+    if (confirm("이 기록을 삭제할까요?")) {
+      setLogs(logs.filter((log) => log.id !== id));
+    }
+  };
+
+  const groupedLogs = logs.reduce((acc, log) => {
+    const date = dayjs(log.intakeTime).format('MM월 DD일 (ddd)');
+    if (!acc[date]) acc[date] = [];
+    acc[date].push(log);
+    return acc;
+  }, {} as Record<string, typeof logs>);
+
+  return (
+    <div className="p-6 pb-28 max-w-2xl mx-auto bg-[#FDFAF6] min-h-screen">
+      <header className="mb-10">
+        <h2 className="text-3xl font-black text-[#5C3D2E]">기록</h2>
+        <p className="text-gray-500 font-medium mt-1">내가 마신 커피가 몸속에 얼마나 남아있을까?</p>
+      </header>
+
+      {Object.keys(groupedLogs).length === 0 ? (
+        <div className="text-center py-20 text-gray-400 font-bold">아직 기록된 음료가 없어요 ☕️</div>
+      ) : (
+        Object.entries(groupedLogs).reverse().map(([date, dateLogs]) => (
+          <div key={date} className="mb-8">
+            <h3 className="text-sm font-black text-[#5C3D2E] mb-4 bg-[#EFEBE4] py-1 px-3 rounded-full inline-block">
+              {date}
+            </h3>
+            <div className="space-y-4">
+              {/* 1. 정렬 후 map 시작 */}
+              {dateLogs
+                .sort((a, b) => dayjs(b.intakeTime).valueOf() - dayjs(a.intakeTime).valueOf())
+                .map((log) => {
+                  const currentAmount = calculateCurrentCaffeine(log.caffeineAmount, log.intakeTime);
+                  
+                  // 2. return 문으로 JSX 반환
+                  return (
+                    <div key={log.id} className="bg-white p-5 rounded-3xl shadow-sm border border-gray-100 flex justify-between items-center group">
+                      <div>
+                        <p className="font-bold text-gray-800">{log.beverageName}</p>
+                        <p className="text-xs text-gray-400 font-medium">{dayjs(log.intakeTime).format('A HH:mm')} 섭취</p>
+                      </div>
+                      
+                      <div className="flex items-center gap-4">
+                        <div className="text-right">
+                          <p className="font-black text-xl text-[#E57B3E]">{currentAmount}mg</p>
+                          <p className="text-[10px] text-gray-400 font-bold uppercase">잔존량</p>
+                        </div>
+                        
+                        {/* 삭제 버튼 */}
+                        <button 
+                          onClick={() => deleteLog(log.id)}
+                          className="text-gray-300 hover:text-red-500 transition-colors text-xl font-light"
+                        >
+                          ✕
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+            </div>
+          </div>
+        ))
+      )}
+    </div>
+  );
+};
+
+==================================================FILE:./src/pages/Stats/Stats.tsx
+==================================================
+
+import { useAtomValue } from 'jotai';
+import { caffeineLogsAtom } from '../../hooks/useCaffeineStore';
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts';
+import dayjs from 'dayjs';
+
+export const Stats = () => {
+  const logs = useAtomValue(caffeineLogsAtom);
+
+  // 최근 7일 데이터 가공
+  const data = Array.from({ length: 7 }).map((_, i) => {
+    const date = dayjs().subtract(6 - i, 'day').format('MM/DD');
+    const total = logs
+      .filter(l => dayjs(l.intakeTime).format('MM/DD') === date)
+      .reduce((sum, l) => sum + l.caffeineAmount, 0);
+    return { date, total };
+  });
+
+  return (
+    <>
+    <div className="p-6 pb-28 max-w-2xl mx-auto bg-[#FDFAF6] min-h-screen">
+      <h2 className="text-3xl font-black text-[#5C3D2E] mb-8">통계</h2>
+      
+      <div className="bg-white p-6 rounded-[30px] shadow-sm h-72">
+        <ResponsiveContainer width="100%" height="100%">
+          <BarChart data={data}>
+            <XAxis dataKey="date" fontSize={12} axisLine={false} tickLine={false} />
+            <YAxis fontSize={12} axisLine={false} tickLine={false} /> 
+            <Tooltip cursor={{fill: '#F4F1EA'}} />
+            <Bar dataKey="total" radius={[10, 10, 0, 0]}>
+              {data.map((entry, index) => (
+                <Cell key={index} fill={entry.total > 400 ? '#E05252' : '#E57B3E'} />
+              ))}
+            </Bar>
+          </BarChart>
+        </ResponsiveContainer>
+      </div>
+      
+      <p className="text-center text-gray-400 font-medium mt-6 text-sm">
+        빨간색 막대는 권장량(400mg)을 초과한 날이에요!
+      </p>
+    </div>
+    <div className="mt-10 bg-white p-6 rounded-[30px] shadow-sm">
+    <h3 className="font-black text-[#5C3D2E] mb-4">💡 카페인 배출 꿀팁</h3>
+    <ul className="text-sm text-gray-600 font-medium space-y-2 list-disc pl-4">
+        <li>물 많이 마시기 (커피 1잔당 물 2잔)</li>
+        <li>가벼운 유산소 운동으로 신진대사 높이기</li>
+        <li>십자화과 채소(브로콜리, 양배추) 챙겨 먹기</li>
+        <li>단백질과 함께 섭취하여 위산 자극 줄이기</li>
+    </ul>
+    </div>
+    </>
+  );
+};
+
+
 ==================================================FILE:./src/pages/Onboarding/Onboarding.tsx
 ==================================================
 
@@ -2193,12 +2466,13 @@ const Onboarding = () => {
   const severity = score >= 6 ? '중증 🚨' : score >= 4 ? '중등도 ⚠️' : score >= 2 ? '경도 🌱' : '정상 🌿';
 
   return (
-    <div className="flex flex-col min-h-[100dvh] bg-[#FDFAF6] text-gray-800 px-6 py-12 max-w-2xl mx-auto">
+   <div className="min-h-screen bg-[#FDFAF6] p-6 flex flex-col items-center">
+      <div className="w-full max-w-lg">
       
       {/* 1단계: 기본 정보 입력 */}
       {step === 1 && (
         <div className="flex flex-col h-full animate-fade-in">
-          <div className="text-6xl mb-6 text-center mt-10">🦆</div>
+          <div className="text-6xl mb-6 text-center mt-10">☕️</div>
           <h2 className="text-2xl font-black text-center text-[#5C3D2E] mb-2">환영해요!</h2>
           <p className="text-center text-gray-500 font-medium mb-10">안전한 커피 생활을 위해<br/>몇 가지 정보가 필요해요.</p>
 
@@ -2286,6 +2560,7 @@ const Onboarding = () => {
         </div>
       )}
     </div>
+  </div>
   );
 };
 

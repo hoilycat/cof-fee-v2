@@ -5,7 +5,7 @@ import { dailyGoalAtom } from '../../hooks/useCaffeineStore';
 
 const Dashboard = () => { 
   const navigate = useNavigate();
-  const { totalCaffeine, sleepStatus, characterStatus } = useCaffeine();
+  const { totalCaffeine, goal, sleepStatus, characterStatus, isTapering } = useCaffeine();
   const dailyGoal = useAtomValue(dailyGoalAtom);
 
   const percentage = Math.min((totalCaffeine / dailyGoal) * 100, 100);
@@ -26,6 +26,27 @@ const Dashboard = () => {
         </h1>
         <p className="text-sm text-gray-500 mt-2 font-medium">안전하게 즐기는 커피 생활</p>
       </header>
+
+      {/* 1. 상단 트랙 배지 */}
+      <div className="text-center mb-4">
+        <span className={`px-4 py-1 rounded-full text-xs font-bold ${isTapering ? 'bg-[#5C3D2E] text-white' : 'bg-green-100 text-green-700'}`}>
+          {isTapering ? '👋 이별 트랙 진행 중' : '🌿 안전 트랙 유지 중'}
+        </span>
+      </div>
+
+      {/* 2. 상태 메시지 분기 */}
+      <div className="text-center mb-12">
+        {isTapering ? (
+          <h2 className="text-xl font-bold text-[#5C3D2E]">
+            {totalCaffeine > goal ? "오늘은 목표보다 조금 많아요!" : "훌륭해요! 감량 목표를 잘 지키고 있어요."}
+          </h2>
+        ) : (
+          <h2 className="text-xl font-bold text-gray-800">
+            {totalCaffeine > goal ? "⚠️ 권장량을 초과했어요!" : "오늘도 안전한 범위 내예요!"}
+          </h2>
+        )}
+      </div>
+
 
       {/* 2. 상태 메시지 */}
       <div className="text-center mb-12">

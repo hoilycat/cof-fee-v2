@@ -6,6 +6,9 @@ import Dashboard from './pages/Dashboard/Dashboard';
 import { AddDrink } from './pages/AddDrink/AddDrink';
 import { Settings } from './pages/Settings/Settings';
 import Onboarding from './pages/Onboarding/Onboarding';
+import { History } from './pages/History/History'; 
+import { Goals } from './pages/Goals/Goals';
+import { Stats } from './pages/Stats/Stats';
 
 const BottomNav = () => {
   const location = useLocation();
@@ -41,7 +44,7 @@ const BottomNav = () => {
 function App() {
   const userProfile = useAtomValue(userProfileAtom);
 
-  // ⭐️ 진단을 안 받았다면 무조건 온보딩 화면으로!
+  // 진단을 안 받았다면 무조건 온보딩 화면으로!
   if (!userProfile.hasCompletedOnboarding) {
     return <Onboarding />;
   }
@@ -53,9 +56,9 @@ function App() {
           <Route path="/" element={<Dashboard />} />
           <Route path="/add" element={<AddDrink />} />
           <Route path="/settings" element={<Settings />} />
-          <Route path="/history" element={<div className="p-10 text-center mt-20 text-gray-400 font-bold">기록 페이지 준비중 🛠️</div>} />
-          <Route path="/goals" element={<div className="p-10 text-center mt-20 text-gray-400 font-bold">목표 페이지 준비중 🛠️</div>} />
-          <Route path="/stats" element={<div className="p-10 text-center mt-20 text-gray-400 font-bold">통계 페이지 준비중 🛠️</div>} />
+          <Route path="/history" element={<History />} />
+          <Route path="/goals" element={<Goals/>} />
+          <Route path="/stats" element={<Stats />} />
         </Routes>
         <BottomNav />
       </div>

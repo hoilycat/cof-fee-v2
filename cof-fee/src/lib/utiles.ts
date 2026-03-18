@@ -29,10 +29,11 @@ export const getPersonalizedGoal = (user: UserProfile) => {
 
   // [이별 트랙] 4주 점진적 감량 로직 (75-50-25-12.5 법칙)
   if (user.isTapering && user.baseIntake > 0) {
-    if (user.taperingWeek === 1) goal = user.baseIntake * 0.75;
-    else if (user.taperingWeek === 2) goal = user.baseIntake * 0.50;
-    else if (user.taperingWeek === 3) goal = user.baseIntake * 0.25;
-    else if (user.taperingWeek >= 4) goal = user.baseIntake * 0.125;
+    const week = user.taperingWeek;
+    if (week === 1) goal = user.baseIntake * 0.75;
+    else if (week === 2) goal = user.baseIntake * 0.50;
+    else if (week === 3) goal = user.baseIntake * 0.25;
+    else if (week >= 4) goal = user.baseIntake * 0.125;
   }
   return Math.round(goal);
 };
