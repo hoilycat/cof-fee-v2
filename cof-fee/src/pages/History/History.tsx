@@ -1,6 +1,7 @@
 import { useAtom } from 'jotai'; // useState는 사용하지 않으면 지워도 됩니다
 import { caffeineLogsAtom } from '../../hooks/useCaffeineStore';
 import { calculateCurrentCaffeine } from '../../lib/utiles';
+import { motion, AnimatePresence } from 'framer-motion';
 import dayjs from 'dayjs';
 import 'dayjs/locale/ko';
 
@@ -38,7 +39,9 @@ export const History = () => {
             <h3 className="text-sm font-black text-[#5C3D2E] mb-4 bg-[#EFEBE4] py-1 px-3 rounded-full inline-block">
               {date}
             </h3>
-            <div className="space-y-4">
+
+          <div className="space-y-4">
+            <AnimatePresence mode="popLayout">
               {/* 1. 정렬 후 map 시작 */}
               {dateLogs
                 .sort((a, b) => dayjs(b.intakeTime).valueOf() - dayjs(a.intakeTime).valueOf())
@@ -47,7 +50,16 @@ export const History = () => {
                   
                   // 2. return 문으로 JSX 반환
                   return (
-                    <div key={log.id} className="bg-white p-5 rounded-3xl shadow-sm border border-gray-100 flex justify-between items-center group">
+                    
+                    <motion.div 
+                        key={log.id}
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        exit={{ opacity: 0, x: 50, scale: 0.95 }} // 오른쪽으로 슈슉- 사라지기
+                        layout // 삭제 시 다른 아이템들이 스르륵 올라오는 마법
+                        transition={{ duration: 0.2 }}
+                        className="bg-white p-5 rounded-3xl shadow-sm border border-gray-100 flex justify-between items-center group"
+                      >
                       <div>
                         <p className="font-bold text-gray-800">{log.beverageName}</p>
                         <p className="text-xs text-gray-400 font-medium">{dayjs(log.intakeTime).format('A HH:mm')} 섭취</p>
@@ -67,9 +79,10 @@ export const History = () => {
                           ✕
                         </button>
                       </div>
-                    </div>
+                    </motion.div>
                   );
                 })}
+                </AnimatePresence>
             </div>
           </div>
         ))
