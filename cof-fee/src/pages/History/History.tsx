@@ -1,6 +1,6 @@
-import { useAtom } from 'jotai'; // useState는 사용하지 않으면 지워도 됩니다
-import { caffeineLogsAtom } from '../../hooks/useCaffeineStore';
-import { calculateCurrentCaffeine } from '../../lib/utiles';
+import { useAtom, useAtomValue } from 'jotai'; // useState는 사용하지 않으면 지워도 됩니다
+import { caffeineLogsAtom, userProfileAtom  } from '../../hooks/useCaffeineStore';
+import { calculateCurrentCaffeine, getDynamicHalfLife } from '../../lib/utiles';
 import { motion, AnimatePresence } from 'framer-motion';
 import dayjs from 'dayjs';
 import 'dayjs/locale/ko';
@@ -9,6 +9,10 @@ dayjs.locale('ko');
 
 export const History = () => {
   const [logs, setLogs] = useAtom(caffeineLogsAtom);
+  const user = useAtomValue(userProfileAtom);
+ 
+   // 사용자의 현재 반감기 계산 (생리 모드 등 반영)
+  const currentHalfLife = getDynamicHalfLife(user);
 
   // 삭제 함수 (로그 ID를 받아 필터링)
   const deleteLog = (id: string) => {
@@ -25,10 +29,10 @@ export const History = () => {
   }, {} as Record<string, typeof logs>);
 
   return (
-    <div className="p-6 pb-28 max-w-2xl mx-auto bg-[#FDFAF6] min-h-screen">
+    <div className="p-6 pb-28 max-w-2xl mx-auto bg-[#FDFAF6] dark:bg-transparent min-h-screen transition-colors">
       <header className="mb-10">
-        <h2 className="text-3xl font-black text-[#5C3D2E]">기록</h2>
-        <p className="text-gray-500 font-medium mt-1">내가 마신 커피가 몸속에 얼마나 남아있을까?</p>
+        <h2 className="text-3xl font-black text-[#5C3D2E] dark:text-[#F5E8D3]">기록</h2>
+        <p className="text-gray-500 dark:text-white/40 font-medium mt-1">내가 마신 커피가 몸속에 얼마나 남아있을까?</p>
       </header>
 
       {Object.keys(groupedLogs).length === 0 ? (
@@ -36,7 +40,7 @@ export const History = () => {
       ) : (
         Object.entries(groupedLogs).reverse().map(([date, dateLogs]) => (
           <div key={date} className="mb-8">
-            <h3 className="text-sm font-black text-[#5C3D2E] mb-4 bg-[#EFEBE4] py-1 px-3 rounded-full inline-block">
+            <h3 className="text-sm font-black text-[#5C3D2E] dark:text-[#F5E8D3] mb-4 bg-[#EFEBE4] dark:bg-[#3D2B1F] py-1 px-3 rounded-full inline-block">
               {date}
             </h3>
 
@@ -46,7 +50,7 @@ export const History = () => {
               {dateLogs
                 .sort((a, b) => dayjs(b.intakeTime).valueOf() - dayjs(a.intakeTime).valueOf())
                 .map((log) => {
-                  const currentAmount = calculateCurrentCaffeine(log.caffeineAmount, log.intakeTime);
+                  const currentAmount = calculateCurrentCaffeine(log.caffeineAmount, log.intakeTime, currentHalfLife);
                   
                   // 2. return 문으로 JSX 반환
                   return (
@@ -58,11 +62,11 @@ export const History = () => {
                         exit={{ opacity: 0, x: 50, scale: 0.95 }} // 오른쪽으로 슈슉- 사라지기
                         layout // 삭제 시 다른 아이템들이 스르륵 올라오는 마법
                         transition={{ duration: 0.2 }}
-                        className="bg-white p-5 rounded-3xl shadow-sm border border-gray-100 flex justify-between items-center group"
+                        className="bg-white dark:bg-[#3D2B1F] p-5 rounded-3xl shadow-sm border border-gray-100 dark:border-white/5 flex justify-between items-center group transition-colors"
                       >
                       <div>
-                        <p className="font-bold text-gray-800">{log.beverageName}</p>
-                        <p className="text-xs text-gray-400 font-medium">{dayjs(log.intakeTime).format('A HH:mm')} 섭취</p>
+                        <p className="font-bold text-gray-800 dark:text-[#F5E8D3]">{log.beverageName}</p>
+                        <p className="text-xs text-gray-400 dark:text-white/30 font-medium">{dayjs(log.intakeTime).format('A HH:mm')} 섭취</p>
                       </div>
                       
                       <div className="flex items-center gap-4">

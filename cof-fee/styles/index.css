@@ -7,7 +7,6 @@ html, body {
   padding: 0;
   width: 100%;
   min-height: 100vh;
-  background-color: #ffffff; /* 칸나눔 없이 깨끗한 흰색 배경 */
   -webkit-font-smoothing: antialiased;
 }
 

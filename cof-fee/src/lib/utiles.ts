@@ -5,7 +5,7 @@ import type { CaffeineLog, UserProfile } from '../hooks/useCaffeineStore';
  * 1. 실시간 잔존량 계산 (지수적 감쇠 공식)
  * C_now = C_initial * (0.5)^(t / halfLife)
  */
-export const calculateCurrentCaffeine = (mg: number, intakeTime: string, halfLife = 5) => {
+export const calculateCurrentCaffeine = (mg: number, intakeTime: string, halfLife: number) => {
   const now = dayjs();
   const diffHours = now.diff(dayjs(intakeTime), "hour", true);
   
@@ -16,8 +16,10 @@ export const calculateCurrentCaffeine = (mg: number, intakeTime: string, halfLif
   return parseFloat(remaining.toFixed(2));
 };
 
-export const getTotalRemainingCaffeine = (logs: CaffeineLog[]) => {
-  return logs.reduce((total, log) => total + calculateCurrentCaffeine(log.caffeineAmount, log.intakeTime), 0);
+
+export const getTotalRemainingCaffeine = (logs: CaffeineLog[], halfLife: number) => {
+  return logs.reduce((total, log) => 
+    total + calculateCurrentCaffeine(log.caffeineAmount, log.intakeTime, halfLife), 0);
 };
 
 /**
@@ -37,6 +39,15 @@ export const getPersonalizedGoal = (user: UserProfile) => {
   }
   return Math.round(goal);
 };
+
+export const getDynamicHalfLife = (user: UserProfile) => {
+  // 기본 5시간, 생리 중이면 대사가 느려지므로 7.5시간으로 연장
+  if ( user.gender === 'F' && user.isMenstruating ){
+    return 7.5;
+  }
+  return 5;
+};
+
 
 /**
  * 3. '3일의 법칙' 감지기 (연속 3일 섭취 여부 파악)

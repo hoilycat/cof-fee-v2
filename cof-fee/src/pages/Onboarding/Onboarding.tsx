@@ -45,6 +45,8 @@ const Onboarding = () => {
       taperingWeek: isTapering ? 1 : 0,
       baseIntake: safeGoal,
       hasCompletedOnboarding: true,
+      isMenstruating: false, // 온보딩 시에는 기본적으로 꺼둠
+      isDarkMode: false,     // 온보딩 시에는 기본적으로 라이트 모드
     });
     setDailyGoal(isTapering ? safeGoal * 0.75 : safeGoal); // 감량 트랙이면 첫 주 75% 설정
   };
@@ -66,7 +68,7 @@ const Onboarding = () => {
           <div className="space-y-6 flex-1">
             <input 
               type="text" placeholder="이름이나 애칭을 적어주세요" value={nickname} onChange={(e) => setNickname(e.target.value)}
-              className="w-full p-5 bg-white rounded-2xl font-bold shadow-sm outline-none focus:ring-4 focus:ring-[#E57B3E]/30"
+              className="w-full p-5 bg-white dark:bg-[#3D2B1F] border-gray-100 dark:border-white/5  rounded-2xl font-bold shadow-sm outline-none focus:ring-4 focus:ring-[#E57B3E]/30"
             />
             <div className="flex gap-4">
               <button onClick={() => setGender('F')} className={`flex-1 py-4 rounded-2xl font-bold transition-all shadow-sm ${gender === 'F' ? 'bg-[#E57B3E] text-white' : 'bg-white text-gray-400'}`}>여성</button>
@@ -75,7 +77,7 @@ const Onboarding = () => {
             <div className="relative">
               <input 
                 type="number" placeholder="몸무게를 적어주세요 (권장량 계산용)" value={weight} onChange={(e) => setWeight(Number(e.target.value))}
-                className="w-full p-5 bg-white rounded-2xl font-bold shadow-sm outline-none focus:ring-4 focus:ring-[#E57B3E]/30"
+                className="w-full p-5 bg-white dark:bg-[#3D2B1F] border-gray-100 dark:border-white/5  rounded-2xl font-bold shadow-sm outline-none focus:ring-4 focus:ring-[#E57B3E]/30"
               />
               <span className="absolute right-5 top-5 font-bold text-gray-400">kg</span>
             </div>

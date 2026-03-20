@@ -1,22 +1,35 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useCaffeine } from '../../hooks/useCaffeine';
-import { useAtomValue } from 'jotai'; 
-import { dailyGoalAtom , caffeineLogsAtom } from '../../hooks/useCaffeineStore';
+import { useAtomValue} from 'jotai'; 
+import { dailyGoalAtom , caffeineLogsAtom, userProfileAtom } from '../../hooks/useCaffeineStore';
 import dayjs from 'dayjs';
 import relaxbeen from '../../assets/characters/relaxbeen.png';
 import funnybeen from '../../assets/characters/funnybeen.png';
 import composedbeen from '../../assets/characters/composedbeen.png';
 import busybeen from '../../assets/characters/busybeen.png';
 import { motion, AnimatePresence } from 'framer-motion';
+import { Plus } from 'lucide-react';
 
 const Dashboard = () => { 
   const navigate = useNavigate();
-  const { totalCaffeine, characterStatus, isTapering } = useCaffeine();
+  const { totalCaffeine, characterStatus, isTapering, isMenstruating, goal } = useCaffeine();
   const dailyGoal = useAtomValue(dailyGoalAtom);
   const logs = useAtomValue(caffeineLogsAtom); // 전체 기록 가져오기
 
+  // 1. App.tsx에서 가져오는 대신, 전역 Atom에서 직접 다크모드 여부를 가져오기.
+  const user = useAtomValue(userProfileAtom);
+  const isDark = user.isDarkMode;
   const [showRemaining, setShowRemaining] = useState(true); // 잔존량 vs 총량 상태
+
+
+  // 1. 테마 컬러 정의 (dark: 클래스 방식으로 App.tsx에서 배경을 처리하므로, 여기선 내부 요소 색상만)
+  const theme = isDark ? {
+    text: '#F5E8D3', gaugeBg: '#3D2B1F', accent: '#D97706', card: '#3D2B1F', border: 'rgba(255,255,255,0.05)'
+  } : {
+    text: '#5C3D2E', gaugeBg: '#EFEBE4', accent: '#E57B3E', card: '#FFFFFF', border: '#F3F4F6'
+  };
+
 
   // 오늘 마신 순수 총량 계산하기 (반감기 무시)
   const totalIntakeToday = logs
@@ -27,12 +40,11 @@ const Dashboard = () => {
     // 클릭할 때마다 보여줄 값과 제목을 결정하는 로직
   const displayAmount = showRemaining ? totalCaffeine : totalIntakeToday;
   const displayLabel = showRemaining ? "현재 잔존량" : "오늘 총 섭취량";
-  const toggleView = () => setShowRemaining(!showRemaining);
   
 
  // 게이지 퍼센트도 이제 displayAmount(선택된 값)를 따라가게 수정!
   const percentage = Math.min((displayAmount / dailyGoal) * 100, 100);
-  const radius = 85; 
+  const radius = 90; 
   const circumference = 2 * Math.PI * radius;
   const strokeDashoffset = circumference - (percentage / 100) * circumference;
 
@@ -70,98 +82,124 @@ const Dashboard = () => {
     ? characterMessages[characterStatus]?.remaining 
     : characterMessages[characterStatus]?.total;
 
-  return (
+ return (
+    <div className="flex flex-col min-h-screen font-sans max-w-lg mx-auto px-6 pt-12 pb-24 relative overflow-hidden
+      /*별빛 추가*/
+      dark:before:content-[''] dark:before:absolute dark:before:inset-0 
+      dark:before:bg-stars dark:before:opacity-30 dark:before:pointer-events-none    
+    ">
+      
+      {/* --- 배경 하늘 요소 (해, 달, 별) --- */}
+      <AnimatePresence mode="wait">
+        {isDark ? (
+          <motion.div 
+            key="night-sky"
+            initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.8 }}
+            className="absolute top-20 right-10 pointer-events-none"
+          >
+            <span className="text-5xl drop-shadow-[0_0_15px_rgba(255,215,0,0.3)]">🌙</span>
+            <motion.div animate={{ opacity: [0.3, 0.8, 0.3] }} transition={{ repeat: Infinity, duration: 3 }} className="absolute -top-4 -left-8 text-lg">✨</motion.div>
+          </motion.div>
+        ) : (
+          <motion.div 
+            key="day-sky"
+            initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.8 }}
+            className="absolute top-20 right-10 pointer-events-none text-5xl drop-shadow-[0_0_20px_rgba(255,165,0,0.3)]"
+          >
+            ☀️
+          </motion.div>
+        )}
+      </AnimatePresence>
+      
+      {/* 1. 상단 헤더: 로고 + 테마토글 + 설정 */}
+      <header className="flex justify-between items-center mb-10 z-20">
+        <h1 className="text-2xl font-black tracking-tighter" style={{ color: theme.text }}>cof/fee</h1>
+      </header>
 
-    /* 1. 배경을 더 깨끗하게, 중앙 집중형 레이아웃 */
-    <div className="flex flex-col min-h-screen items-center px-6 py-16 bg-[#FDFAF6] text-gray-900 font-sans max-w-lg mx-auto">
-      
-      {/* 로고 영역 (더 심플하게) */}
-      <h1 className="text-4xl font-black text-[#5C3D2E] tracking-tighter mb-2">cof/fee</h1>
-      
-      {/* 2. 트랙 배지 (더 부드럽게) */}
-      <div className="mb-6">
-        <span className={`px-4 py-1.5 rounded-full text-xs font-bold ${isTapering ? 'bg-[#5C3D2E] text-white' : 'bg-green-100 text-green-700'}`}>
-          {isTapering ? '👋 이별 트랙 진행 중' : '🌿 안전 트랙 유지 중'}
+      {/* 2. 트랙 표시 */}
+      <div className="flex justify-center mb-8 z-20">
+        <span className="px-4 py-1 rounded-full text-[10px] font-black uppercase tracking-widest shadow-sm transition-colors"
+          style={{ 
+            backgroundColor: isDark ? 'rgba(255,255,255,0.1)' : (isTapering ? '#5C3D2E' : '#DCFCE7'), 
+            color: isDark ? theme.text : (isTapering ? 'white' : '#15803D') 
+          }}>
+          {isTapering ? 'Tapering Track' : 'Safe Track'}
         </span>
       </div>
 
-      {/* 3. 메인 인터랙티브 영역: 서클과 캐릭터 통합 */}
-      <div 
-        onClick={toggleView} 
-        className="flex-1 w-full flex flex-col items-center justify-center cursor-pointer active:scale-[0.98] transition-all"
-        title="클릭하여 잔존량/총량 전환"
-      >
-        {/* 라벨 (더 세련된 폰트와 컬러) */}
-        <h2 className="text-sm font-black text-[#E57B3E] mb-8 bg-[#FFEAE8] py-1.5 px-4 rounded-full">
-          {displayLabel}
-        </h2>
-
-        <p className="text-xs text-gray-400 mt-2 font-medium">
-        반감기(5시간)를 적용한 실시간 잔존량
-        </p>
-
-        {/* 4. 메인 원형 게이지 & 섭취량 (더 큼직하게, 숫자 중심) */}
-        <div className="flex justify-center items-center mb-16 relative">
-          <svg className="w-72 h-72 transform -rotate-90">
-            <circle cx="144" cy="144" r={100} fill="transparent" stroke="#EFEBE4" strokeWidth="20" />
+      {/* 메인 비주얼 스테이지 (캐릭터가 게이지를 안고 있는 형태) */}
+      <div className="flex-1 flex flex-col items-center justify-center relative">
+        <div className="relative cursor-pointer" onClick={() => setShowRemaining(!showRemaining)}>
+          
+          {/* 게이지 아우라 (생리 모드 시 활성화) */}
+          <div className={`absolute inset-0 rounded-full transition-all duration-1000 ${isMenstruating ? 'shadow-[0_0_40px_rgba(248,113,113,0.2)] dark:shadow-[0_0_50px_rgba(251,113,133,0.4)]' : ''}`} />
+          
+          <svg className="w-80 h-80 transform -rotate-90">
+            <circle cx="160" cy="160" r={radius} fill={isDark ? theme.card : 'white'} fillOpacity="0.5" stroke={theme.gaugeBg} strokeWidth="18" />
             <circle
-              cx="144" cy="144" r={100}
-              fill="transparent"
-              stroke={percentage > 80 ? '#E05252' : '#E57B3E'}
-              strokeWidth="20" strokeLinecap="round"
+              cx="160" cy="160" r={radius} fill="transparent"
+              stroke={isMenstruating ? '#F87171' : (percentage > 80 ? '#E05252' : theme.accent)}
+              strokeWidth="18" strokeLinecap="round"
               strokeDasharray={circumference} strokeDashoffset={strokeDashoffset}
               className="transition-all duration-1000 ease-out"
             />
+            {/* 상단 궤도 점 (스케치 반영) */}
+            {isMenstruating && (
+              <circle cx="160" cy={160-radius} r="5" fill="#EF4444" className="animate-pulse" />
+            )}
           </svg>
-          <div className="absolute flex flex-col items-center justify-center">
-            <span className="text-6xl font-black text-gray-800 tracking-tight">
-              {Math.floor(displayAmount)}<span className="text-2xl font-bold ml-1 text-gray-400">mg</span>
-            </span>
-            <span className="text-sm text-gray-400 font-bold mt-1">
-              / {Math.round(dailyGoal)}mg
-            </span>
+
+          {/* 중앙 수치 */}
+          <div className="absolute inset-0 flex flex-col items-center justify-center">
+            <span className="text-[10px] font-black mb-1 uppercase tracking-widest opacity-60" style={{ color: theme.accent }}>{displayLabel}</span>
+            <div className="flex items-baseline">
+              <span className="text-6xl font-black tracking-tighter" style={{ color: theme.text }}>{Math.floor(displayAmount)}</span>
+              <span className="text-xl font-bold opacity-30 ml-1">mg</span>
+            </div>
+            <span className="text-xs font-bold mt-2 opacity-40">/ {Math.round(goal)}mg</span>
+          </div>
+
+          {/* 캐릭터 배치: 게이지 왼쪽 하단을 안고 있는 느낌 */}
+          <div className="absolute -bottom-6 -left-6 w-36 h-36 z-20">
+            <img 
+              src={characterImages[characterStatus]} 
+              alt="character" 
+              className={`w-full h-full object-contain animate-bounce ${isDark ? 'brightness-110 sepia-[0.1]' : ''}`}
+              style={{ animationDuration: '4s' }}
+            />
           </div>
         </div>
 
-
-        {/* 5. 캐릭터 영역: 네가 만든 이미지로 교체! */}
-        <div className="flex flex-col items-center justify-center mb-12">
-          {/* 이미지 연동 (id 기반) */}
-          <div className="w-32 h-32 mb-6">
-            <img 
-            // characterImages 지도에서 characterStatus 주소를 찾고, 없으면 relaxbeen을 보여줌
-            src={characterImages[characterStatus] || relaxbeen} 
-            alt="Cof/fee Character" 
-            className="w-full h-full object-contain animate-bounce"
-          />
-          </div>
-          
-          {/* 3. [애니메이션 적용 ✨] */}
+        {/* 4. 말풍선 메시지: 테마 적용 */}
+        <div className="mt-12 w-full max-w-[280px]">
           <AnimatePresence mode="wait">
-            <motion.p
+            <motion.div
               key={currentMessage}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              transition={{ duration: 0.3 }}
-              className="text-sm text-gray-500 font-medium text-center bg-white py-2 px-5 rounded-full shadow-inner border border-gray-100"
+              initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}
+              className="p-5 rounded-[28px] shadow-sm border relative transition-colors"
+              style={{ backgroundColor: theme.card, borderColor: theme.border }}
             >
-              {currentMessage}
-            </motion.p>
+              <div className="absolute -top-2 left-10 w-4 h-4 rotate-45 border-l border-t" style={{ backgroundColor: theme.card, borderColor: theme.border }} />
+              <p className="text-sm font-bold text-center leading-relaxed" style={{ color: theme.text }}>
+                {isMenstruating && <span className="text-red-400 mr-1">🩸</span>}
+                {currentMessage}
+              </p>
+            </motion.div>
           </AnimatePresence>
         </div>
       </div>
 
-      {/* 6. 음료 추가 버튼 (더 크고 둥글게) */}
-      <div className="w-full mt-auto mb-16">
+      {/* 5. 하단 추가 버튼: 아이콘 추가 */}
+      <div className="mt-8 z-20">
         <button 
           onClick={() => navigate('/add')}
-          className="w-full bg-[#E57B3E] hover:bg-[#d66b2d] text-white py-5 rounded-[25px] font-bold text-xl flex justify-center items-center gap-2 shadow-sm transition-colors"
+          className="w-full py-5 rounded-[30px] font-black text-xl shadow-xl transition-all active:scale-[0.97] flex items-center justify-center gap-2"
+          style={{ backgroundColor: theme.accent, color: 'white' }}
         >
-          <span className="text-2xl leading-none">+</span> 음료 추가
+          <Plus size={24} strokeWidth={3} />
+          음료 추가
         </button>
       </div>
-      
     </div>
   );
 }
