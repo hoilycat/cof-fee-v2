@@ -56,6 +56,7 @@ const Onboarding = () => {
 
   return (
    <div className="min-h-screen bg-[#FDFAF6] p-6 flex flex-col items-center">
+    
       <div className="w-full max-w-lg">
       
       {/* 1단계: 기본 정보 입력 */}

@@ -2,11 +2,12 @@
 import { useAtomValue } from 'jotai';
 import { caffeineLogsAtom, dailyGoalAtom, userProfileAtom } from './useCaffeineStore'; // dailyGoalAtom 추가
 import { getTotalRemainingCaffeine, 
-         getSleepStatus, 
+        //  getSleepStatus, 
          getCharacterStatus, 
          getPersonalizedGoal, 
          getDynamicHalfLife  
 } from '../lib/utiles';
+import { predictSleepReadyTime, getHoursSinceLastDrink, getWithdrawalWarning } from '../lib/utiles';
 
 export const useCaffeine = () => {
     const logs = useAtomValue(caffeineLogsAtom);
@@ -22,7 +23,17 @@ export const useCaffeine = () => {
     // 2. '이별 트랙'이면 감량 목표를, 아니면 일반 목표를 사용하도록 계산
     const currentGoal = user.isTapering ? getPersonalizedGoal(user) : dailyGoal;
     
-    const sleepStatus = getSleepStatus(totalCaffeine);
+    // const sleepStatus = getSleepStatus(totalCaffeine);
+
+
+
+        // 수면 예측 시간 계산
+    const sleepReadyTime = predictSleepReadyTime(totalCaffeine, halfLife);
+    
+    // 금단 증상 분석
+    const withdrawalInfo = getWithdrawalWarning(logs);
+    const hoursSinceLastDrink = getHoursSinceLastDrink(logs);
+
     
     // 3. characterStatus 계산 시 계산된 currentGoal을 전달
     const characterStatus = getCharacterStatus(totalCaffeine, currentGoal);
@@ -30,9 +41,12 @@ export const useCaffeine = () => {
     return { 
         totalCaffeine, 
         goal: currentGoal, // UI에서 보여줄 현재 목표
-        sleepStatus, 
+        // sleepStatus, 
         characterStatus, 
         isTapering: user.isTapering,
-        isMenstruating: user.isMenstruating
+        isMenstruating: user.isMenstruating,
+        sleepReadyTime, // 대시보드에 전달
+        withdrawalInfo, // 대시보드에 전달
+        hoursSinceLastDrink
     };
 };

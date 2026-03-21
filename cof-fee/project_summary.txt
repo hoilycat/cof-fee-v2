@@ -1,6 +1,22 @@
 
 
-==================================================FILE:.\code_gather.py
+==================================================FILE:./tailwind.config.js
+==================================================
+
+/** @type {import('tailwindcss').Config} */
+export default {
+  content: ["./index.html", "./src/**/*.{ts,tsx}"],
+  darkMode: 'class',
+  theme: { 
+    extend: {
+      
+    }, 
+  },
+  plugins: [],
+}
+
+
+==================================================FILE:./code_gather.py
 ==================================================
 
 import os
@@ -26,7 +42,7 @@ with open(output_file, 'w', encoding='utf-8') as f:
                     
 print(f"모든 코드가{output_file}에 저장 되었습니다")
 
-==================================================FILE:.\eslint.config.js
+==================================================FILE:./eslint.config.js
 ==================================================
 
 import js from '@eslint/js'
@@ -54,41 +70,7 @@ export default defineConfig([
 ])
 
 
-==================================================FILE:.\postcss.config.js
-==================================================
-
-export default {
-  plugins: {
-    tailwindcss: {},
-    autoprefixer: {},
-  },
-}
-
-
-==================================================FILE:.\tailwind.config.js
-==================================================
-
-/** @type {import('tailwindcss').Config} */
-export default {
-  content: ["./index.html", "./src/**/*.{ts,tsx}"],
-  darkMode: 'class',
-  theme: { 
-    extend: {
-      backgroundImage: {
-        // 별빛이 내림
-        'stars': 'radial-gradient(0.5px 0.5px at 10px 10px, #fff, rgba(0,0,0,0)), radial-gradient(1px 1px at 20px 50px, #fff, rgba(0,0,0,0)), radial-gradient(0.5px 0.5px at 40px 90px, #fff, rgba(0,0,0,0)), radial-gradient(1px 1px at 80px 10px, #fff, rgba(0,0,0,0)), radial-gradient(1px 1px at 120px 60px, #fff, rgba(0,0,0,0)), radial-gradient(0.5px 0.5px at 150px 130px, #fff, rgba(0,0,0,0))'
-      },
-      backgroundSize: {
-        // 500px마다 반복
-        'stars': '500px 500px',
-      }
-    }, 
-  },
-  plugins: [],
-}
-
-
-==================================================FILE:.\vite.config.ts
+==================================================FILE:./vite.config.ts
 ==================================================
 
 import { defineConfig } from 'vite'
@@ -100,7 +82,43 @@ export default defineConfig({
 })
 
 
-==================================================FILE:.\src\App.tsx
+==================================================FILE:./postcss.config.js
+==================================================
+
+export default {
+  plugins: {
+    tailwindcss: {},
+    autoprefixer: {},
+  },
+}
+
+
+==================================================FILE:./types/caffeine.d.ts
+==================================================
+
+
+
+==================================================FILE:./styles/index.css
+==================================================
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html, body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+}
+
+#root {
+  width: 100%;
+  min-height: 100vh;
+}
+
+==================================================FILE:./src/App.tsx
 ==================================================
 
 import { BrowserRouter, Routes, Route, Link, useLocation } from 'react-router-dom';
@@ -132,14 +150,14 @@ const BottomNav = () => {
 
   
   return (
-    <nav className="fixed bottom-0 left-0 w-full bg-white dark:bg-[#3D2B1F] border-t border-gray-200 dark:border-white/5 pb-safe pt-2 px-6 flex justify-around items-center z-50 transition-color">
+    <nav className="fixed bottom-0 left-0 w-full bg-white dark:bg-[#3A312B] border-t border-gray-200 dark:border-white/5 pb-safe pt-2 px-6 flex justify-around items-center z-50 transition-color">
       {navItems.map((item) => {
         const isActive = currentPath === item.path;
         return (
           <Link 
             key={item.label} 
             to={item.path} 
-            className={`flex flex-col items-center p-3 transition-colors ${isActive ? 'text-[#E57B3E] dark:text-[#D97706]' : 'text-gray-400 dark:text-white/20'}`}          
+            className={`flex flex-col items-center p-3 transition-colors ${isActive ? 'text-[#E57B3E] dark:text-[#D97706]' : 'text-gray-400 dark:text-[#A3978F]'}`}          
             >
             <span className="text-2xl mb-1">{item.icon}</span>
             <span className={`text-[11px] ${isActive ? 'font-bold' : 'font-medium'}`}>{item.label}</span>
@@ -156,16 +174,16 @@ function App() {
 
 
   // 테마에 따른 배경색 정의
-  const bgColor = isDark ? '#2C1B12' : '#FDFAF6';
+  const bgColor = isDark ? '#483C32' : '#FDFAF6';
   const textColor = isDark ? '#F5E8D3' : '#5C3D2E';
 
 // 테마별 색상 정의
   const theme = isDark ? {
-    bg: '#2C1B12',
-    nav: '#3D2B1F', // 하단 바 색상
-    text: '#F5E8D3',
-    navText: '#8D776A',
-    active: '#D97706'
+    bg: '#483C32',
+    nav: '#3A312B', 
+    text: '#F5E8D3',   
+    navText: '#A3978F',
+    active: '#E57B3E'  
   } : {
     bg: '#FDFAF6',
     nav: '#FFFFFF',
@@ -196,7 +214,7 @@ function App() {
       <motion.div 
         animate={{ backgroundColor: bgColor }}
         transition={{ duration: 0.5 }}
-        className="w-full min-h-screen font-sans pb-28 transition-colors"
+        className="w-full min-h-screen font-sans transition-colors"
         style={{ color: textColor }}
       >
         <Routes>
@@ -221,7 +239,7 @@ function App() {
 
 export default App;
 
-==================================================FILE:.\src\main.tsx
+==================================================FILE:./src/main.tsx
 ==================================================
 
 import { StrictMode } from 'react'
@@ -236,18 +254,68 @@ createRoot(document.getElementById('root')!).render(
 )
 
 
-==================================================FILE:.\src\hooks\useCaffeine.ts
+==================================================FILE:./src/components/SymptomModal.tsx
+==================================================
+
+import { motion } from 'framer-motion';
+import { useSetAtom } from 'jotai';
+import { symptomLogsAtom, type SymptomLog } from '../hooks/useCaffeineStore';
+import { X } from 'lucide-react';
+
+const SYMPTOMS = [
+  { id: 'HEADACHE', label: '두통 🤕' },
+  { id: 'FATIGUE', label: '무기력/피로 😴' },
+  { id: 'CRAMPS', label: '근육경련/떨림 🫨' },
+  { id: 'RUNNY_NOSE', label: '콧물/재채기 🤧' },
+];
+
+export const SymptomModal = ({ onClose }: { onClose: () => void }) => {
+  const setSymptomLogs = useSetAtom(symptomLogsAtom);
+  
+  const handleRecord = (type: SymptomLog['type']) => {
+    const newLog :SymptomLog = {
+      id: crypto.randomUUID(),
+      type,
+      recordTime: new Date().toISOString(),
+      severity: 3 as const
+    };
+    setSymptomLogs(prev => [...prev, newLog]);
+    alert("상태가 기록되었습니다. 나중에 통계에서 분석해 드릴게요!");
+    onClose();
+  };
+
+  return (
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="fixed inset-0 z-[100] flex items-end justify-center bg-black/60 p-4">
+      <motion.div initial={{ y: 100 }} animate={{ y: 0 }} className="w-full max-w-md bg-white dark:bg-[#3A312B] rounded-[40px] p-8">
+        <div className="flex justify-between items-center mb-6">
+          <h3 className="text-xl font-black dark:text-[#F5E8D3]">지금 몸 상태는?</h3>
+          <button onClick={onClose} className="p-2 dark:text-[#A3978F]"><X /></button>
+        </div>
+        <div className="grid grid-cols-2 gap-3">
+          {SYMPTOMS.map(s => (
+            <button key={s.id} onClick={() => handleRecord(s.id as SymptomLog['type'])} className="p-5 rounded-[25px] bg-[#F4F1EA] dark:bg-[#483C32] text-sm font-bold dark:text-[#ECE0D1] hover:scale-95 transition-transform">
+              {s.label}
+            </button>
+          ))}
+        </div>
+      </motion.div>
+    </motion.div>
+  );
+};
+
+==================================================FILE:./src/hooks/useCaffeine.ts
 ==================================================
 
 // src/hooks/useCaffeine.ts
 import { useAtomValue } from 'jotai';
 import { caffeineLogsAtom, dailyGoalAtom, userProfileAtom } from './useCaffeineStore'; // dailyGoalAtom 추가
 import { getTotalRemainingCaffeine, 
-         getSleepStatus, 
+        //  getSleepStatus, 
          getCharacterStatus, 
          getPersonalizedGoal, 
          getDynamicHalfLife  
 } from '../lib/utiles';
+import { predictSleepReadyTime, getHoursSinceLastDrink, getWithdrawalWarning } from '../lib/utiles';
 
 export const useCaffeine = () => {
     const logs = useAtomValue(caffeineLogsAtom);
@@ -263,7 +331,17 @@ export const useCaffeine = () => {
     // 2. '이별 트랙'이면 감량 목표를, 아니면 일반 목표를 사용하도록 계산
     const currentGoal = user.isTapering ? getPersonalizedGoal(user) : dailyGoal;
     
-    const sleepStatus = getSleepStatus(totalCaffeine);
+    // const sleepStatus = getSleepStatus(totalCaffeine);
+
+
+
+        // 수면 예측 시간 계산
+    const sleepReadyTime = predictSleepReadyTime(totalCaffeine, halfLife);
+    
+    // 금단 증상 분석
+    const withdrawalInfo = getWithdrawalWarning(logs);
+    const hoursSinceLastDrink = getHoursSinceLastDrink(logs);
+
     
     // 3. characterStatus 계산 시 계산된 currentGoal을 전달
     const characterStatus = getCharacterStatus(totalCaffeine, currentGoal);
@@ -271,18 +349,27 @@ export const useCaffeine = () => {
     return { 
         totalCaffeine, 
         goal: currentGoal, // UI에서 보여줄 현재 목표
-        sleepStatus, 
+        // sleepStatus, 
         characterStatus, 
         isTapering: user.isTapering,
-        isMenstruating: user.isMenstruating
+        isMenstruating: user.isMenstruating,
+        sleepReadyTime, // 대시보드에 전달
+        withdrawalInfo, // 대시보드에 전달
+        hoursSinceLastDrink
     };
 };
 
 
-==================================================FILE:.\src\hooks\useCaffeineStore.ts
+==================================================FILE:./src/hooks/useCaffeineStore.ts
 ==================================================
 
 import { atomWithStorage } from 'jotai/utils';
+
+
+
+export const favoriteDrinksAtom = atomWithStorage<string[]>('favorite-drinks', []);
+
+
 
 // 1. 사용자 정보 (기획서 반영)
 export interface UserProfile {
@@ -338,7 +425,7 @@ export const symptomLogsAtom = atomWithStorage<SymptomLog[]>('symptom-logs',[]);
 
 export const dailyGoalAtom = atomWithStorage<number>('daily-goal', 400);
 
-==================================================FILE:.\src\lib\caffeineData.ts
+==================================================FILE:./src/lib/caffeineData.ts
 ==================================================
 
 export interface SizeOption {
@@ -1823,12 +1910,7 @@ export const COFFEE_BRANDS: BrandData[] = [
   } 
 ];
 
-==================================================FILE:.\src\lib\constants.ts
-==================================================
-
-
-
-==================================================FILE:.\src\lib\utiles.ts
+==================================================FILE:./src/lib/utiles.ts
 ==================================================
 
 import dayjs from "dayjs";
@@ -1854,6 +1936,26 @@ export const getTotalRemainingCaffeine = (logs: CaffeineLog[], halfLife: number)
   return logs.reduce((total, log) => 
     total + calculateCurrentCaffeine(log.caffeineAmount, log.intakeTime, halfLife), 0);
 };
+
+/* 1. 숙면 가능 시간 예측 (잔존량이 50mg 이하가 되는 시점 계산)*/
+export const predictSleepReadyTime = (totalCaffeine: number, halfLife: number) => {
+  if (totalCaffeine <= 50) return "지금 바로 가능";
+
+  // 공식: 현재량 * (0.5)^(t/halfLife) = 50 
+  // => t = halfLife * log2(현재량 / 50)
+  const hoursToWait = halfLife * (Math.log(totalCaffeine / 50) / Math.log(2));
+  
+  return dayjs().add(hoursToWait, 'hour').format('A h시 m분');
+};
+
+/*2. 마지막 섭취로부터 경과 시간 계산 (금단 현상 분석용)*/
+export const getHoursSinceLastDrink = (logs: CaffeineLog[]) => {
+  if (logs.length === 0) return 0;
+  const lastLog = [...logs].sort((a, b) => dayjs(b.intakeTime).valueOf() - dayjs(a.intakeTime).valueOf())[0];
+  return dayjs().diff(dayjs(lastLog.intakeTime), 'hour', true);
+};
+
+
 
 /**
  * 2. 스마트 맞춤형 권장량 계산 (체중 및 감량 챌린지 기반)
@@ -1942,179 +2044,161 @@ export const getCharacterStatus = (totalCaffeine: number, goal: number) => {
 
 
 
-==================================================FILE:.\src\pages\AddDrink\AddDrink.tsx
+==================================================FILE:./src/lib/constants.ts
 ==================================================
 
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useSetAtom, useAtomValue } from 'jotai';
-import { caffeineLogsAtom, userProfileAtom } from '../../hooks/useCaffeineStore';
-import { COFFEE_BRANDS, type BrandData, type CoffeeMenu, type SizeOption } from '../../lib/caffeineData';
 
-export const AddDrink = () => {
-  const navigate = useNavigate();
-  const setLogs = useSetAtom(caffeineLogsAtom);
-  const user = useAtomValue(userProfileAtom);
 
-  const [isManual, setIsManual] = useState(false);
-  const [manualCaffeine, setManualCaffeine] = useState<number>(0);
-  const [manualName, setManualName] = useState('');
+==================================================FILE:./src/pages/Settings/Settings.tsx
+==================================================
 
-  const [selectedBrand, setSelectedBrand] = useState<BrandData | null>(null);
-  const [selectedMenu, setSelectedMenu] = useState<CoffeeMenu | null>(null);
-  const [selectedSize, setSelectedSize] = useState<SizeOption | null>(null);
+import { useAtom, useSetAtom } from 'jotai';
+import { dailyGoalAtom, userProfileAtom, caffeineLogsAtom } from '../../hooks/useCaffeineStore';
 
-  const currentCaffeine = isManual ? manualCaffeine : (selectedSize?.caffeine || 0);
-  const isHighCaffeine = !isManual && selectedSize ? selectedSize.caffeine > 150 : false;
+export const Settings = () => {
+    // userProfileAtom을 사용하여 전체 유저 정보를 가져오기.
+    const [userProfile, setUserProfile] = useAtom(userProfileAtom);
+    const [dailyGoal, setDailyGoal] = useAtom(dailyGoalAtom);
+    const setLogs = useSetAtom(caffeineLogsAtom);
 
-  // 저장 버튼 활성화 조건
-  const isFormValid = isManual 
-    ? (manualName.trim() !== '' && manualCaffeine > 0) 
-    : (selectedSize !== null);
 
-  const handleAddCoffee = () => {
-    if (isManual) {
-      if (!manualName || manualCaffeine <= 0) return;
-    } else {
-      if (!selectedMenu || !selectedSize) return;
-    }
-
-    const newLog = {
-      id: Date.now().toString(),
-      caffeineAmount: currentCaffeine, 
-      intakeTime: new Date().toISOString(),
-      beverageName: isManual ? manualName : `${selectedBrand?.brand} ${selectedMenu?.name} (${selectedSize?.label})`,
-      isFasting: false,
-      price: 0,
+        // 초기화 함수
+    const handleResetAll = () => {
+        if (confirm("정말로 모든 카페인 기록을 삭제할까요? 이 작업은 되돌릴 수 없습니다.")) {
+            setLogs([]); // 기록 배열을 빈 배열로 초기화
+            alert("모든 기록이 초기화되었습니다.");
+        }
     };
 
-    setLogs((prev) => [...prev, newLog]);
-    alert(`${newLog.beverageName} 기록 완료! ☕️`);
-    navigate('/');
+    // 닉네임만 따로 업데이트하기 위한 함수
+    const setNickname = (newName: string) => {
+        setUserProfile((prev) => ({ ...prev, nickname: newName }));
+    };
+
+    return (
+        <div className="flex flex-col min-h-full px-6 py-12 max-w-2xl mx-auto">
+            
+            {/* 상단 귀여운 헤더 */}
+            <header className="flex flex-col items-center mb-12">
+                <div className="text-6xl mb-4 drop-shadow-sm">📋</div>
+                <h2 className="text-2xl font-black text-[#5C3D2E] dark:text-[#F5E8D3] mb-8">앱 설정</h2>
+                <p className="text-sm text-gray-500 dark:text-[#A3978F] mt-2 font-medium">나만의 커피 습관을 만들어봐요</p>
+            </header>
+
+            <div className="w-full space-y-6">
+                {/* 다크 모드 설정 박스 추가 */}
+                <div className="bg-[#F4F1EA] dark:bg-[#3A312B] p-6 rounded-[30px] flex items-center justify-between transition-colors">
+                    <div>
+                        <label className="block text-sm font-extrabold text-[#5C3D2E] dark:text-[#F5E8D3]">☕ 모카 다크 모드</label>
+                        <p className="text-[13px] text-gray-500 dark:text-[#A3978F] font-medium">눈이 편안한 원두색 테마로 바꿉니다</p>
+                    </div>
+                    <button 
+                        onClick={() => setUserProfile({...userProfile, isDarkMode: !userProfile.isDarkMode})}
+                        className={`w-14 h-8 rounded-full transition-all relative ${userProfile.isDarkMode ? 'bg-[#D97706]' : 'bg-gray-300'}`}
+                    >
+                        <div className={`absolute top-1 w-6 h-6 bg-white dark:bg-[#4A423B] border-gray-100 dark:border-white/5  rounded-full transition-all ${userProfile.isDarkMode ? 'left-7' : 'left-1'}`} />
+                    </button>
+                </div>
+                {/* 닉네임 설정 박스 */}
+                <div className="bg-[#F4F1EA] dark:bg-[#3A312B] p-6 rounded-[30px]">
+                    <label className="block text-sm font-extrabold text-[#5C3D2E] dark:text-[#F5E8D3] mb-3 ml-2">
+                        내 이름 (또는 애칭)
+                    </label>
+                    <input 
+                        type="text" 
+                        value={userProfile.nickname} 
+                        onChange={(e) => setNickname(e.target.value)} 
+                        placeholder="이름을 입력해주세요"
+                        className="w-full p-4 bg-white dark:bg-[#29221e] rounded-2xl text-gray-800 dark:text-[#F5E8D3] font-bold focus:outline-none focus:ring-4 focus:ring-[#F08B46]/30 transition-all border-none shadow-sm"
+                    />
+                </div>
+        
+                {/* 하루 목표 설정 박스 */}
+                <div className="bg-[#F4F1EA] dark:bg-[#3A312B] p-6 rounded-[30px]">
+                    <label className="block text-sm font-extrabold text-[#5C3D2E] dark:text-[#F5E8D3] mb-3 ml-2">
+                        하루 카페인 목표량
+                    </label>
+                    <div className="relative">
+                        <input 
+                            type="number" 
+                            value={dailyGoal} 
+                            onChange={(e) => setDailyGoal(Number(e.target.value))} 
+                            className="w-full p-4 bg-white dark:bg-[#29221e] rounded-2xl text-gray-800 dark:text-[#F5E8D3] font-bold focus:outline-none focus:ring-4 focus:ring-[#F08B46]/30 transition-all border-none shadow-sm"                        />
+                        <span className="absolute right-5 top-4 text-gray-400 dark:text-[#A3978F] font-bold">mg</span>
+                    </div>
+                    <p className="text-xs text-gray-500 mt-3 dark:text-[#A3978F] text-[13px] font-medium flex items-center gap-1 ml-2">
+                        💡 성인 일일 카페인 최대 권장량은 400mg 입니다.
+                    </p>
+                </div>
+            </div>
+
+            {/*생리모드 토글 스위치*/}
+            {userProfile.gender === 'F' && (
+            <div className="bg-[#F4F1EA] dark:bg-[#3A312B] p-6 mt-6 rounded-[30px] flex items-center justify-between">
+                <div>
+                <label className="block text-sm font-extrabold text-[#5C3D2E] dark:text-[#F5E8D3]">🩸 생리 모드</label>
+                <p className="text-[13px] text-gray-500 dark:text-[#A3978F] font-medium">카페인 분해 능력이 떨어지는 기간이에요</p>
+                </div>
+                <button 
+                onClick={() => setUserProfile({...userProfile, isMenstruating: !userProfile.isMenstruating})}
+                className={`w-14 h-8 rounded-full transition-all relative ${userProfile.isMenstruating ? 'bg-[#F87171]' : 'bg-gray-300'}`}
+                >
+                <div className={`absolute top-1 w-6 h-6 bg-white dark:bg-[#4A423B] border-gray-100 dark:border-white/5  rounded-full transition-all ${userProfile.isMenstruating ? 'left-7' : 'left-1'}`} />
+                </button>
+            </div>
+            )}
+
+
+            {/* 초기화 버튼 */}
+            <div className="mt-12">
+                <button 
+                    className="w-full py-5 rounded-3xl font-black text-lg bg-[#FFEAE8] text-[#E05252] hover:bg-[#FFD8D6] dark:bg-[#4A2723] dark:text-[#F87171] dark:hover:bg-[#5C332D]  active:scale-[0.98] transition-all shadow-sm"
+                    onClick={handleResetAll} // 함수 연결
+                >
+                    모든 기록 초기화하기
+                </button>
+            </div>
+        </div>
+    );
+};
+
+==================================================FILE:./src/pages/Goals/Goals.tsx
+==================================================
+
+import { useAtom } from 'jotai';
+import { userProfileAtom } from '../../hooks/useCaffeineStore';
+
+export const Goals = () => {
+  const [user, setUser] = useAtom(userProfileAtom);
+
+  const updateWeek = (week: number) => {
+    setUser({ ...user, taperingWeek: Math.max(1, Math.min(week, 4)) });
   };
 
   return (
-    <div className="p-6 max-w-md mx-auto">
-      <h2 className="text-2xl font-bold mb-6 text-gray-800">음료 기록하기</h2>
-
-      {/* 1. 직접 입력 전환 버튼 */}
-      <button 
-        onClick={() => {
-          setIsManual(!isManual);
-          setSelectedBrand(null);
-          setSelectedMenu(null);
-          setSelectedSize(null);
-        }}
-        className="mb-6 text-sm text-[#E57B3E] font-bold underline"
-      >
-        {isManual ? '브랜드 메뉴 선택하기' : '직접 입력하기'}
-      </button>
-
-      {/* 2. 입력 영역 분기 */}
-      {isManual ? (
-        <div className="space-y-4 mb-6">
-          <input 
-            className="w-full p-3 bg-gray-800 rounded text-white outline-none focus:ring-2 focus:ring-[#E57B3E]" 
-            placeholder="음료 이름 (예: 편의점 커피)" 
-            onChange={(e) => setManualName(e.target.value)} 
-          />
-          <div className="relative">
-            <input 
-              type="number" 
-              className="w-full p-3 bg-gray-800 rounded text-white outline-none focus:ring-2 focus:ring-[#E57B3E]" 
-              placeholder="카페인 함량" 
-              onChange={(e) => setManualCaffeine(Number(e.target.value))} 
-            />
-            <span className="absolute right-3 top-3 text-gray-500 font-bold">mg</span>
-          </div>
+    <div className="p-6 pb-28 max-w-2xl mx-auto bg-[#FDFAF6] dark:bg-transparent min-h-screen">
+      <h2 className="text-3xl font-black text-[#5C3D2E] dark:text-[#F5E8D3] mb-8">목표 관리</h2>
+      
+      {/* 챌린지 카드 */}
+      <div className="bg-white dark:bg-[#3A312B] p-8 rounded-[30px] shadow-sm  text-center">
+        <p className="text-sm font-bold text-[#E57B3E] mb-2">4주 카페인 감량 챌린지</p>
+        <h3 className="text-2xl font-black mb-6">{user.taperingWeek}주차 진행 중</h3>
+        
+        {/* 진행률 시각화 */}
+        <div className="w-full h-4 border-gray-100 dark:border-white/5 rounded-full overflow-hidden mb-8">
+          <div className="h-full bg-[#E57B3E] transition-all" style={{ width: `${(user.taperingWeek / 4) * 100}%` }} />
         </div>
-      ) : (
-        <div className="space-y-6 mb-6">
-          {/* 브랜드 선택 UI */}
-          {selectedBrand && (
-            <div className="p-4 bg-[#EFEBE4] rounded-2xl text-sm font-bold text-[#5C3D2E]">
-              {user.isTapering ? "☕️ 감량 중이에요! 디카페인은 어떨까요?" : "오늘 컨디션은 어떠신가요?"}
-            </div>
-          )}
-          
-          <div>
-            <label className="block mb-2 text-gray-400 text-sm">브랜드</label>
-            <select 
-              className="w-full p-3 bg-gray-800 rounded border border-gray-700 text-white"
-              value={selectedBrand?.id || ''}
-              onChange={(e) => {
-                const brand = COFFEE_BRANDS.find(b => b.id === e.target.value) || null;
-                setSelectedBrand(brand);
-                setSelectedMenu(null);
-                setSelectedSize(null);
-              }}
-            >
-              <option value="">브랜드를 선택하세요</option>
-              {COFFEE_BRANDS.map(brand => <option key={brand.id} value={brand.id}>{brand.brand}</option>)}
-            </select>
-          </div>
 
-          {selectedBrand && (
-            <div>
-              <label className="block mb-2 text-gray-400 text-sm">메뉴</label>
-              <select 
-                className="w-full p-3 bg-gray-800 rounded border border-gray-700 text-white"
-                value={selectedMenu?.id || ''}
-                onChange={(e) => {
-                  const menu = selectedBrand.menus.find(m => m.id === e.target.value) || null;
-                  setSelectedMenu(menu);
-                  setSelectedSize(null);
-                }}
-              >
-                <option value="">메뉴를 선택하세요</option>
-                {selectedBrand.menus.map(menu => <option key={menu.id} value={menu.id}>{menu.name}</option>)}
-              </select>
-            </div>
-          )}
-
-          {selectedMenu && (
-            <div>
-              <label className="block mb-2 text-gray-400 text-sm">사이즈</label>
-              <div className="grid grid-cols-2 gap-2">
-                {selectedMenu.sizes.map((size, idx) => (
-                  <button
-                    key={idx}
-                    className={`p-3 rounded border transition-all ${
-                      selectedSize === size ? 'bg-green-600 border-green-500 text-white' : 'bg-gray-800 border-gray-700 text-gray-300'
-                    }`}
-                    onClick={() => setSelectedSize(size)}
-                  >
-                    <div className="font-bold">{size.label}</div>
-                    <div className="text-sm opacity-80">{size.caffeine}mg</div>
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
+        <div className="flex justify-center gap-4">
+          <button onClick={() => updateWeek(user.taperingWeek - 1)} className="px-6 py-2 border-gray-100 dark:border-white/5 rounded-full font-bold">이전 주</button>
+          <button onClick={() => updateWeek(user.taperingWeek + 1)} className="px-6 py-2 text-[#5C3D2E] dark:text-[#F5E8D3] rounded-full font-bold">다음 주</button>
         </div>
-      )}
-
-      {/* 3. 공통 경고 및 버튼 영역 */}
-      {isHighCaffeine && (
-        <div className="mb-4 p-4 bg-[#FFEAE8] rounded-2xl text-sm font-bold text-[#E05252]">
-          ⚠️ 주의: 이 음료는 카페인 함량이 높습니다!
-        </div>
-      )}
-
-      <button 
-        disabled={!isFormValid}
-        onClick={handleAddCoffee}
-        className={`w-full py-4 rounded-xl font-bold text-lg transition-all ${
-          isFormValid ? 'bg-green-500 hover:bg-green-400 text-black shadow-lg' : 'bg-gray-700 text-gray-500 cursor-not-allowed'
-        }`}
-      >
-        기록하기
-      </button>
+      </div>
     </div>
   );
 };
 
-==================================================FILE:.\src\pages\Dashboard\Dashboard.tsx
+==================================================FILE:./src/pages/Dashboard/Dashboard.tsx
 ==================================================
 
 import { useState } from 'react';
@@ -2127,12 +2211,16 @@ import relaxbeen from '../../assets/characters/relaxbeen.png';
 import funnybeen from '../../assets/characters/funnybeen.png';
 import composedbeen from '../../assets/characters/composedbeen.png';
 import busybeen from '../../assets/characters/busybeen.png';
+import { SymptomModal } from '../../components/SymptomModal'; // 모달 임포트
 import { motion, AnimatePresence } from 'framer-motion';
-import { Plus } from 'lucide-react';
+import { Plus, Activity } from 'lucide-react';
+
+
 
 const Dashboard = () => { 
   const navigate = useNavigate();
-  const { totalCaffeine, characterStatus, isTapering, isMenstruating, goal } = useCaffeine();
+  const { totalCaffeine, characterStatus, isTapering, isMenstruating, goal, sleepReadyTime, withdrawalInfo } = useCaffeine();
+  const [isSymptomModalOpen, setIsSymptomModalOpen] = useState(false);
   const dailyGoal = useAtomValue(dailyGoalAtom);
   const logs = useAtomValue(caffeineLogsAtom); // 전체 기록 가져오기
 
@@ -2144,9 +2232,17 @@ const Dashboard = () => {
 
   // 1. 테마 컬러 정의 (dark: 클래스 방식으로 App.tsx에서 배경을 처리하므로, 여기선 내부 요소 색상만)
   const theme = isDark ? {
-    text: '#F5E8D3', gaugeBg: '#3D2B1F', accent: '#D97706', card: '#3D2B1F', border: 'rgba(255,255,255,0.05)'
+    text: '#F5E8D3',      
+    gaugeBg: '#3A312B',   
+    accent: '#E57B3E',    
+    card: '#3A312B',      
+    border: 'rgba(255,255,255,0.05)'
   } : {
-    text: '#5C3D2E', gaugeBg: '#EFEBE4', accent: '#E57B3E', card: '#FFFFFF', border: '#F3F4F6'
+    text: '#5C3D2E', 
+    gaugeBg: '#EFEBE4', 
+    accent: '#E57B3E', 
+    card: '#FFFFFF', 
+    border: '#F3F4F6'
   };
 
 
@@ -2174,8 +2270,6 @@ const Dashboard = () => {
     IDLE: funnybeen,
   };
   
-
-
   // 캐릭터 상태별 맞춤형 메시지 지도
   // showRemaining 조건까지 고려해서 두 배로 풍성하게!
   const characterMessages: Record<string, { remaining: string; total: string }> = {
@@ -2201,38 +2295,129 @@ const Dashboard = () => {
     ? characterMessages[characterStatus]?.remaining 
     : characterMessages[characterStatus]?.total;
 
+  //배경에 쓰일 색깔
+  const auraColors: Record<string, string[]> = {
+    DANGER: isDark 
+      ? ['#7A3E3E', '#5C2C2C', '#8F4A4A']  
+      : ['#FF4D4D', '#F43F5E', '#FFB020'], 
+    WARNING: isDark 
+      ? ['#855A30', '#66421F', '#9C6D3D']
+      : ['#FF9800', '#F97316', '#FFD700'], 
+    GOOD: isDark 
+      ? ['#4A6B4E', '#354F38', '#5E8262'] 
+      : ['#34D399', '#10B981', '#FDE047'], 
+    IDLE: isDark 
+      ? ['#4A3F35', '#3D332A', '#5C4E43']  
+      : ['#FDE68A', '#FFEDD5', '#E2E8F0'], 
+  };
+
+  // 현재 상태에 맞는 옷(색상 3개)을 꺼내오는 코드
+  const colors = auraColors[characterStatus] || auraColors.IDLE;
+
+  const AURORA_LAYERS = [
+    { w: '60%', h: '60%', x: ['-20%', '10%', '-20%'], y: ['-10%', '20%', '-10%'], scale: [1, 1.4, 1], dur: 8, pos: '-top-[10%] -left-[10%]' },
+    { w: '65%', h: '65%', x: ['20%', '-10%', '20%'], y: ['-20%', '10%', '-20%'], scale: [1.2, 1, 1.2], dur: 10, pos: '-top-[10%] -right-[10%]' },
+    { w: '60%', h: '60%', x: ['-10%', '20%', '-10%'], y: ['20%', '-10%', '20%'], scale: [1, 1.3, 1], dur: 11, pos: '-bottom-[10%] -left-[10%]' },
+    { w: '70%', h: '70%', x: ['10%', '-20%', '10%'], y: ['10%', '-20%', '10%'], scale: [1.3, 1, 1.3], dur: 13, pos: '-bottom-[10%] -right-[10%]' },
+  ];
+  
+  // 고정식 별빛 (큰별, 작은별 7개씩)
+  const NIGHT_STARS = [
+    { top: '15%', left: '20%', size: 3, dur: 3 },
+    { top: '25%', left: '75%', size: 2, dur: 4 },
+    { top: '40%', left: '10%', size: 4, dur: 2.5 },
+    { top: '55%', left: '85%', size: 2, dur: 5 },
+    { top: '75%', left: '30%', size: 3, dur: 3.5 },
+    { top: '85%', left: '80%', size: 2, dur: 4.5 },
+    { top: '10%', left: '50%', size: 4, dur: 3.2 },
+
+    { top: '20%', left: '40%', size: 1.5, dur: 2.8 },
+    { top: '65%', left: '15%', size: 2.5, dur: 4.2 },
+    { top: '80%', left: '60%', size: 1.5, dur: 3.8 },
+    { top: '35%', left: '90%', size: 3, dur: 5.5 },
+    { top: '50%', left: '45%', size: 1.5, dur: 3.1 },
+    { top: '5%',  left: '85%', size: 1.5, dur: 2.2 },
+    { top: '90%', left: '20%', size: 2.5, dur: 4.8 },
+    { top: '45%', left: '65%', size: 3.5, dur: 3.7 }
+  ];
+
+
  return (
-    <div className="flex flex-col min-h-screen font-sans max-w-lg mx-auto px-6 pt-12 pb-24 relative overflow-hidden
-      /*별빛 추가*/
-      dark:before:content-[''] dark:before:absolute dark:before:inset-0 
-      dark:before:bg-stars dark:before:opacity-30 dark:before:pointer-events-none    
-    ">
-      
-      {/* --- 배경 하늘 요소 (해, 달, 별) --- */}
-      <AnimatePresence mode="wait">
-        {isDark ? (
-          <motion.div 
-            key="night-sky"
-            initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.8 }}
-            className="absolute top-20 right-10 pointer-events-none"
-          >
-            <span className="text-5xl drop-shadow-[0_0_15px_rgba(255,215,0,0.3)]">🌙</span>
-            <motion.div animate={{ opacity: [0.3, 0.8, 0.3] }} transition={{ repeat: Infinity, duration: 3 }} className="absolute -top-4 -left-8 text-lg">✨</motion.div>
-          </motion.div>
-        ) : (
-          <motion.div 
-            key="day-sky"
-            initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.8 }}
-            className="absolute top-20 right-10 pointer-events-none text-5xl drop-shadow-[0_0_20px_rgba(255,165,0,0.3)]"
-          >
-            ☀️
-          </motion.div>
-        )}
-      </AnimatePresence>
-      
+    <div className="flex flex-col min-h-screen font-sans w-full px-6 pt-12 pb-36 relative overflow-hidden">
+
+      {/* 역동적으로 움직이는 오로라 층 */}
+      <div className="absolute inset-0 pointer-events-none overflow-hidden z-0">
+        <div className="w-full h-full relative" style={{ filter: 'blur(90px)' }}> 
+          {AURORA_LAYERS.map((layer, i) => (
+            <motion.div
+              key={`aura-${i}`}
+              className={`absolute rounded-full ${layer.pos}`}
+              style={{
+                backgroundColor: colors[i % colors.length],
+                // 가독성을 위해 라이트 모드일 때 투명도를 확 낮추기
+                opacity: isDark ? 0.35 : 0.2, 
+                width: layer.w,
+                height: layer.h,
+              }}
+              animate={{ x: layer.x, y: layer.y, scale: layer.scale }}
+              transition={{ duration: layer.dur, repeat: Infinity, ease: "easeInOut" }}
+            />
+          ))}
+        </div>
+      </div>
+
+      {/* 가독성을 살리는 중앙 보호막 (비네팅 마스크) */}
+      <div 
+        className="absolute inset-0 pointer-events-none z-0"
+        style={{
+          // 가장자리는 투명하게 둬서 빛을 보여주고, 가운데는 배경색으로 덮어서 글씨를 뚜렷하게!
+          background: isDark 
+            ? 'radial-gradient(circle at center, rgba(72,60,50,0.7) 0%, transparent 70%)' 
+            : 'radial-gradient(circle at center, rgba(253,250,246,0.8) 0%, transparent 70%)'
+        }}
+      />
+
+      {/* 다크 모드 전용 반짝이는 별빛 */}
+      {isDark && (
+        <div className="absolute inset-0 pointer-events-none z-0">
+          {NIGHT_STARS.map((star, i) => (
+            <motion.div
+              key={`star-${i}`}
+              className="absolute bg-white rounded-full shadow-[0_0_6px_white]"
+              style={{ top: star.top, left: star.left, width: star.size, height: star.size }}
+              animate={{ opacity: [0.1, 0.8, 0.1], scale: [0.8, 1.2, 0.8] }}
+              transition={{ duration: star.dur, repeat: Infinity, ease: "easeInOut" }}
+            />
+          ))}
+        </div>
+      )}
+
       {/* 1. 상단 헤더: 로고 + 테마토글 + 설정 */}
       <header className="flex justify-between items-center mb-10 z-20">
-        <h1 className="text-2xl font-black tracking-tighter" style={{ color: theme.text }}>cof/fee</h1>
+        <div className="w-full max-w-sm mx-auto flex justify-between items-center px-2 relative">
+          <h1 className="text-2xl font-black tracking-tighter" style={{ color: theme.text }}>cof/fee</h1>
+           {/* --- 배경 하늘 요소 (해, 달, 별) --- */}
+            <AnimatePresence mode="wait">
+              {isDark ? (
+                <motion.div 
+                  key="night-sky"
+                  initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.8 }}
+                  className="absolute top-20 right-10 pointer-events-none"
+                >
+                  <span className="text-5xl drop-shadow-[0_0_15px_rgba(255,215,0,0.3)]">🌙</span>
+                  <motion.div animate={{ opacity: [0.3, 0.8, 0.3] }} transition={{ repeat: Infinity, duration: 3 }} className="absolute -top-4 -left-8 text-lg">✨</motion.div>
+                </motion.div>
+              ) : (
+                <motion.div 
+                  key="day-sky"
+                  initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.8 }}
+                  className="absolute top-20 right-10 pointer-events-none text-5xl drop-shadow-[0_0_20px_rgba(255,165,0,0.3)]"
+                >
+                  ☀️
+                </motion.div>
+            )}
+            </AnimatePresence>
+        </div>
       </header>
 
       {/* 2. 트랙 표시 */}
@@ -2272,7 +2457,7 @@ const Dashboard = () => {
           <div className="absolute inset-0 flex flex-col items-center justify-center">
             <span className="text-[10px] font-black mb-1 uppercase tracking-widest opacity-60" style={{ color: theme.accent }}>{displayLabel}</span>
             <div className="flex items-baseline">
-              <span className="text-6xl font-black tracking-tighter" style={{ color: theme.text }}>{Math.floor(displayAmount)}</span>
+              <span className="text-4xl font-black tracking-tighter" style={{ color: theme.text }}>{Math.floor(displayAmount)}</span>
               <span className="text-xl font-bold opacity-30 ml-1">mg</span>
             </div>
             <span className="text-xs font-bold mt-2 opacity-40">/ {Math.round(goal)}mg</span>
@@ -2308,8 +2493,40 @@ const Dashboard = () => {
         </div>
       </div>
 
+      {/* 4. 메시지 및 추가 정보 카드 영역 */}
+      <div className="mt-12 w-full max-w-[320px] space-y-4 z-20">
+        
+        {/* 수면 예측 카드: 진짜 데이터 적용! */}
+        <div className="bg-white dark:bg-[#3A312B] p-5 rounded-[28px] shadow-sm border border-gray-50 dark:border-white/5 flex justify-between items-center">
+           <div>
+              <p className="text-[10px] font-black opacity-30 uppercase tracking-tighter mb-0.5 dark:text-white">Sleep Prediction</p>
+              <p className="text-sm font-bold dark:text-[#ECE0D1]">{sleepReadyTime} 이후 숙면 가능 🌙</p>
+           </div>
+           <div className="w-10 h-10 bg-[#F4F1EA] dark:bg-[#483C32] rounded-full flex items-center justify-center text-lg">💤</div>
+        </div>
+
+        {/* 금단 증상 경고 (조건부 렌더링) */}
+        {withdrawalInfo?.isWarning && (
+          <div className="bg-red-50 dark:bg-red-900/20 p-5 rounded-[28px] border border-red-100 dark:border-red-900/30">
+            <p className="text-xs font-bold text-red-500">{withdrawalInfo.message}</p>
+          </div>
+        )}
+
+        {/* 몸 상태 기록 버튼 */}
+        <button 
+          onClick={() => setIsSymptomModalOpen(true)}
+          className="w-full bg-[#F4F1EA] dark:bg-[#483C32] p-5 rounded-[28px] flex justify-between items-center group active:scale-95 transition-all"
+        >
+           <div className="flex items-center gap-3">
+              <Activity size={18} className="text-[#E57B3E]" />
+              <span className="text-sm font-bold dark:text-[#ECE0D1]">지금 컨디션 기록하기</span>
+           </div>
+           <span className="text-xs opacity-30 dark:text-white">GO</span>
+        </button>
+      </div>
+
       {/* 5. 하단 추가 버튼: 아이콘 추가 */}
-      <div className="mt-8 z-20">
+      <div className="mt-8 z-20 w-full max-w-md mx-auto">
         <button 
           onClick={() => navigate('/add')}
           className="w-full py-5 rounded-[30px] font-black text-xl shadow-xl transition-all active:scale-[0.97] flex items-center justify-center gap-2"
@@ -2319,49 +2536,216 @@ const Dashboard = () => {
           음료 추가
         </button>
       </div>
+
+      {/* 증상 모달 */}
+      {isSymptomModalOpen && <SymptomModal onClose={() => setIsSymptomModalOpen(false)} />}
     </div>
   );
 }
 
 export default Dashboard;
 
-==================================================FILE:.\src\pages\Goals\Goals.tsx
+==================================================FILE:./src/pages/AddDrink/AddDrink.tsx
 ==================================================
 
-import { useAtom } from 'jotai';
-import { userProfileAtom } from '../../hooks/useCaffeineStore';
+import { useState, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useSetAtom, useAtomValue, useAtom } from 'jotai';
+import { caffeineLogsAtom, userProfileAtom, favoriteDrinksAtom } from '../../hooks/useCaffeineStore';
+import { COFFEE_BRANDS, type BrandData, type CoffeeMenu, type SizeOption } from '../../lib/caffeineData';
+import { Search, Star, X, ArrowLeft } from 'lucide-react';
 
-export const Goals = () => {
-  const [user, setUser] = useAtom(userProfileAtom);
+export const AddDrink = () => {
+  const navigate = useNavigate();
+  const setLogs = useSetAtom(caffeineLogsAtom);
+  const user = useAtomValue(userProfileAtom); // 'user'를 아래 UI에서 팁 노출용으로 사용합니다.
+  const [favorites, setFavorites] = useAtom(favoriteDrinksAtom);
 
-  const updateWeek = (week: number) => {
-    setUser({ ...user, taperingWeek: Math.max(1, Math.min(week, 4)) });
+  const [searchTerm, setSearchTerm] = useState('');
+  const [isManual, setIsManual] = useState(false);
+  const [manualCaffeine, setManualCaffeine] = useState<number>(0);
+  const [manualName, setManualName] = useState('');
+  const [isFasting, setIsFasting] = useState(false); 
+
+  const [selectedMenuInfo, setSelectedMenuInfo] = useState<{brand: BrandData, menu: CoffeeMenu} | null>(null);
+  const [selectedSize, setSelectedSize] = useState<SizeOption | null>(null);
+
+  // --- 계산 로직 (currentCaffeine을 handleAddCoffee에서 사용함) ---
+  const currentCaffeine = isManual ? manualCaffeine : (selectedSize?.caffeine || 0);
+  const isHighCaffeine = !isManual && selectedSize ? selectedSize.caffeine > 150 : false;
+  
+  // 음료 이름 결정
+  const drinkName = isManual 
+    ? manualName 
+    : selectedMenuInfo ? `${selectedMenuInfo.brand.brand} ${selectedMenuInfo.menu.name} (${selectedSize?.label || ''})` : '';
+
+  const allMenus = useMemo(() => {
+    const list: { brand: BrandData; menu: CoffeeMenu; isFav: boolean; key: string }[] = [];
+    COFFEE_BRANDS.forEach((brand: BrandData) => {
+      brand.menus.forEach((menu: CoffeeMenu) => {
+        const key = `${brand.id}_${menu.id}`;
+        list.push({ brand, menu, isFav: favorites.includes(key), key });
+      });
+    });
+    return list;
+  }, [favorites]);
+
+  const filteredMenus = useMemo(() => {
+    const term = searchTerm.toLowerCase();
+    if (!term) return allMenus.filter(m => m.isFav); 
+    return allMenus.filter(m => 
+      m.brand.brand.toLowerCase().includes(term) || 
+      m.menu.name.toLowerCase().includes(term)
+    );
+  }, [searchTerm, allMenus]);
+
+  const toggleFavorite = (e: React.MouseEvent, key: string) => {
+    e.stopPropagation();
+    setFavorites((prev: string[]) => 
+      prev.includes(key) ? prev.filter((f: string) => f !== key) : [...prev, key]
+    );
+  };
+
+  const isFormValid = isManual 
+    ? (manualName.trim() !== '' && manualCaffeine > 0) 
+    : (selectedSize !== null);
+
+  const handleAddCoffee = () => {
+    // 경고가 떴던 currentCaffeine과 drinkName을 여기서 사용합니다.
+    const newLog = {
+      id: crypto.randomUUID(),
+      caffeineAmount: currentCaffeine,
+      intakeTime: new Date().toISOString(),
+      beverageName: drinkName,
+      isFasting,
+      price: 0,
+    };
+
+    setLogs((prev) => [...prev, newLog]);
+    alert(`${drinkName} 기록 완료! ☕️`);
+    navigate('/');
   };
 
   return (
-    <div className="p-6 pb-28 max-w-2xl mx-auto bg-[#FDFAF6] dark:bg-transparent min-h-screen">
-      <h2 className="text-3xl font-black text-[#5C3D2E] dark:text-[#F5E8D3] mb-8">목표 관리</h2>
-      
-      {/* 챌린지 카드 */}
-      <div className="bg-white dark:bg-[#3D2B1F] p-8 rounded-[30px] shadow-sm  text-center">
-        <p className="text-sm font-bold text-[#E57B3E] mb-2">4주 카페인 감량 챌린지</p>
-        <h3 className="text-2xl font-black mb-6">{user.taperingWeek}주차 진행 중</h3>
-        
-        {/* 진행률 시각화 */}
-        <div className="w-full h-4 border-gray-100 dark:border-white/5 rounded-full overflow-hidden mb-8">
-          <div className="h-full bg-[#E57B3E] transition-all" style={{ width: `${(user.taperingWeek / 4) * 100}%` }} />
-        </div>
+    <div className="p-6 max-w-md mx-auto min-h-screen pb-32">
+      <header className="flex items-center gap-4 mb-8">
+        <button 
+          onClick={() => selectedMenuInfo || isManual ? (setSelectedMenuInfo(null), setIsManual(false), setSelectedSize(null)) : navigate(-1)} 
+          className="p-2 dark:text-[#ECE0D1]"
+        >
+          <ArrowLeft size={24} />
+        </button>
+        <h2 className="text-2xl font-black text-gray-800 dark:text-[#ECE0D1]">음료 기록</h2>
+      </header>
 
-        <div className="flex justify-center gap-4">
-          <button onClick={() => updateWeek(user.taperingWeek - 1)} className="px-6 py-2 border-gray-100 dark:border-white/5 rounded-full font-bold">이전 주</button>
-          <button onClick={() => updateWeek(user.taperingWeek + 1)} className="px-6 py-2 text-[#5C3D2E] dark:text-[#F5E8D3] text-white rounded-full font-bold">다음 주</button>
+      {!selectedMenuInfo && !isManual ? (
+        <>
+          {/* 💡 감량 트랙 진행 중일 때 팁 노출 (user 활용) */}
+          {user.isTapering && (
+            <div className="mb-6 p-4 bg-[#EFEBE4] dark:bg-[#3A312B] rounded-2xl text-xs font-bold text-[#5C3D2E] dark:text-[#ECE0D1] border border-[#E57B3E]/20">
+              👋 감량 트랙 진행 중이시네요! 오늘은 디카페인 메뉴를 찾아보는 건 어떨까요?
+            </div>
+          )}
+
+          <div className="relative mb-6">
+            <Search className="absolute left-4 top-3.5 text-gray-400" size={20} />
+            <input 
+              className="w-full p-4 pl-12 bg-white dark:bg-[#3A312B] rounded-[20px] shadow-sm border-none outline-none focus:ring-2 focus:ring-[#E57B3E] dark:text-[#ECE0D1]"
+              placeholder="브랜드나 메뉴를 검색하세요"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+            {searchTerm && <X className="absolute right-4 top-3.5 text-gray-400 cursor-pointer" size={20} onClick={() => setSearchTerm('')} />}
+          </div>
+
+          <button onClick={() => setIsManual(true)} className="mb-6 text-sm text-[#E57B3E] font-bold underline">찾는 메뉴가 없나요? 직접 입력하기</button>
+
+          <div className="space-y-3">
+            <p className="text-xs font-black text-gray-400 uppercase tracking-widest ml-2 mb-2">
+              {searchTerm ? 'Search Results' : 'Your Favorites ⭐'}
+            </p>
+            {filteredMenus.length > 0 ? (
+              filteredMenus.map(({ brand, menu, isFav, key }) => (
+                <div 
+                  key={key} 
+                  onClick={() => setSelectedMenuInfo({ brand, menu })}
+                  className="flex items-center justify-between p-5 bg-white dark:bg-[#3A312B] rounded-[25px] shadow-sm border border-gray-50 dark:border-white/5 active:scale-[0.98] transition-all cursor-pointer"
+                >
+                  <div className="flex flex-col">
+                    <span className="text-[10px] font-black text-[#E57B3E] opacity-70 uppercase">{brand.brand}</span>
+                    <span className="font-bold text-gray-800 dark:text-[#ECE0D1]">{menu.name}</span>
+                  </div>
+                  <button onClick={(e) => toggleFavorite(e, key)} className="p-2">
+                    <Star size={20} fill={isFav ? "#E57B3E" : "none"} color={isFav ? "#E57B3E" : "#94A3B8"} />
+                  </button>
+                </div>
+              ))
+            ) : (
+              <div className="text-center py-20 text-gray-400 font-bold">검색 결과가 없어요 ☕️</div>
+            )}
+          </div>
+        </>
+      ) : isManual ? (
+        <div className="space-y-4 animate-fade-in">
+           <input className="w-full p-5 bg-white dark:bg-[#3A312B] rounded-2xl dark:text-[#ECE0D1] outline-none shadow-sm font-bold" placeholder="음료 이름" value={manualName} onChange={(e) => setManualName(e.target.value)} />
+           <div className="relative">
+             <input type="number" className="w-full p-5 bg-white dark:bg-[#3A312B] rounded-2xl dark:text-[#ECE0D1] outline-none shadow-sm font-bold" placeholder="카페인 함량" onChange={(e) => setManualCaffeine(Number(e.target.value))} />
+             <span className="absolute right-5 top-5 font-bold text-gray-400">mg</span>
+           </div>
         </div>
-      </div>
+      ) : (
+        <div className="animate-fade-in">
+          <div className="p-6 bg-white dark:bg-[#3A312B] rounded-[30px] mb-8 text-center border border-gray-50 dark:border-white/5 shadow-sm">
+             <p className="text-sm font-black text-[#E57B3E] uppercase mb-1">{selectedMenuInfo?.brand.brand}</p>
+             <h3 className="text-xl font-black dark:text-[#ECE0D1]">{selectedMenuInfo?.menu.name}</h3>
+          </div>
+          
+          <div className="grid grid-cols-1 gap-3 mb-8">
+            {selectedMenuInfo?.menu.sizes.map((size, idx) => (
+              <button
+                key={idx}
+                onClick={() => setSelectedSize(size)}
+                className={`p-5 rounded-[25px] flex justify-between items-center border transition-all ${
+                  selectedSize === size ? 'bg-[#E57B3E] border-[#E57B3E] text-white shadow-lg' : 'bg-white dark:bg-[#3A312B] border-gray-100 dark:border-white/5 dark:text-[#ECE0D1]'
+                }`}
+              >
+                <span className="font-bold">{size.label}</span>
+                <span className={`font-black ${selectedSize === size ? 'text-white' : 'text-[#E57B3E]'}`}>{size.caffeine}mg</span>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* 공통 경고 및 푸터 */}
+      {(selectedSize || isManual) && (
+        <div className="fixed bottom-10 left-0 w-full px-6 max-w-md mx-auto z-50">
+           {isHighCaffeine && (
+              <div className="mb-4 p-4 bg-[#FFEAE8] dark:bg-red-900/20 rounded-2xl text-xs font-bold text-[#E05252] text-center border border-red-100 dark:border-red-900/30">
+                ⚠️ 주의: 이 음료는 카페인 함량이 매우 높습니다!
+              </div>
+            )}
+           <div className="flex items-center gap-3 p-5 bg-white dark:bg-[#3A312B] rounded-[25px] shadow-lg border border-gray-50 dark:border-white/5 mb-4">
+              <input 
+                  type="checkbox" id="fasting" checked={isFasting} onChange={(e) => setIsFasting(e.target.checked)}
+                  className="w-5 h-5 accent-[#E57B3E]"
+              />
+              <label htmlFor="fasting" className="text-sm font-bold dark:text-[#ECE0D1]">공복에 마셔요 (위 보호 주의! ⚠️)</label>
+           </div>
+           <button 
+             disabled={!isFormValid}
+             onClick={handleAddCoffee}
+             className="w-full py-5 bg-[#E57B3E] disabled:bg-gray-300 dark:disabled:bg-gray-700 text-white rounded-[30px] font-black text-xl shadow-xl active:scale-95 transition-all"
+           >
+             기록 완료 ☕️
+           </button>
+        </div>
+      )}
     </div>
   );
 };
 
-==================================================FILE:.\src\pages\History\History.tsx
+==================================================FILE:./src/pages/History/History.tsx
 ==================================================
 
 import { useAtom, useAtomValue } from 'jotai'; // useState는 사용하지 않으면 지워도 됩니다
@@ -2428,7 +2812,7 @@ export const History = () => {
                         exit={{ opacity: 0, x: 50, scale: 0.95 }} // 오른쪽으로 슈슉- 사라지기
                         layout // 삭제 시 다른 아이템들이 스르륵 올라오는 마법
                         transition={{ duration: 0.2 }}
-                        className="bg-white dark:bg-[#3D2B1F] p-5 rounded-3xl shadow-sm border border-gray-100 dark:border-white/5 flex justify-between items-center group transition-colors"
+                        className="bg-white dark:bg-[#3A312B] p-5 rounded-3xl shadow-sm border border-gray-100 dark:border-white/5 flex justify-between items-center group transition-colors"
                       >
                       <div>
                         <p className="font-bold text-gray-800 dark:text-[#F5E8D3]">{log.beverageName}</p>
@@ -2461,7 +2845,85 @@ export const History = () => {
   );
 };
 
-==================================================FILE:.\src\pages\Onboarding\Onboarding.tsx
+==================================================FILE:./src/pages/Stats/Stats.tsx
+==================================================
+
+import { useAtomValue } from 'jotai';
+import { caffeineLogsAtom } from '../../hooks/useCaffeineStore';
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts';
+import { userProfileAtom } from '../../hooks/useCaffeineStore';
+import dayjs from 'dayjs';
+
+export const Stats = () => {
+  const logs = useAtomValue(caffeineLogsAtom);
+
+  // 최근 7일 데이터 가공
+  const data = Array.from({ length: 7 }).map((_, i) => {
+    const date = dayjs().subtract(6 - i, 'day').format('MM/DD');
+    const total = logs
+      .filter(l => dayjs(l.intakeTime).format('MM/DD') === date)
+      .reduce((sum, l) => sum + l.caffeineAmount, 0);
+    return { date, total };
+  });
+  const isDark = useAtomValue(userProfileAtom).isDarkMode;
+
+  return (
+    <>
+    <div className="p-6 pb-28 max-w-2xl mx-auto bg-[#FDFAF6] dark:bg-transparent min-h-screen">
+      <h2 className="text-3xl font-black text-[#5C3D2E] dark:text-[#F5E8D3] mb-8">통계</h2>
+      
+      <div className="bg-white dark:bg-[#3A312B] p-6 rounded-[30px] shadow-sm h-72">
+        <ResponsiveContainer width="100%" height="100%">
+          <BarChart data={data}>
+            <XAxis dataKey="date" fontSize={12} axisLine={false} tickLine={false} />
+            <YAxis fontSize={12} axisLine={false} tickLine={false} /> 
+            <Tooltip 
+              cursor={{ 
+                // 유령 기둥 색깔 바꾸기
+                fill: isDark ? 'rgba(255, 255, 255, 0.05)' : '#F4F1EA' 
+              }} 
+              contentStyle={{ 
+                // 툴팁 상자 배경색 & 글자색 바꾸기
+                backgroundColor: isDark ? '#2C1B12' : '#FFFFFF', 
+                color: isDark ? '#F5E8D3' : '#5C3D2E',
+                border: 'none',
+                borderRadius: '16px',
+                boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+              }} 
+              itemStyle={{ 
+                // 툴팁 안의 숫자 색깔 바꾸기
+                color: isDark ? '#E57B3E' : '#E05252',
+                fontWeight: '900'
+              }}
+            />
+            <Bar dataKey="total" radius={[10, 10, 0, 0]}>
+              {data.map((entry, index) => (
+                <Cell key={index} fill={entry.total > 400 ? '#E05252' : '#E57B3E'} />
+              ))}
+            </Bar>
+          </BarChart>
+        </ResponsiveContainer>
+      </div>
+      
+      <p className="text-center text-gray-400 dark:text-[#A3978F] font-medium mt-6 text-sm">
+        빨간색 막대는 권장량(400mg)을 초과한 날이에요!
+      </p>
+    </div>
+    <div className="mt-10 bg-white dark:bg-[#3D2B1F] p-6 rounded-[30px] shadow-sm">
+    <h3 className="font-black text-[#5C3D2E] dark:text-[#F5E8D3] mb-4">💡 카페인 배출 꿀팁</h3>
+    <ul className="text-sm text-gray-600 dark:text-[#A3978F] font-medium space-y-2 list-disc pl-4">
+        <li>물 많이 마시기 (커피 1잔당 물 2잔)</li>
+        <li>가벼운 유산소 운동으로 신진대사 높이기</li>
+        <li>십자화과 채소(브로콜리, 양배추) 챙겨 먹기</li>
+        <li>단백질과 함께 섭취하여 위산 자극 줄이기</li>
+    </ul>
+    </div>
+    </>
+  );
+};
+
+
+==================================================FILE:./src/pages/Onboarding/Onboarding.tsx
 ==================================================
 
 import { useState } from 'react';
@@ -2620,218 +3082,3 @@ const Onboarding = () => {
 };
 
 export default Onboarding;
-
-==================================================FILE:.\src\pages\Settings\Settings.tsx
-==================================================
-
-import { useAtom, useSetAtom } from 'jotai';
-import { dailyGoalAtom, userProfileAtom, caffeineLogsAtom } from '../../hooks/useCaffeineStore';
-
-export const Settings = () => {
-    // userProfileAtom을 사용하여 전체 유저 정보를 가져오기.
-    const [userProfile, setUserProfile] = useAtom(userProfileAtom);
-    const [dailyGoal, setDailyGoal] = useAtom(dailyGoalAtom);
-    const setLogs = useSetAtom(caffeineLogsAtom);
-
-
-        // 초기화 함수
-    const handleResetAll = () => {
-        if (confirm("정말로 모든 카페인 기록을 삭제할까요? 이 작업은 되돌릴 수 없습니다.")) {
-            setLogs([]); // 기록 배열을 빈 배열로 초기화
-            alert("모든 기록이 초기화되었습니다.");
-        }
-    };
-
-    // 닉네임만 따로 업데이트하기 위한 함수
-    const setNickname = (newName: string) => {
-        setUserProfile((prev) => ({ ...prev, nickname: newName }));
-    };
-
-    return (
-        <div className="flex flex-col min-h-full px-6 py-12 max-w-2xl mx-auto">
-            
-            {/* 상단 귀여운 헤더 */}
-            <header className="flex flex-col items-center mb-12">
-                <div className="text-6xl mb-4 drop-shadow-sm">📋</div>
-                <h2 className="text-2xl font-black text-[#5C3D2E] dark:text-[#F5E8D3] mb-8">앱 설정</h2>
-                <p className="text-sm text-gray-500 mt-2 font-medium">나만의 커피 습관을 만들어봐요</p>
-            </header>
-
-            <div className="w-full space-y-6">
-                {/* 다크 모드 설정 박스 추가 */}
-                <div className="bg-[#F4F1EA] dark:bg-[#3D2B1F] p-6 rounded-[30px] flex items-center justify-between transition-colors">
-                    <div>
-                        <label className="block text-sm font-extrabold text-[#5C3D2E] dark:text-[#F5E8D3]">☕ 모카 다크 모드</label>
-                        <p className="text-[10px] text-gray-500 font-medium">눈이 편안한 원두색 테마로 바꿉니다</p>
-                    </div>
-                    <button 
-                        onClick={() => setUserProfile({...userProfile, isDarkMode: !userProfile.isDarkMode})}
-                        className={`w-14 h-8 rounded-full transition-all relative ${userProfile.isDarkMode ? 'bg-[#D97706]' : 'bg-gray-300'}`}
-                    >
-                        <div className={`absolute top-1 w-6 h-6 bg-white dark:bg-[#3D2B1F] border-gray-100 dark:border-white/5  rounded-full transition-all ${userProfile.isDarkMode ? 'left-7' : 'left-1'}`} />
-                    </button>
-                </div>
-                {/* 닉네임 설정 박스 */}
-                <div className="bg-[#F4F1EA] dark:bg-[#3D2B1F] p-6 rounded-[30px]">
-                    <label className="block text-sm font-extrabold text-[#5C3D2E] dark:text-[#F5E8D3] mb-3 ml-2">
-                        내 이름 (또는 애칭)
-                    </label>
-                    <input 
-                        type="text" 
-                        value={userProfile.nickname} 
-                        onChange={(e) => setNickname(e.target.value)} 
-                        placeholder="이름을 입력해주세요"
-                        className="w-full p-4 bg-white dark:bg-[#2C1B12] rounded-2xl text-gray-800 dark:text-[#F5E8D3] font-bold focus:outline-none focus:ring-4 focus:ring-[#F08B46]/30 transition-all border-none shadow-sm"
-                    />
-                </div>
-        
-                {/* 하루 목표 설정 박스 */}
-                <div className="bg-[#F4F1EA] dark:bg-[#3D2B1F] p-6 rounded-[30px]">
-                    <label className="block text-sm font-extrabold text-[#5C3D2E] dark:text-[#F5E8D3] mb-3 ml-2">
-                        하루 카페인 목표량
-                    </label>
-                    <div className="relative">
-                        <input 
-                            type="number" 
-                            value={dailyGoal} 
-                            onChange={(e) => setDailyGoal(Number(e.target.value))} 
-                            className="w-full p-4 bg-white dark:bg-[#2C1B12] rounded-2xl text-gray-800 dark:text-[#F5E8D3] font-bold focus:outline-none focus:ring-4 focus:ring-[#F08B46]/30 transition-all border-none shadow-sm"                        />
-                        <span className="absolute right-5 top-4 text-gray-400 font-bold">mg</span>
-                    </div>
-                    <p className="text-xs text-gray-500 mt-3 font-medium flex items-center gap-1 ml-2">
-                        💡 성인 일일 카페인 최대 권장량은 400mg 입니다.
-                    </p>
-                </div>
-            </div>
-
-            {/*생리모드 토글 스위치*/}
-            {userProfile.gender === 'F' && (
-            <div className="bg-[#F4F1EA] dark:bg-[#3D2B1F] p-6 mt-6 rounded-[30px] flex items-center justify-between">
-                <div>
-                <label className="block text-sm font-extrabold text-[#5C3D2E] dark:text-[#F5E8D3]">🩸 생리 모드</label>
-                <p className="text-[10px] text-gray-500 font-medium">카페인 분해 능력이 떨어지는 기간이에요</p>
-                </div>
-                <button 
-                onClick={() => setUserProfile({...userProfile, isMenstruating: !userProfile.isMenstruating})}
-                className={`w-14 h-8 rounded-full transition-all relative ${userProfile.isMenstruating ? 'bg-[#F87171]' : 'bg-gray-300'}`}
-                >
-                <div className={`absolute top-1 w-6 h-6 bg-white dark:bg-[#3D2B1F] border-gray-100 dark:border-white/5  rounded-full transition-all ${userProfile.isMenstruating ? 'left-7' : 'left-1'}`} />
-                </button>
-            </div>
-            )}
-
-
-            {/* 초기화 버튼 */}
-            <div className="mt-12">
-                <button 
-                    className="w-full py-5 rounded-3xl font-black text-lg bg-[#FFEAE8] text-[#E05252] hover:bg-[#FFD8D6] dark:bg-[#4A2723] dark:text-[#F87171] dark:hover:bg-[#5C332D]  active:scale-[0.98] transition-all shadow-sm"
-                    onClick={handleResetAll} // 함수 연결
-                >
-                    모든 기록 초기화하기
-                </button>
-            </div>
-        </div>
-    );
-};
-
-==================================================FILE:.\src\pages\Stats\Stats.tsx
-==================================================
-
-import { useAtomValue } from 'jotai';
-import { caffeineLogsAtom } from '../../hooks/useCaffeineStore';
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts';
-import { userProfileAtom } from '../../hooks/useCaffeineStore';
-import dayjs from 'dayjs';
-
-export const Stats = () => {
-  const logs = useAtomValue(caffeineLogsAtom);
-
-  // 최근 7일 데이터 가공
-  const data = Array.from({ length: 7 }).map((_, i) => {
-    const date = dayjs().subtract(6 - i, 'day').format('MM/DD');
-    const total = logs
-      .filter(l => dayjs(l.intakeTime).format('MM/DD') === date)
-      .reduce((sum, l) => sum + l.caffeineAmount, 0);
-    return { date, total };
-  });
-  const isDark = useAtomValue(userProfileAtom).isDarkMode;
-
-  return (
-    <>
-    <div className="p-6 pb-28 max-w-2xl mx-auto bg-[#FDFAF6] dark:bg-transparent min-h-screen">
-      <h2 className="text-3xl font-black text-[#5C3D2E] dark:text-[#F5E8D3] mb-8">통계</h2>
-      
-      <div className="bg-white dark:bg-[#3D2B1F] p-6 rounded-[30px] shadow-sm h-72">
-        <ResponsiveContainer width="100%" height="100%">
-          <BarChart data={data}>
-            <XAxis dataKey="date" fontSize={12} axisLine={false} tickLine={false} />
-            <YAxis fontSize={12} axisLine={false} tickLine={false} /> 
-            <Tooltip 
-              cursor={{ 
-                // 유령 기둥 색깔 바꾸기
-                fill: isDark ? 'rgba(255, 255, 255, 0.05)' : '#F4F1EA' 
-              }} 
-              contentStyle={{ 
-                // 툴팁 상자 배경색 & 글자색 바꾸기
-                backgroundColor: isDark ? '#2C1B12' : '#FFFFFF', 
-                color: isDark ? '#F5E8D3' : '#5C3D2E',
-                border: 'none',
-                borderRadius: '16px',
-                boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
-              }} 
-              itemStyle={{ 
-                // 툴팁 안의 숫자 색깔 바꾸기
-                color: isDark ? '#E57B3E' : '#E05252',
-                fontWeight: '900'
-              }}
-            />
-            <Bar dataKey="total" radius={[10, 10, 0, 0]}>
-              {data.map((entry, index) => (
-                <Cell key={index} fill={entry.total > 400 ? '#E05252' : '#E57B3E'} />
-              ))}
-            </Bar>
-          </BarChart>
-        </ResponsiveContainer>
-      </div>
-      
-      <p className="text-center text-gray-400 font-medium mt-6 text-sm">
-        빨간색 막대는 권장량(400mg)을 초과한 날이에요!
-      </p>
-    </div>
-    <div className="mt-10 bg-white dark:bg-[#3D2B1F] p-6 rounded-[30px] shadow-sm">
-    <h3 className="font-black text-[#5C3D2E] dark:text-[#F5E8D3] mb-4">💡 카페인 배출 꿀팁</h3>
-    <ul className="text-sm text-gray-600 font-medium space-y-2 list-disc pl-4">
-        <li>물 많이 마시기 (커피 1잔당 물 2잔)</li>
-        <li>가벼운 유산소 운동으로 신진대사 높이기</li>
-        <li>십자화과 채소(브로콜리, 양배추) 챙겨 먹기</li>
-        <li>단백질과 함께 섭취하여 위산 자극 줄이기</li>
-    </ul>
-    </div>
-    </>
-  );
-};
-
-
-==================================================FILE:.\styles\index.css
-==================================================
-
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-
-html, body {
-  margin: 0;
-  padding: 0;
-  width: 100%;
-  min-height: 100vh;
-  -webkit-font-smoothing: antialiased;
-}
-
-#root {
-  width: 100%;
-  min-height: 100vh;
-}
-
-==================================================FILE:.\types\caffeine.d.ts
-==================================================
-

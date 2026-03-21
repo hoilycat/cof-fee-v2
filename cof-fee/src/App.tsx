@@ -27,14 +27,14 @@ const BottomNav = () => {
 
   
   return (
-    <nav className="fixed bottom-0 left-0 w-full bg-white dark:bg-[#3D2B1F] border-t border-gray-200 dark:border-white/5 pb-safe pt-2 px-6 flex justify-around items-center z-50 transition-color">
+    <nav className="fixed bottom-0 left-0 w-full bg-white dark:bg-[#3A312B] border-t border-gray-200 dark:border-white/5 pb-safe pt-2 px-6 flex justify-around items-center z-50 transition-color">
       {navItems.map((item) => {
         const isActive = currentPath === item.path;
         return (
           <Link 
             key={item.label} 
             to={item.path} 
-            className={`flex flex-col items-center p-3 transition-colors ${isActive ? 'text-[#E57B3E] dark:text-[#D97706]' : 'text-gray-400 dark:text-white/20'}`}          
+            className={`flex flex-col items-center p-3 transition-colors ${isActive ? 'text-[#E57B3E] drop-shadow-[0_0_8px_rgba(229,123,62,0.6)] scale-110 dark:text-[#D97706]' : 'text-gray-400 dark:text-[#A3978F]'}`}          
             >
             <span className="text-2xl mb-1">{item.icon}</span>
             <span className={`text-[11px] ${isActive ? 'font-bold' : 'font-medium'}`}>{item.label}</span>
@@ -51,16 +51,16 @@ function App() {
 
 
   // 테마에 따른 배경색 정의
-  const bgColor = isDark ? '#2C1B12' : '#FDFAF6';
+  const bgColor = isDark ? '#483C32' : '#FDFAF6';
   const textColor = isDark ? '#F5E8D3' : '#5C3D2E';
 
 // 테마별 색상 정의
   const theme = isDark ? {
-    bg: '#2C1B12',
-    nav: '#3D2B1F', // 하단 바 색상
-    text: '#F5E8D3',
-    navText: '#8D776A',
-    active: '#D97706'
+    bg: '#483C32',
+    nav: '#3A312B', 
+    text: '#F5E8D3',   
+    navText: '#A3978F',
+    active: '#E57B3E'  
   } : {
     bg: '#FDFAF6',
     nav: '#FFFFFF',
@@ -91,7 +91,7 @@ function App() {
       <motion.div 
         animate={{ backgroundColor: bgColor }}
         transition={{ duration: 0.5 }}
-        className="w-full min-h-screen font-sans pb-28 transition-colors"
+        className="w-full min-h-screen font-sans transition-colors"
         style={{ color: textColor }}
       >
         <Routes>

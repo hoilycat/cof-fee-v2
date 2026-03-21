@@ -1,5 +1,11 @@
 import { atomWithStorage } from 'jotai/utils';
 
+
+
+export const favoriteDrinksAtom = atomWithStorage<string[]>('favorite-drinks', []);
+
+
+
 // 1. 사용자 정보 (기획서 반영)
 export interface UserProfile {
   nickname: string;

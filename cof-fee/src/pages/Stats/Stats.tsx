@@ -22,7 +22,7 @@ export const Stats = () => {
     <div className="p-6 pb-28 max-w-2xl mx-auto bg-[#FDFAF6] dark:bg-transparent min-h-screen">
       <h2 className="text-3xl font-black text-[#5C3D2E] dark:text-[#F5E8D3] mb-8">통계</h2>
       
-      <div className="bg-white dark:bg-[#3D2B1F] p-6 rounded-[30px] shadow-sm h-72">
+      <div className="bg-white dark:bg-[#3A312B]/70 backdrop-blur-md p-6 rounded-[30px] shadow-sm h-72">
         <ResponsiveContainer width="100%" height="100%">
           <BarChart data={data}>
             <XAxis dataKey="date" fontSize={12} axisLine={false} tickLine={false} />
@@ -55,13 +55,13 @@ export const Stats = () => {
         </ResponsiveContainer>
       </div>
       
-      <p className="text-center text-gray-400 font-medium mt-6 text-sm">
+      <p className="text-center text-gray-400 dark:text-[#A3978F] font-medium mt-6 text-sm">
         빨간색 막대는 권장량(400mg)을 초과한 날이에요!
       </p>
     </div>
     <div className="mt-10 bg-white dark:bg-[#3D2B1F] p-6 rounded-[30px] shadow-sm">
     <h3 className="font-black text-[#5C3D2E] dark:text-[#F5E8D3] mb-4">💡 카페인 배출 꿀팁</h3>
-    <ul className="text-sm text-gray-600 font-medium space-y-2 list-disc pl-4">
+    <ul className="text-sm text-gray-600 dark:text-[#A3978F] font-medium space-y-2 list-disc pl-4">
         <li>물 많이 마시기 (커피 1잔당 물 2잔)</li>
         <li>가벼운 유산소 운동으로 신진대사 높이기</li>
         <li>십자화과 채소(브로콜리, 양배추) 챙겨 먹기</li>

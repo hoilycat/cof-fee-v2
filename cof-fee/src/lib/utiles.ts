@@ -22,6 +22,25 @@ export const getTotalRemainingCaffeine = (logs: CaffeineLog[], halfLife: number)
     total + calculateCurrentCaffeine(log.caffeineAmount, log.intakeTime, halfLife), 0);
 };
 
+/* 1. 숙면 가능 시간 예측 (잔존량이 50mg 이하가 되는 시점 계산)*/
+export const predictSleepReadyTime = (totalCaffeine: number, halfLife: number) => {
+  if (totalCaffeine <= 50) return "지금 바로 가능";
+
+  // 공식: 현재량 * (0.5)^(t/halfLife) = 50 
+  // => t = halfLife * log2(현재량 / 50)
+  const hoursToWait = halfLife * (Math.log(totalCaffeine / 50) / Math.log(2));
+  
+  return dayjs().add(hoursToWait, 'hour').format('A h시 m분');
+};
+
+/*2. 마지막 섭취로부터 경과 시간 계산 (금단 현상 분석용)*/
+export const getHoursSinceLastDrink = (logs: CaffeineLog[]) => {
+  if (logs.length === 0) return 0;
+  const lastLog = [...logs].sort((a, b) => dayjs(b.intakeTime).valueOf() - dayjs(a.intakeTime).valueOf())[0];
+  return dayjs().diff(dayjs(lastLog.intakeTime), 'hour', true);
+};
+
+
 /**
  * 2. 스마트 맞춤형 권장량 계산 (체중 및 감량 챌린지 기반)
  */
@@ -100,10 +119,54 @@ export const getSleepStatus = (totalCaffeine: number) => {
 
 //카페인 함량에 따른 상태
 export const getCharacterStatus = (totalCaffeine: number, goal: number) => {
+  const hour = dayjs().hour();
   const percentage = (totalCaffeine / goal) * 100;
+
+  // 밤 10시(22시) 이후인데 잔류량이 50mg(수면 방해 기준) 이상인 경우
+  // 무조건 WARNING 이상으로 격상
+  if ((hour >= 22 || hour < 4) && totalCaffeine >= 50) {
+    return totalCaffeine >= 100 ? "DANGER" : "WARNING";
+  }
+
   if (percentage === 0) return "IDLE";
   if (percentage <= 50) return "GOOD";
   if (percentage <= 80) return "WARNING";
   return "DANGER";
+};
+
+/**
+ * 수면 세이프티 가이드 (액션 플랜)
+ */
+export const getSleepActionTip = (totalCaffeine: number) => {
+  if (totalCaffeine <= 50) return "지금 바로 꿀잠 잘 수 있는 클린한 상태예요! ✨";
+  if (totalCaffeine <= 100) return "물을 2잔 마시면 배출이 더 빨라져요! 💧";
+  return "가벼운 스트레칭으로 신진대사를 높여 배출을 도와보세요! 🏃‍♀️";
+};
+
+
+/**
+ * 카페인 각성 단계 바 로직
+ */
+export const getArousalStage = (totalCaffeine: number) => {
+  if (totalCaffeine >= 200) return { label: "강한 각성 ⚡️", color: "#E05252", tip: "심박수가 빠를 수 있어요. 물을 드세요!" };
+  if (totalCaffeine >= 100) return { label: "집중 모드 🔥", color: "#D97706", tip: "업무와 공부에 최적인 상태입니다." };
+  if (totalCaffeine >= 50) return { label: "평온한 상태 ☕️", color: "#E57B3E", tip: "은은한 에너지가 남아있어요." };
+  return { label: "카페인 프리 🥔", color: "#A3978F", tip: "뇌가 휴식하고 있는 깨끗한 상태!" };
+};
+
+
+/**
+ * 아데노신 수용체 회복률 계산 (가상 시나리오 기반)
+ * 마지막으로 많이 마신 날로부터 시간이 지날수록 회복됨
+ */
+export const getReceptorRecovery = (logs: CaffeineLog[]) => {
+  if (logs.length === 0) return 100;
+  // 최근 3일간의 평균 섭취량이 적을수록 회복률이 높다고 가정
+  const recentIntake = logs
+    .filter(l => dayjs(l.intakeTime).isAfter(dayjs().subtract(3, 'day')))
+    .reduce((sum, l) => sum + l.caffeineAmount, 0) / 3;
+  
+  const recovery = Math.max(0, 100 - (recentIntake / 400) * 100);
+  return Math.round(recovery);
 };
 

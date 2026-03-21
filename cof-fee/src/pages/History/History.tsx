@@ -62,7 +62,7 @@ export const History = () => {
                         exit={{ opacity: 0, x: 50, scale: 0.95 }} // 오른쪽으로 슈슉- 사라지기
                         layout // 삭제 시 다른 아이템들이 스르륵 올라오는 마법
                         transition={{ duration: 0.2 }}
-                        className="bg-white dark:bg-[#3D2B1F] p-5 rounded-3xl shadow-sm border border-gray-100 dark:border-white/5 flex justify-between items-center group transition-colors"
+                        className="bg-white dark:bg-[#3A312B] p-5 rounded-3xl shadow-sm border border-gray-100 dark:border-white/5 flex justify-between items-center group transition-colors"
                       >
                       <div>
                         <p className="font-bold text-gray-800 dark:text-[#F5E8D3]">{log.beverageName}</p>
