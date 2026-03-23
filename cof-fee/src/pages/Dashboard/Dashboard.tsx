@@ -1,8 +1,8 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useCaffeine } from '../../hooks/useCaffeine';
 import { useAtomValue} from 'jotai'; 
-import { dailyGoalAtom , caffeineLogsAtom, userProfileAtom } from '../../hooks/useCaffeineStore';
+import { caffeineLogsAtom, userProfileAtom } from '../../hooks/useCaffeineStore';
 import dayjs from 'dayjs';
 import relaxbeen from '../../assets/characters/relaxbeen.png';
 import funnybeen from '../../assets/characters/funnybeen.png';
@@ -10,21 +10,22 @@ import composedbeen from '../../assets/characters/composedbeen.png';
 import busybeen from '../../assets/characters/busybeen.png';
 import { SymptomModal } from '../../components/SymptomModal';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Plus, Activity, Coffee } from 'lucide-react';
+import { Plus, Activity, Coffee, X, Moon } from 'lucide-react';
 import { getSleepActionTip, getArousalStage, getSmartRecommendation  } from '../../lib/utiles';
 
 const Dashboard = () => { 
   const navigate = useNavigate();
   const { totalCaffeine, characterStatus, isTapering, isMenstruating, goal, sleepReadyTime, withdrawalInfo } = useCaffeine();
   const [isSymptomModalOpen, setIsSymptomModalOpen] = useState(false);
-  const dailyGoal = useAtomValue(dailyGoalAtom);
+  
   const logs = useAtomValue(caffeineLogsAtom); // 전체 기록 가져오기
 
   // 1. App.tsx에서 가져오는 대신, 전역 Atom에서 직접 다크모드 여부를 가져오기.
   const user = useAtomValue(userProfileAtom);
   const isDark = user.isDarkMode;
   const [showRemaining, setShowRemaining] = useState(true); // 잔존량 vs 총량 상태
-
+  const [showSleepCard, setShowSleepCard] = useState(true);
+  const [showRecCard, setShowRecCard] = useState(true);
 
   // 1. 테마 컬러 정의 (dark: 클래스 방식으로 App.tsx에서 배경을 처리하므로, 여기선 내부 요소 색상만)
   const theme = isDark ? {
@@ -41,6 +42,53 @@ const Dashboard = () => {
     border: '#F3F4F6'
   };
 
+// 🌌 1. 상태별 은하수(성운) 및 별빛 설정
+  const galaxyConfig : Record<string, { colors: string[], starCount: number, speed: number, blur: string }> ={
+    DANGER: {
+      colors: ['rgba(224, 82, 82, 0.3)', 'rgba(150, 40, 40, 0.2)', 'rgba(255, 100, 100, 0.1)'],
+      starCount: 40,
+      speed: 0.5,
+      blur: 'blur(100px)',
+    },
+    WARNING: {
+      colors: ['rgba(217, 119, 6, 0.25)', 'rgba(180, 83, 9, 0.15)', 'rgba(251, 191, 36, 0.1)'],
+      starCount: 30,
+      speed: 2,
+      blur: 'blur(80px)',
+    },
+    GOOD: {
+      colors: ['rgba(16, 185, 129, 0.2)', 'rgba(5, 150, 105, 0.1)', 'rgba(167, 243, 208, 0.05)'],
+      starCount: 20,
+      speed: 4,
+      blur: 'blur(70px)',
+    },
+    IDLE: {
+      colors: ['rgba(245, 232, 211, 0.15)', 'rgba(163, 151, 143, 0.1)', 'rgba(255, 255, 255, 0.05)'],
+      starCount: 15,
+      speed: 6,
+      blur: 'blur(60px)',
+    }
+  };
+
+  const config = galaxyConfig[characterStatus] || galaxyConfig.IDLE;
+
+  // 별빛 생성 (한 번 생성 후 유지되도록 하거나, 상태 변경 시 재계산)
+  const stars = useMemo(() => {
+    return Array.from({ length: 50 }).map((_, i) => {
+      // 아주 큰 소수를 곱하고 사인(sin) 함수를 섞어서 패턴을 완전히 깨버립니다.
+      const pseudoRandomTop = Math.abs(Math.sin(i * 12.9898) * 43758.5453) % 1;
+      const pseudoRandomLeft = Math.abs(Math.sin(i * 78.233) * 43758.5453) % 1;
+      const pseudoRandomSize = Math.abs(Math.sin(i * 45.123) * 43758.5453) % 1;
+
+      return {
+        id: i,
+        top: `${pseudoRandomTop * 100}%`,
+        left: `${pseudoRandomLeft * 100}%`,
+        size: (pseudoRandomSize * 2) + 1, // 1px ~ 3px 사이
+        duration: (pseudoRandomSize * 3) + 2, // 2s ~ 5s 사이
+      };
+    });
+  }, []); // 초기 1회만 생성
 
   // 오늘 마신 순수 총량 계산하기 (반감기 무시)
   const totalIntakeToday = logs
@@ -54,7 +102,7 @@ const Dashboard = () => {
   
 
  // 게이지 퍼센트도 이제 displayAmount(선택된 값)를 따라가게 수정!
-  const percentage = Math.min((displayAmount / dailyGoal) * 100, 100);
+  const percentage = Math.min((displayAmount / goal) * 100, 100);
   const radius = 90; 
   const circumference = 2 * Math.PI * radius;
   const strokeDashoffset = circumference - (percentage / 100) * circumference;
@@ -97,78 +145,79 @@ const Dashboard = () => {
   ? `🚨 ${withdrawalInfo.message}` // 금단 증상 구간일 때 최우선 메시지
   : (showRemaining ? characterMessages[characterStatus]?.remaining : characterMessages[characterStatus]?.total);
 
-  
-  //배경에 쓰일 색깔
-  const auraColors: Record<string, string[]> = {
-    DANGER: isDark 
-      ? ['#7A3E3E', '#5C2C2C', '#8F4A4A']  
-      : ['#FF4D4D', '#F43F5E', '#FFB020'], 
-    WARNING: isDark 
-      ? ['#855A30', '#66421F', '#9C6D3D']
-      : ['#FF9800', '#F97316', '#FFD700'], 
-    GOOD: isDark 
-      ? ['#4A6B4E', '#354F38', '#5E8262'] 
-      : ['#34D399', '#10B981', '#FDE047'], 
-    IDLE: isDark 
-      ? ['#4A3F35', '#3D332A', '#5C4E43']  
-      : ['#FDE68A', '#FFEDD5', '#E2E8F0'], 
-  };
 
-  // 현재 상태에 맞는 옷(색상 3개)을 꺼내오는 코드
-  const colors = auraColors[characterStatus] || auraColors.IDLE;
 
-  const AURORA_LAYERS = [
-    { w: '60%', h: '60%', x: ['-20%', '10%', '-20%'], y: ['-10%', '20%', '-10%'], scale: [1, 1.4, 1], dur: 8, pos: '-top-[10%] -left-[10%]' },
-    { w: '65%', h: '65%', x: ['20%', '-10%', '20%'], y: ['-20%', '10%', '-20%'], scale: [1.2, 1, 1.2], dur: 10, pos: '-top-[10%] -right-[10%]' },
-    { w: '60%', h: '60%', x: ['-10%', '20%', '-10%'], y: ['20%', '-10%', '20%'], scale: [1, 1.3, 1], dur: 11, pos: '-bottom-[10%] -left-[10%]' },
-    { w: '70%', h: '70%', x: ['10%', '-20%', '10%'], y: ['10%', '-20%', '10%'], scale: [1.3, 1, 1.3], dur: 13, pos: '-bottom-[10%] -right-[10%]' },
-  ];
-  
-  // 고정식 별빛 (큰별, 작은별 7개씩)
-  const NIGHT_STARS = [
-    { top: '15%', left: '20%', size: 3, dur: 3 },
-    { top: '25%', left: '75%', size: 2, dur: 4 },
-    { top: '40%', left: '10%', size: 4, dur: 2.5 },
-    { top: '55%', left: '85%', size: 2, dur: 5 },
-    { top: '75%', left: '30%', size: 3, dur: 3.5 },
-    { top: '85%', left: '80%', size: 2, dur: 4.5 },
-    { top: '10%', left: '50%', size: 4, dur: 3.2 },
+  const rec = getSmartRecommendation(user, totalCaffeine, goal);
 
-    { top: '20%', left: '40%', size: 1.5, dur: 2.8 },
-    { top: '65%', left: '15%', size: 2.5, dur: 4.2 },
-    { top: '80%', left: '60%', size: 1.5, dur: 3.8 },
-    { top: '35%', left: '90%', size: 3, dur: 5.5 },
-    { top: '50%', left: '45%', size: 1.5, dur: 3.1 },
-    { top: '5%',  left: '85%', size: 1.5, dur: 2.2 },
-    { top: '90%', left: '20%', size: 2.5, dur: 4.8 },
-    { top: '45%', left: '65%', size: 3.5, dur: 3.7 }
-  ];
-
- const rec = getSmartRecommendation(user, totalCaffeine, goal);
-
+ 
  return (
-    <div className="flex flex-col min-h-screen font-sans w-full px-6 pt-12 pb-36 relative overflow-hidden">
+    <div className="flex flex-col min-h-screen font-sans w-full relative overflow-hidden transition-colors duration-1000">
 
-      {/* 역동적으로 움직이는 오로라 층 */}
-      <div className="absolute inset-0 pointer-events-none overflow-hidden z-0">
-        <div className="w-full h-full relative" style={{ filter: 'blur(90px)' }}> 
-          {AURORA_LAYERS.map((layer, i) => (
-            <motion.div
-              key={`aura-${i}`}
-              className={`absolute rounded-full ${layer.pos}`}
-              style={{
-                backgroundColor: colors[i % colors.length],
-                // 가독성을 위해 라이트 모드일 때 투명도를 확 낮추기
-                opacity: isDark ? 0.35 : 0.2, 
-                width: layer.w,
-                height: layer.h,
-              }}
-              animate={{ x: layer.x, y: layer.y, scale: layer.scale }}
-              transition={{ duration: layer.dur, repeat: Infinity, ease: "easeInOut" }}
-            />
-          ))}
-        </div>
+       {/* 🌌 [신규] 동적 은하수(성운) 레이어 */}
+      <div className="absolute inset-0 pointer-events-none z-0">
+        <AnimatePresence>
+          <motion.div 
+            key={characterStatus}
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            transition={{ duration: 2 }}
+            className="w-full h-full relative"
+            style={{ filter: config.blur }}
+          >
+            {config.colors.map((color, idx) => (
+              <motion.div
+                key={idx}
+                className="absolute rounded-full"
+                style={{
+                  backgroundColor: color,
+                  width: `${60 + idx * 20}%`,
+                  height: `${60 + idx * 20}%`,
+                  top: idx % 2 === 0 ? '-10%' : '20%',
+                  left: idx % 2 === 0 ? '10%' : '-10%',
+                }}
+                animate={{
+                  x: [0, 30, -30, 0],
+                  y: [0, -40, 40, 0],
+                  scale: [1, 1.2, 0.9, 1],
+                }}
+                transition={{
+                  duration: config.speed + idx * 5,
+                  repeat: Infinity,
+                  ease: "easeInOut"
+                }}
+              />
+            ))}
+          </motion.div>
+        </AnimatePresence>
       </div>
+
+      {/* ✨동적 별빛 레이어 */}
+      {isDark && (
+        <div className="absolute inset-0 pointer-events-none z-0">
+          <AnimatePresence>
+            {stars.map((star) => (
+              <motion.div
+                key={`${characterStatus}-star-${star.id}`}
+                initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                className="absolute bg-white rounded-full"
+                style={{
+                  top: star.top,
+                  left: star.left,
+                  width: star.size,
+                  height: star.size,
+                  boxShadow: `0 0 ${star.size * 2}px white`,
+                  backgroundColor: 'white',
+                  borderRadius: '50%',
+                }}
+                transition={{
+                  duration: characterStatus === 'DANGER' ? 1 : star.duration, // Danger일 땐 미친듯이 반짝임
+                  repeat: Infinity,
+                  ease: "easeInOut"
+                }}
+              />
+            ))}
+          </AnimatePresence>
+        </div>
+      )}
 
       {/* 가독성을 살리는 중앙 보호막 (비네팅 마스크) */}
       <div 
@@ -181,20 +230,6 @@ const Dashboard = () => {
         }}
       />
 
-      {/* 다크 모드 전용 반짝이는 별빛 */}
-      {isDark && (
-        <div className="absolute inset-0 pointer-events-none z-0">
-          {NIGHT_STARS.map((star, i) => (
-            <motion.div
-              key={`star-${i}`}
-              className="absolute bg-white rounded-full shadow-[0_0_6px_white]"
-              style={{ top: star.top, left: star.left, width: star.size, height: star.size }}
-              animate={{ opacity: [0.1, 0.8, 0.1], scale: [0.8, 1.2, 0.8] }}
-              transition={{ duration: star.dur, repeat: Infinity, ease: "easeInOut" }}
-            />
-          ))}
-        </div>
-      )}
 
       {/* 상단 헤더: 로고 + 테마토글 + 설정 */}
       <header className="flex justify-between items-center mb-10 z-20">
@@ -226,7 +261,7 @@ const Dashboard = () => {
 
       {/* 트랙 표시 */}
       <div className="flex justify-center mb-8 z-20">
-        <span className="px-4 py-1 rounded-full text-[10px] font-black uppercase tracking-widest shadow-sm transition-colors"
+        <span className="px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest shadow-sm transition-colors bg-white/20 dark:bg-white/10 backdrop-blur-sm border border-white/20"
           style={{ 
             backgroundColor: isDark ? 'rgba(255,255,255,0.1)' : (isTapering ? '#5C3D2E' : '#DCFCE7'), 
             color: isDark ? theme.text : (isTapering ? 'white' : '#15803D') 
@@ -237,7 +272,7 @@ const Dashboard = () => {
 
       {/* 메인 비주얼 스테이지 (캐릭터가 게이지를 안고 있는 형태) */}
       <div className="flex-1 flex flex-col items-center justify-center relative">
-        <div className="relative cursor-pointer" onClick={() => setShowRemaining(!showRemaining)}>
+        <div className="relative flex justify-center items-center mb-8 cursor-pointer" onClick={() => setShowRemaining(!showRemaining)}>
           
           {/* 게이지 아우라 (생리 모드 시 활성화) */}
           <div className={`absolute inset-0 rounded-full transition-all duration-1000 ${isMenstruating ? 'shadow-[0_0_40px_rgba(248,113,113,0.2)] dark:shadow-[0_0_50px_rgba(251,113,133,0.4)]' : ''}`} />
@@ -260,7 +295,7 @@ const Dashboard = () => {
           {/* 중앙 수치 */}
           <div className="absolute inset-0 flex flex-col items-center justify-center">
             <span className="text-[10px] font-black mb-1 uppercase tracking-widest opacity-60" style={{ color: theme.accent }}>{displayLabel}</span>
-            <div className="flex items-baseline">
+            <div className="flex items-baseline justify-center">
               <span className="text-4xl font-black tracking-tighter" style={{ color: theme.text }}>{Math.floor(displayAmount)}</span>
               <span className="text-xl font-bold opacity-30 ml-1">mg</span>
             </div>
@@ -327,23 +362,11 @@ const Dashboard = () => {
           </AnimatePresence>
         </div>
       </div>        
+
       {/* 메시지 및 추가 정보 카드 영역 */}
       <div className="mt-12 w-full max-w-[320px] space-y-4 z-20">
-        
-        {/* 수면 예측 카드 (액션 플랜 포함) */}
-        <div className="bg-white dark:bg-[#3A312B] p-6 rounded-[30px] shadow-sm border border-gray-100 dark:border-white/5">
-                <div className="flex justify-between items-center mb-3">
-                  <span className="text-[10px] font-black opacity-30 uppercase tracking-widest">Sleep Safety Guide</span>
-                  <span className="text-lg">🌙</span>
-                </div>
-                <p className="text-sm font-black mb-1">
-                  {sleepReadyTime} 이후 숙면 가능
-                </p>
-                <p className="text-[11px] font-bold text-[#E57B3E] leading-relaxed">
-                  💡 {sleepTip}
-                </p>
-        </div>  
            
+
         {/* 금단 증상 경고 (조건부 렌더링) */}
         {withdrawalInfo?.isWarning && (
           <div className="bg-red-50 dark:bg-red-900/20 p-5 rounded-[28px] border border-red-100 dark:border-red-900/30">
@@ -351,34 +374,76 @@ const Dashboard = () => {
           </div>
         )}
 
-        {/* 몸 상태 기록 버튼 */}
-        <button 
-          onClick={() => setIsSymptomModalOpen(true)}
-          className="w-full bg-[#F4F1EA] dark:bg-[#483C32] p-5 rounded-[28px] flex justify-between items-center group active:scale-95 hover:scale-105 transition-all"
-        >
-           <div className="flex items-center gap-3">
-              <Activity size={18} className="text-[#E57B3E]" />
-              <span className="text-sm font-bold dark:text-[#ECE0D1]">지금 컨디션 기록하기</span>
-           </div>
-           <span className="text-xs opacity-30 dark:text-white">GO</span>
-        </button>
+
       </div>
-      {/* 💡 실시간 추천 카드 섹션 */}
-      <div className="mt-8 w-full max-w-[320px] z-20">
-        <p className="text-[10px] font-black opacity-30 uppercase tracking-widest ml-4 mb-2 dark:text-white">Smart Recommendation</p>
-        <div 
-          onClick={() => navigate('/add')} // 추천 카드 누르면 바로 추가 페이지로!
-          className="bg-[#E57B3E] dark:bg-[#D97706] p-6 rounded-[35px] shadow-lg text-white cursor-pointer active:scale-95 transition-all group"
-        >
-          <div className="flex justify-between items-start mb-2">
-            <h5 className="font-black text-lg group-hover:underline">{rec.title}</h5>
-            <Coffee size={20} className="opacity-50" />
-          </div>
-          <p className="text-xs font-medium opacity-90 leading-relaxed">
-            {rec.desc}
-          </p>
-        </div>
+
+      {/* 2. [지능형 플로팅 정보창] */}
+      {/* 화면 좌측 하단(데스크탑) / 중앙 하단(모바일) 배치 */}
+      <div className="fixed bottom-32 left-0 lg:left-8 w-full lg:w-auto px-6 lg:px-0 flex flex-col gap-3 z-50 pointer-events-none">
+        <AnimatePresence>
+          
+          {/* A. 수면 예측 팝업 */}
+          {showSleepCard && (
+            <motion.div 
+              initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}
+              className="pointer-events-auto w-full max-w-[320px] mx-auto lg:mx-0 bg-white/80 dark:bg-[#3A312B]/90 backdrop-blur-xl p-5 rounded-[30px] shadow-2xl border border-white/20 relative group"
+            >
+              <button 
+                onClick={() => setShowSleepCard(false)}
+                className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 p-1 hover:bg-gray-100 dark:hover:bg-white/10 rounded-full transition-all"
+              >
+                <X size={25} />
+              </button>
+              <div className="flex justify-between items-center mb-2">
+                <span className="text-[10px] font-black opacity-30 uppercase tracking-widest">Sleep Safety</span>
+                <Moon size={25} className="text-indigo-400" />
+              </div>
+              <p className="text-sm font-black mb-5 dark:text-[#ECE0D1]">
+                {sleepReadyTime.time} 이후 숙면 가능 
+                <p className="text-sm font-black mt-5 dark:text-[#ECE0D1]">
+                  <p>💡{sleepTip}</p>
+                </p>
+              </p>
+    
+              {totalCaffeine > 0 && (
+                <p className="text-[13px] font-bold text-[#E57B3E] mt-1">
+                  💡 배출까지 <span className="underline underline-offset-4">{sleepReadyTime.left}</span> 남음
+                </p>
+              )}
+            </motion.div>
+          )}
+
+          {/* B. 스마트 추천 팝업 */}
+          {showRecCard && (
+            <motion.div 
+              initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}
+              className="pointer-events-auto w-full max-w-[320px] mx-auto lg:mx-0 bg-[#E57B3E] dark:bg-[#D97706] p-5 rounded-[30px] shadow-2xl text-white relative group"
+            >
+              <button 
+                onClick={() => setShowRecCard(false)}
+                className="absolute top-4 right-4 opacity-30 hover:opacity-100 p-1 hover:bg-black/10 rounded-full transition-all"
+              >
+                <X size={25} />
+              </button>
+              <div className="flex justify-between items-center mb-2">
+                    <span className="text-[10px] font-black opacity-60 uppercase tracking-widest "
+                    >
+                      Next Drink
+                    </span>
+                <Coffee size={25} className="opacity-50 cursor-pointer hover:opacity-100 transition-opacity" />
+              </div>
+              <h5 
+              onClick={() => {
+                        navigate('/add');
+                      }}
+              className="font-black text-sm cursor-pointer hover:opacity-100 transition-opacity">{rec.title}</h5>
+              <p className="text-[13px] opacity-90 mt-1 leading-relaxed">{rec.desc}</p>
+            </motion.div>
+          )}
+          
+        </AnimatePresence>
       </div>
+
 
       {/* 하단 추가 버튼: 아이콘 추가 */}
       <div className="mt-8 z-20 w-full max-w-md mx-auto">
@@ -390,6 +455,21 @@ const Dashboard = () => {
           <Plus size={24} strokeWidth={3} />
           음료 추가
         </button>
+        
+        {/* 몸 상태 기록 버튼 */}
+        <div className="mt-8 z-20 w-full max-w-md mx-auto">  
+          <button 
+            onClick={() => setIsSymptomModalOpen(true)}
+            className="w-full bg-[#F4F1EA] dark:bg-[#483C32] p-5 rounded-[28px] flex justify-between items-center group active:scale-95 hover:scale-105 transition-all"
+          >
+            <div className="flex items-center gap-3">
+                <Activity size={18} className="text-[#E57B3E]" />
+                <span className="text-sm font-bold dark:text-[#ECE0D1]">지금 컨디션 기록하기</span>
+            </div>
+            <span className="text-xs opacity-30 dark:text-white">GO</span>
+          </button>
+
+        </div>
       </div>
 
       {/* 증상 모달 */}

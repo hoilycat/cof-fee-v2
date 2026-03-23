@@ -25,18 +25,8 @@ export const getTotalRemainingCaffeine = (logs: CaffeineLog[], halfLife: number)
     total + calculateCurrentCaffeine(log.caffeineAmount, log.intakeTime, halfLife), 0);
 };
 
-/* 1. 숙면 가능 시간 예측 (잔존량이 50mg 이하가 되는 시점 계산)*/
-export const predictSleepReadyTime = (totalCaffeine: number, halfLife: number) => {
-  if (totalCaffeine <= 50) return "지금 바로 가능";
 
-  // 공식: 현재량 * (0.5)^(t/halfLife) = 50 
-  // => t = halfLife * log2(현재량 / 50)
-  const hoursToWait = halfLife * (Math.log(totalCaffeine / 50) / Math.log(2));
-  
-  return dayjs().add(hoursToWait, 'hour').format('A h시 m분');
-};
-
-/*2. 마지막 섭취로부터 경과 시간 계산 (금단 현상 분석용)*/
+/* 마지막 섭취로부터 경과 시간 계산 (금단 현상 분석용)*/
 export const getHoursSinceLastDrink = (logs: CaffeineLog[]) => {
   if (logs.length === 0) return 0;
   const lastLog = [...logs].sort((a, b) => dayjs(b.intakeTime).valueOf() - dayjs(a.intakeTime).valueOf())[0];
@@ -45,7 +35,7 @@ export const getHoursSinceLastDrink = (logs: CaffeineLog[]) => {
 
 
 /**
- * 2. 스마트 맞춤형 권장량 계산 (체중 및 감량 챌린지 기반)
+ *   스마트 맞춤형 권장량 계산 (체중 및 감량 챌린지 기반)
  */
 export const getPersonalizedGoal = (user: UserProfile) => {
   // 성인 기본 최대 권장량은 체중 1kg당 400mg을 넘지 않게 설정 (통상 400mg 상한)
@@ -72,7 +62,7 @@ export const getDynamicHalfLife = (user: UserProfile) => {
 
 
 /**
- * 3. '3일의 법칙' 감지기 (연속 3일 섭취 여부 파악)
+ *  '3일의 법칙' 감지기 (연속 3일 섭취 여부 파악)
  */
 export const checkThreeDayRule = (logs: CaffeineLog[]) => {
   const today = dayjs().startOf('day');
@@ -93,7 +83,7 @@ export const checkThreeDayRule = (logs: CaffeineLog[]) => {
 };
 
 /**
- * 4. 두통 소방차 & 리바운드 예측 (10~24시간 경과 확인)
+ *  두통 소방차 & 리바운드 예측 (10~24시간 경과 확인)
  */
 export const getWithdrawalWarning = (logs: CaffeineLog[]) => {
   if (logs.length === 0) return null;
@@ -112,7 +102,7 @@ export const getWithdrawalWarning = (logs: CaffeineLog[]) => {
 };
 
 /**
- * 5. 수면 및 캐릭터 상태
+ *  수면 및 캐릭터 상태
  */
 export const getSleepStatus = (totalCaffeine: number) => {
   if (totalCaffeine < 50) return "GOOD";    // 꿀잠
@@ -181,8 +171,11 @@ export const checkDrankOnDate = (logs: CaffeineLog[], date: dayjs.Dayjs) => {
 
 /**
  * 연속 무카페인 일수(Clean Streak) 계산
+ * 챌린지 시작일(startDateStr)을 인자로 받아 그 날까지만 거슬러 올라감.
  */
-export const getCleanStreak = (logs: CaffeineLog[]) => {
+export const getCleanStreak = (logs: CaffeineLog[], startDateStr: string) => {
+  
+  if (!startDateStr) return 0; // 시작일 없으면 0일
   let streak = 0;
   let current = dayjs().startOf('day');
 
@@ -249,21 +242,84 @@ export const getSmartRecommendation = (user: UserProfile, totalCaffeine: number,
 };
 
 /**
- * 2. 증상 상관관계 분석
- * 특정 시간대나 섭취량 이후에 증상이 발생하는지 분석합니다.
+ * 1. 특정 시점(targetTime)의 잔존 카페인 계산 (정밀 분석용)
  */
-{/*여기 로직 좀 더 보강하기*/}
-export const analyzeSymptomCorrelation = (logs: CaffeineLog[], symptoms: SymptomLog[]) => {
-  if (symptoms.length === 0) return "아직 증상 기록이 없네요! 컨디션이 안 좋을 때 기록해 주시면 카페인과의 상관관계를 분석해 드릴게요.";
-  if (logs.length === 0) return "카페인 기록이 없어서 분석이 어려워요. 마신 음료를 먼저 기록해 주세요!";
+export const getCaffeineAtTime = (logs: CaffeineLog[], targetTime: string, halfLife = 5) => {
+  return logs.reduce((total, log) => {
+    const diffHours = dayjs(targetTime).diff(dayjs(log.intakeTime), "hour", true);
+    if (diffHours < 0) return total; // 증상 발생 이후에 마신 커피는 제외
+    const remaining = log.caffeineAmount * Math.pow(0.5, diffHours / halfLife);
+    return total + remaining;
+  }, 0);
+};
 
-  // 간단한 분석 예시: 증상이 있는 날의 평균 카페인 섭취량 계산
-  const symptomDates = new Set(symptoms.map(s => dayjs(s.recordTime).format('YYYY-MM-DD')));
-  const intakeOnSymptomDays = logs.filter(l => symptomDates.has(dayjs(l.intakeTime).format('YYYY-MM-DD')));
+
+
+/**
+ * 2. 초정밀 증상 상관관계 분석 (Pseudo-AI)
+ */
+export const analyzeSymptomCorrelation = (logs: CaffeineLog[], symptoms: SymptomLog[]) => {
+  if (symptoms.length === 0) return "아직 데이터가 부족합니다. 컨디션이 변할 때 기록해 주시면 분석을 시작할게요.";
   
-  if (intakeOnSymptomDays.length > 0) {
-    return "데이터 분석 결과, 증상이 나타난 날에는 평소보다 더 많은 양의 카페인을 섭취하는 경향이 확인되었습니다. 섭취량을 조금만 줄여보는 건 어떨까요?";
+  // 모든 증상 기록 시점의 카페인 농도를 추적
+  const symptomData = symptoms.map(s => ({
+    type: s.type,
+    levelAtTime: getCaffeineAtTime(logs, s.recordTime)
+  }));
+
+  // 1단계: 과다 섭취 분석 (농도가 높을 때 증상이 나타남)
+  const highLevelSymptoms = symptomData.filter(d => d.levelAtTime > 120);
+  // 2단계: 금단 현상 분석 (농도가 낮을 때 증상이 나타남)
+  const withdrawalSymptoms = symptomData.filter(d => d.levelAtTime < 30);
+
+  if (highLevelSymptoms.length >= 2) {
+    const avg = Math.round(highLevelSymptoms.reduce((a, b) => a + b.levelAtTime, 0) / highLevelSymptoms.length);
+    return `분석 결과, 회원님은 혈중 카페인이 ${avg}mg 이상일 때 주로 불편함을 느끼십니다. 현재 수치에 맞춰 섭취량을 조절해 보세요.`;
   }
+
+  if (withdrawalSymptoms.length >= 2) {
+    return "특징적인 패턴이 발견되었습니다! 주로 카페인 농도가 낮아질 때 두통/피로를 느끼시네요. 이는 전형적인 '금단 리바운드' 현상입니다.";
+  }
+
+  return "데이터를 정밀 분석 중입니다. 증상이 나타날 때 정확한 시간을 기록할수록 분석 정확도가 올라갑니다.";
+};
+
+
+/**
+ *  정직한 누적 아낀 돈 계산 (버그 해결 버전)
+ */
+export const getTotalSavedMoney = (logs: CaffeineLog[], startDateStr: string) => {
+  if (!startDateStr) return 0;
   
-  return "현재 섭취량과 증상 간의 뚜렷한 인과관계는 발견되지 않았습니다. 꾸준한 기록으로 더 정밀한 분석을 받아보세요!";
+  const startDate = dayjs(startDateStr).startOf('day');
+  const today = dayjs().startOf('day');
+  const totalDays = today.diff(startDate, 'day') + 1;
+
+  // 중복 날짜를 제거한 '커피 마신 날' 목록
+  const drankDates = new Set(logs.map(log => dayjs(log.intakeTime).format('YYYY-MM-DD')));
+  
+  // 챌린지 범위 내의 마신 날만 카운트
+  const actualDrankDaysInChallenge = Array.from(drankDates).filter(date => {
+    const d = dayjs(date);
+    return (d.isSame(startDate) || d.isAfter(startDate)) && (d.isSame(today) || d.isBefore(today));
+  }).length;
+
+  const cleanDays = totalDays - actualDrankDaysInChallenge;
+  return Math.max(0, cleanDays * 4500);
+};
+
+/**
+ *  수면 예측 디테일 (남은 시간 포함)
+ */
+export const predictSleepReadyTime = (totalCaffeine: number, halfLife: number) => {
+  if (totalCaffeine <= 50) return { time: "지금 바로", left: "0분" };
+
+  const hoursToWait = halfLife * (Math.log(totalCaffeine / 50) / Math.log(2));
+  const h = Math.floor(hoursToWait);
+  const m = Math.round((hoursToWait - h) * 60);
+
+  return {
+    time: dayjs().add(hoursToWait, 'hour').format('A h시 m분'),
+    left: `${h > 0 ? h + '시간 ' : ''}${m}분 뒤`
+  };
 };

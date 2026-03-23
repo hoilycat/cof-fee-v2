@@ -11,16 +11,7 @@ export const Settings = () => {
     const setLogs = useSetAtom(caffeineLogsAtom);
     const setSymptomLogs = useSetAtom(symptomLogsAtom);
 
-
-    // 초기화 함수
-    const handleResetAll = () => {
-        if (confirm("정말로 모든 카페인 기록을 삭제할까요? 이 작업은 되돌릴 수 없습니다.")) {
-            setLogs([]); // 기록 배열을 빈 배열로 초기화
-            setSymptomLogs([]);// 증상 기록도 같이 삭제
-            alert("모든 기록이 초기화되었습니다.");
-        }
-    };
-
+    
     // 재진단 및 여정 초기화 함수
     const handleRediagnosis = () => {
         const message = "여정을 초기화하고 다시 진단하시겠습니까?\n\n현재 진행 중인 감량 주차와 진단 점수가 초기화되며, 첫 화면으로 이동합니다.";
@@ -58,6 +49,26 @@ export const Settings = () => {
     link.click();
     URL.revokeObjectURL(url); //메모리 해제
     };
+
+     // 1. 커피 기록만 삭제 (이름/설정 유지)
+    const handleClearLogsOnly = () => {
+        if (confirm("마신 음료와 신체 증상 기록만 삭제할까요?\n이름과 목표 설정은 그대로 유지됩니다.")) {
+            setLogs([]);
+            setSymptomLogs([]);
+            alert("기록이 깔끔하게 비워졌습니다! ✨");
+        }
+    };
+
+    // 2. 앱 전체 초기화 (공장 초기화)
+    const handleFactoryReset = () => {
+        if (confirm("정말로 모든 데이터를 삭제하고 초기화할까요?\n이름, 설정을 포함한 모든 정보가 사라지며 처음부터 다시 시작해야 합니다.")) {
+            // 로컬 스토리지 싹 비우기
+            localStorage.clear();
+            // 페이지 새로고침하여 초기 상태로 복구
+            window.location.href = "/";
+        }
+    };
+
 
 
     return (
@@ -183,15 +194,24 @@ export const Settings = () => {
                     </button>
                 </div>   
 
-            {/* 초기화 버튼 */}
-            <div className="mt-12">
+             {/* 초기화 섹션 */}
+            <div className="mt-12 pt-8 border-t border-gray-100 dark:border-white/5 space-y-4">
+                <p className="text-xs font-black text-gray-400 dark:text-[#A3978F] uppercase tracking-widest ml-4">데이터 관리</p>
+                
+                {/* 1. 기록만 삭제 버튼 */}
                 <button 
-                    className="w-full py-5 rounded-3xl font-black text-lg bg-[#FFEAE8] text-[#E05252] hover:bg-[#FFD8D6] dark:bg-[#4A2723] dark:text-[#F87171] dark:hover:bg-[#5C332D] active:scale-[0.98] transition-all shadow-sm 
-                    flex items-center justify-center gap-2" // 👈 flex 정렬과 간격(gap) 추가
-                    onClick={handleResetAll}
+                    onClick={handleClearLogsOnly}
+                    className="w-full py-4 rounded-[25px] font-bold text-sm bg-gray-100 dark:bg-[#3A312B] text-gray-600 dark:text-[#A3978F] active:scale-[0.98] transition-all flex items-center justify-center gap-2"
                 >
-                    <AlertTriangle size={20} /> {/* 크기를 20 정도로 키우면 더 잘 어울려요 */}
-                    <span>모든 기록 초기화하기</span>
+                    음료 및 증상 기록만 비우기
+                </button>
+
+                {/* 2. 공장 초기화 버튼 (위험 표시) */}
+                <button 
+                    onClick={handleFactoryReset}
+                    className="w-full py-4 rounded-[25px] font-black text-sm bg-[#FFEAE8] text-[#E05252] dark:bg-[#4A2723] dark:text-[#F87171] active:scale-[0.98] transition-all flex items-center justify-center gap-2"
+                >
+                    <AlertTriangle size={16} /> 앱 전체 초기화 (공장 초기화)
                 </button>
             </div>
         </div>

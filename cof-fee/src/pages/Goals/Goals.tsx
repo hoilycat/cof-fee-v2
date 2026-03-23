@@ -1,7 +1,7 @@
 import { useAtom, useAtomValue } from 'jotai';
 import { userProfileAtom, caffeineLogsAtom } from '../../hooks/useCaffeineStore';
 import { motion } from 'framer-motion';
-import { getReceptorRecovery, getCleanStreak, checkDrankOnDate, } from '../../lib/utiles';
+import { getReceptorRecovery, getCleanStreak, checkDrankOnDate, getTotalSavedMoney } from '../../lib/utiles';
 import { ChevronLeft, ChevronRight, Trophy, Heart, Calendar  } from 'lucide-react';
 import dayjs from 'dayjs';
 import { useState } from 'react';
@@ -23,10 +23,10 @@ export const Goals = () => {
   const [currentMonth, setCurrentMonth] = useState(dayjs());
 
   const recovery = getReceptorRecovery(logs);
-  const streak = getCleanStreak(logs);
+  const streak = getCleanStreak(logs, user.challengeStartedAt);
+
   // 아낀 돈 계산 (사용자의 평소 섭취량 기반으로 안 마신 양만큼 계산)
-  // const savedMoney = user.isTapering ? (user.baseIntake > 0 ? 4500 * user.taperingWeek : 0) : 0;
-  const savedMoney = streak * 4500;
+  const savedMoney = getTotalSavedMoney(logs, user.challengeStartedAt);
 
   // 챌린지 며칠째인지 계산 (D+Day)
   const startDate = dayjs(user.challengeStartedAt);
