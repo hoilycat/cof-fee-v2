@@ -10,9 +10,8 @@ import composedbeen from '../../assets/characters/composedbeen.png';
 import busybeen from '../../assets/characters/busybeen.png';
 import { SymptomModal } from '../../components/SymptomModal';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Plus, Activity } from 'lucide-react';
-import { getSleepActionTip, getArousalStage } from '../../lib/utiles';
-
+import { Plus, Activity, Coffee } from 'lucide-react';
+import { getSleepActionTip, getArousalStage, getSmartRecommendation  } from '../../lib/utiles';
 
 const Dashboard = () => { 
   const navigate = useNavigate();
@@ -94,10 +93,11 @@ const Dashboard = () => {
     },
   };  
   
-  const currentMessage = showRemaining 
-    ? characterMessages[characterStatus]?.remaining 
-    : characterMessages[characterStatus]?.total;
+  const currentMessage = withdrawalInfo?.isWarning 
+  ? `🚨 ${withdrawalInfo.message}` // 금단 증상 구간일 때 최우선 메시지
+  : (showRemaining ? characterMessages[characterStatus]?.remaining : characterMessages[characterStatus]?.total);
 
+  
   //배경에 쓰일 색깔
   const auraColors: Record<string, string[]> = {
     DANGER: isDark 
@@ -144,6 +144,7 @@ const Dashboard = () => {
     { top: '45%', left: '65%', size: 3.5, dur: 3.7 }
   ];
 
+ const rec = getSmartRecommendation(user, totalCaffeine, goal);
 
  return (
     <div className="flex flex-col min-h-screen font-sans w-full px-6 pt-12 pb-36 relative overflow-hidden">
@@ -341,7 +342,8 @@ const Dashboard = () => {
                 <p className="text-[11px] font-bold text-[#E57B3E] leading-relaxed">
                   💡 {sleepTip}
                 </p>
-        </div>     
+        </div>  
+           
         {/* 금단 증상 경고 (조건부 렌더링) */}
         {withdrawalInfo?.isWarning && (
           <div className="bg-red-50 dark:bg-red-900/20 p-5 rounded-[28px] border border-red-100 dark:border-red-900/30">
@@ -352,7 +354,7 @@ const Dashboard = () => {
         {/* 몸 상태 기록 버튼 */}
         <button 
           onClick={() => setIsSymptomModalOpen(true)}
-          className="w-full bg-[#F4F1EA] dark:bg-[#483C32] p-5 rounded-[28px] flex justify-between items-center group active:scale-95 transition-all"
+          className="w-full bg-[#F4F1EA] dark:bg-[#483C32] p-5 rounded-[28px] flex justify-between items-center group active:scale-95 hover:scale-105 transition-all"
         >
            <div className="flex items-center gap-3">
               <Activity size={18} className="text-[#E57B3E]" />
@@ -361,12 +363,28 @@ const Dashboard = () => {
            <span className="text-xs opacity-30 dark:text-white">GO</span>
         </button>
       </div>
+      {/* 💡 실시간 추천 카드 섹션 */}
+      <div className="mt-8 w-full max-w-[320px] z-20">
+        <p className="text-[10px] font-black opacity-30 uppercase tracking-widest ml-4 mb-2 dark:text-white">Smart Recommendation</p>
+        <div 
+          onClick={() => navigate('/add')} // 추천 카드 누르면 바로 추가 페이지로!
+          className="bg-[#E57B3E] dark:bg-[#D97706] p-6 rounded-[35px] shadow-lg text-white cursor-pointer active:scale-95 transition-all group"
+        >
+          <div className="flex justify-between items-start mb-2">
+            <h5 className="font-black text-lg group-hover:underline">{rec.title}</h5>
+            <Coffee size={20} className="opacity-50" />
+          </div>
+          <p className="text-xs font-medium opacity-90 leading-relaxed">
+            {rec.desc}
+          </p>
+        </div>
+      </div>
 
       {/* 하단 추가 버튼: 아이콘 추가 */}
       <div className="mt-8 z-20 w-full max-w-md mx-auto">
         <button 
           onClick={() => navigate('/add')}
-          className="w-full py-5 rounded-[30px] font-black text-xl shadow-xl transition-all active:scale-[0.97] flex items-center justify-center gap-2"
+          className="w-full py-5 rounded-[30px] font-black text-xl shadow-xl transition-all active:scale-[0.97] hover:scale-105 flex items-center justify-center gap-2"
           style={{ backgroundColor: theme.accent, color: 'white' }}
         >
           <Plus size={24} strokeWidth={3} />

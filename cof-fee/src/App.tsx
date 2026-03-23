@@ -86,7 +86,7 @@ function App() {
   }
 
   return (
-    <BrowserRouter>
+    <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
       {/* Framer Motion으로 배경색 전환 애니메이션 적용 */}
       <motion.div 
         animate={{ backgroundColor: bgColor }}

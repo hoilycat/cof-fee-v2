@@ -3,8 +3,9 @@ import { useNavigate } from 'react-router-dom';
 import { useSetAtom, useAtomValue, useAtom } from 'jotai';
 import { caffeineLogsAtom, userProfileAtom, favoriteDrinksAtom } from '../../hooks/useCaffeineStore';
 import { COFFEE_BRANDS, type BrandData, type CoffeeMenu, type SizeOption } from '../../lib/caffeineData';
-import { Search, Star, X, ArrowLeft } from 'lucide-react';
+import { Search, Star, X, ArrowLeft, AlertTriangle  } from 'lucide-react';
 import { useCaffeine } from '../../hooks/useCaffeine'; 
+import dayjs from 'dayjs';
 
 
 export const AddDrink = () => {
@@ -22,6 +23,7 @@ export const AddDrink = () => {
   const [manualName, setManualName] = useState('');
   const [isFasting, setIsFasting] = useState(false); 
 
+  
   const [selectedMenuInfo, setSelectedMenuInfo] = useState<{brand: BrandData, menu: CoffeeMenu} | null>(null);
   const [selectedSize, setSelectedSize] = useState<SizeOption | null>(null);
 
@@ -29,6 +31,12 @@ export const AddDrink = () => {
   const currentCaffeine = isManual ? manualCaffeine : (selectedSize?.caffeine || 0);
   const isHighCaffeine = !isManual && selectedSize ? selectedSize.caffeine > 150 : false;
   
+
+  //섭취 시간을 관리하는 상태 (기본값: 현재 시간)
+  const [intakeTime, setIntakeTime] = useState(dayjs().format('YYYY-MM-DDTHH:mm'));
+
+
+
   // 💡 고카페인 전용 경고 문구 (나이트로 커피 등 대응)
   const highCaffeineMessage = selectedMenuInfo?.menu.name.includes("나이트로") 
     ? "⚠️ 나이트로 경고: 일반 커피보다 체내 흡수가 빠르고 카페인 함량이 매우 높습니다. 밤늦게까지 각성 효과가 지속될 수 있어요!"
@@ -71,13 +79,14 @@ export const AddDrink = () => {
     ? (manualName.trim() !== '' && manualCaffeine > 0) 
     : (selectedSize !== null);
 
+
   const handleAddCoffee = () => {
 
 
     const newLog = {
       id: crypto.randomUUID(),
       caffeineAmount: currentCaffeine,
-      intakeTime: new Date().toISOString(),
+      intakeTime: dayjs(intakeTime).toISOString(), 
       beverageName: drinkName,
       isFasting,
       price: 0,
@@ -87,6 +96,8 @@ export const AddDrink = () => {
     alert(`${drinkName} 기록 완료! ☕️`);
     navigate('/');
   };
+
+  
 
   return (
     <div className="p-6 max-w-md mx-auto min-h-screen pb-32">
@@ -131,7 +142,7 @@ export const AddDrink = () => {
                 <div 
                   key={key} 
                   onClick={() => setSelectedMenuInfo({ brand, menu })}
-                  className="flex items-center justify-between p-5 bg-white dark:bg-[#3A312B] rounded-[25px] shadow-sm border border-gray-50 dark:border-white/5 active:scale-[0.98] transition-all cursor-pointer"
+                  className="flex items-center justify-between hover:scale-105 p-5 bg-white dark:bg-[#3A312B] rounded-[25px] shadow-sm border border-gray-50 dark:border-white/5 active:scale-[0.98] transition-all cursor-pointer"
                 >
                   <div className="flex flex-col">
                     <span className="text-[10px] font-black text-[#E57B3E] opacity-70 uppercase">{brand.brand}</span>
@@ -197,20 +208,33 @@ export const AddDrink = () => {
         </div>
       )}
 
-      {/* 공통 경고 및 푸터 */}
+      {/* ⚠️ 공통 푸터 로직 (사이즈 선택 완료 시 또는 직접 입력 시 노출) */}
       {(selectedSize || isManual) && (
-        <div className="fixed bottom-10 left-0 w-full px-6 max-w-md mx-auto z-50">
-          {isHighCaffeine && (
-              <div className="mb-4 p-4 bg-red-50 dark:bg-red-900/20 rounded-2xl text-[11px] font-bold text-red-600 dark:text-red-400 border border-red-100 dark:border-red-900/30 text-center">
-                {highCaffeineMessage} 
+        <div className="fixed bottom-10 left-0 w-full px-6 pb-32 max-w-md mx-auto z-50">
+           
+          {/* 고카페인 경고창 (isHighCaffeine, highCaffeineMessage 사용) */} 
+           {isHighCaffeine && (
+             <div className="p-4 bg-[#4A2D2D] border border-red-500/30 rounded-[20px] shadow-lg animate-bounce-subtle">
+                <div className="flex gap-3">
+                  <AlertTriangle className="text-red-500 flex-shrink-0" size={18} />
+                  <p className="text-[11px] font-bold text-[#FFD1D1] leading-relaxed">
+                    {highCaffeineMessage}
+                  </p>
+                </div>
+             </div>
+           )}
+
+           {/* 시간 선택 & 공복 체크 UI 섹션 */}
+            <div className="bg-white dark:bg-[#3A312B] p-5 rounded-[25px] shadow-xl border border-gray-100 dark:border-white/5 space-y-4">
+              <div>
+                <label className="text-[10px] font-black opacity-40 uppercase tracking-widest block mb-2 ml-1">Consumption Time</label>
+                <input type="datetime-local" value={intakeTime} onChange={(e) => setIntakeTime(e.target.value)} className="w-full bg-[#F4F1EA] dark:bg-[#29221e] p-3 rounded-xl text-sm font-bold dark:text-[#F5E8D3] outline-none" />
               </div>
-            )}
-           <div className="flex items-center gap-3 p-5 bg-white dark:bg-[#3A312B] rounded-[25px] shadow-lg border border-gray-50 dark:border-white/5 mb-4">
-              <input 
-                  type="checkbox" id="fasting" checked={isFasting} onChange={(e) => setIsFasting(e.target.checked)}
-                  className="w-5 h-5 accent-[#E57B3E]"
-              />
-              <label htmlFor="fasting" className="text-sm font-bold dark:text-[#ECE0D1]">공복에 마셔요 (위 보호 주의! ⚠️)</label>
+              
+              <label className="flex items-center gap-3 cursor-pointer group">
+                <input type="checkbox" checked={isFasting} onChange={(e) => setIsFasting(e.target.checked)} className="w-5 h-5 accent-[#E57B3E] rounded" />
+                <span className="text-sm font-bold dark:text-[#ECE0D1] group-hover:text-[#E57B3E] transition-colors">공복에 마셔요 (위 보호 주의! ⚠️)</span>
+              </label>
            </div>
            <button 
              disabled={!isFormValid}

@@ -2,12 +2,15 @@ import { useAtom, useAtomValue } from 'jotai'; // useState는 사용하지 않�
 import { caffeineLogsAtom, userProfileAtom  } from '../../hooks/useCaffeineStore';
 import { calculateCurrentCaffeine, getDynamicHalfLife } from '../../lib/utiles';
 import { motion, AnimatePresence } from 'framer-motion';
+import { Plus } from 'lucide-react'; 
+import { useNavigate } from 'react-router-dom'; 
 import dayjs from 'dayjs';
 import 'dayjs/locale/ko';
 
 dayjs.locale('ko');
 
 export const History = () => {
+  const navigate = useNavigate();
   const [logs, setLogs] = useAtom(caffeineLogsAtom);
   const user = useAtomValue(userProfileAtom);
  
@@ -91,6 +94,19 @@ export const History = () => {
           </div>
         ))
       )}
+      {/* 4. 🚀 음료 추가 플로팅 버튼 (FAB) */}
+      <div className="fixed bottom-28 right-6 z-50">
+        <button 
+          onClick={() => navigate('/add')}
+          className="w-16 h-16 bg-[#E57B3E] dark:bg-[#D97706] text-white rounded-full shadow-2xl flex items-center justify-center hover:scale-110 active:scale-95 transition-all group"
+        >
+          <Plus size={32} strokeWidth={3} />
+          {/* 버튼 옆에 살짝 뜨는 라벨 (선택 사항) */}
+          <span className="absolute right-20 bg-[#5C3D2E] dark:bg-[#ECE0D1] text-white dark:text-[#3D3630] text-[10px] font-black px-3 py-1.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap shadow-sm">
+            음료 추가하기
+          </span>
+        </button>
+      </div>
     </div>
   );
 };

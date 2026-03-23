@@ -1,6 +1,7 @@
 import { useAtom, useSetAtom } from 'jotai';
-import { dailyGoalAtom, userProfileAtom, caffeineLogsAtom } from '../../hooks/useCaffeineStore';
-import { RotateCcw }  from 'lucide-react';
+import { dailyGoalAtom, userProfileAtom, caffeineLogsAtom, symptomLogsAtom } from '../../hooks/useCaffeineStore';
+import { RotateCcw, Download, Upload, AlertTriangle }  from 'lucide-react';
+import dayjs from "dayjs";
 
 
 export const Settings = () => {
@@ -8,12 +9,14 @@ export const Settings = () => {
     const [userProfile, setUserProfile] = useAtom(userProfileAtom);
     const [dailyGoal, setDailyGoal] = useAtom(dailyGoalAtom);
     const setLogs = useSetAtom(caffeineLogsAtom);
+    const setSymptomLogs = useSetAtom(symptomLogsAtom);
 
 
     // 초기화 함수
     const handleResetAll = () => {
         if (confirm("정말로 모든 카페인 기록을 삭제할까요? 이 작업은 되돌릴 수 없습니다.")) {
             setLogs([]); // 기록 배열을 빈 배열로 초기화
+            setSymptomLogs([]);// 증상 기록도 같이 삭제
             alert("모든 기록이 초기화되었습니다.");
         }
     };
@@ -28,9 +31,8 @@ export const Settings = () => {
                 hasCompletedOnboarding: false, // 이 값이 false가 되면 App.tsx에 의해 온보딩으로 이동함
                 dsm5Score: 0,
                 taperingWeek: 0,
-                isTapering: false
-                // nickname이나 weight는 편의상 유지하거나, 
-                // 아예 생짜 초기화를 원하면 초기값 객체를 넣어도 됩니다.
+                isTapering: false,
+                challengeStartedAt: '', 
             }));
         }
     };
@@ -40,6 +42,23 @@ export const Settings = () => {
     const setNickname = (newName: string) => {
         setUserProfile((prev) => ({ ...prev, nickname: newName }));
     };
+
+
+    const handleExportData = () => {
+    const data = {
+        userProfile,
+        caffeineLogs: JSON.parse(localStorage.getItem('caffeine-logs') || '[]'),
+        symptomLogs: JSON.parse(localStorage.getItem('symptom-logs') || '[]'),
+    };
+    const blob = new Blob([JSON.stringify(data)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `cof-fee-backup-${dayjs().format('YYYY-MM-DD')}.json`;
+    link.click();
+    URL.revokeObjectURL(url); //메모리 해제
+    };
+
 
     return (
         <div className="flex flex-col min-h-full px-6 py-12 pb-32 max-w-2xl mx-auto">
@@ -113,16 +132,48 @@ export const Settings = () => {
                 </button>
             </div>
             )}
+              {/* 3. 데이터 관리 섹션 (내보내기 버튼 연결!) */}
+                <div className="pt-6">
+                    <p className="text-xs font-black text-gray-400 dark:text-[#A3978F] uppercase tracking-widest ml-4 mb-3">데이터 관리</p>
+                    <div className="bg-[#F4F1EA] dark:bg-[#3A312B] p-4 rounded-[30px] space-y-2">
+                        {/* 내보내기 버튼 */}
+                        <button 
+                            onClick={handleExportData}
+                            className="w-full p-5 flex items-center justify-between bg-white dark:bg-[#4A423B]/30 rounded-[25px] active:scale-[0.98] transition-all"
+                        >
+                            <div className="flex items-center gap-4">
+                                <div className="w-10 h-10 rounded-full bg-[#EFEBE4] dark:bg-[#3A312B] flex items-center justify-center text-blue-500">
+                                    <Download size={18} />
+                                </div>
+                                <div className="text-left">
+                                    <p className="text-sm font-black dark:text-[#ECE0D1]">데이터 내보내기</p>
+                                    <p className="text-[11px] text-gray-500 dark:text-[#A3978F]">현재 기록을 파일로 저장합니다</p>
+                                </div>
+                            </div>
+                        </button>
 
-                <div className="mt-8">
+                        {/* 가져오기 버튼 (UI만 구현) */}
+                        <button className="w-full p-5 flex items-center justify-between bg-white dark:bg-[#4A423B]/30 rounded-[25px] opacity-50 cursor-not-allowed">
+                            <div className="flex items-center gap-4">
+                                <div className="w-10 h-10 rounded-full bg-[#EFEBE4] dark:bg-[#3A312B] flex items-center justify-center text-green-500">
+                                    <Upload size={18} />
+                                </div>
+                                <div className="text-left">
+                                    <p className="text-sm font-black dark:text-[#ECE0D1]">데이터 가져오기</p>
+                                    <p className="text-[11px] text-gray-500 dark:text-[#A3978F]">백업 파일에서 복원합니다</p>
+                                </div>
+                            </div>
+                        </button>
+                    </div>
+                </div>
+
+                {/* 4. 여정 관리 섹션 */}
+                <div className="pt-2">
                     <p className="text-xs font-black text-gray-400 dark:text-[#A3978F] uppercase tracking-widest ml-4 mb-3">여정 관리</p>
-                    <button 
-                        onClick={handleRediagnosis}
-                        className="w-full p-5 flex items-center justify-between bg-[#F4F1EA] dark:bg-[#3A312B] rounded-[30px] active:scale-[0.98] transition-all shadow-sm"
-                    >
+                    <button onClick={handleRediagnosis} className="w-full p-5 flex items-center justify-between bg-[#F4F1EA] dark:bg-[#3A312B] rounded-[30px] active:scale-[0.98] transition-all shadow-sm">
                         <div className="flex items-center gap-4">
-                            <div className="w-10 h-10 rounded-full bg-white dark:bg-[#4A423B] flex items-center justify-center">
-                                <RotateCcw size={18} className="text-[#E57B3E]" />
+                            <div className="w-10 h-10 rounded-full bg-white dark:bg-[#4A423B] flex items-center justify-center text-[#E57B3E]">
+                                <RotateCcw size={18} />
                             </div>
                             <div className="text-left">
                                 <p className="text-sm font-black dark:text-[#ECE0D1]">의존도 재진단하기</p>
@@ -130,15 +181,17 @@ export const Settings = () => {
                             </div>
                         </div>
                     </button>
-                </div>
+                </div>   
 
             {/* 초기화 버튼 */}
             <div className="mt-12">
                 <button 
-                    className="w-full py-5 rounded-3xl font-black text-lg bg-[#FFEAE8] text-[#E05252] hover:bg-[#FFD8D6] dark:bg-[#4A2723] dark:text-[#F87171] dark:hover:bg-[#5C332D]  active:scale-[0.98] transition-all shadow-sm"
-                    onClick={handleResetAll} // 함수 연결
+                    className="w-full py-5 rounded-3xl font-black text-lg bg-[#FFEAE8] text-[#E05252] hover:bg-[#FFD8D6] dark:bg-[#4A2723] dark:text-[#F87171] dark:hover:bg-[#5C332D] active:scale-[0.98] transition-all shadow-sm 
+                    flex items-center justify-center gap-2" // 👈 flex 정렬과 간격(gap) 추가
+                    onClick={handleResetAll}
                 >
-                    모든 기록 초기화하기
+                    <AlertTriangle size={20} /> {/* 크기를 20 정도로 키우면 더 잘 어울려요 */}
+                    <span>모든 기록 초기화하기</span>
                 </button>
             </div>
         </div>

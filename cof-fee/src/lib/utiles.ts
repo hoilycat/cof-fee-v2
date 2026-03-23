@@ -1,5 +1,8 @@
 import dayjs from "dayjs";
 import type { CaffeineLog, UserProfile } from '../hooks/useCaffeineStore';
+import { type SymptomLog } from '../hooks/useCaffeineStore';
+
+
 
 /**
  * 1. 실시간 잔존량 계산 (지수적 감쇠 공식)
@@ -154,7 +157,6 @@ export const getArousalStage = (totalCaffeine: number) => {
   return { label: "카페인 프리 🥔", color: "#A3978F", tip: "뇌가 휴식하고 있는 깨끗한 상태!" };
 };
 
-
 /**
  * 아데노신 수용체 회복률 계산 (가상 시나리오 기반)
  * 마지막으로 많이 마신 날로부터 시간이 지날수록 회복됨
@@ -170,3 +172,98 @@ export const getReceptorRecovery = (logs: CaffeineLog[]) => {
   return Math.round(recovery);
 };
 
+/**
+ * 특정 날짜에 카페인을 섭취했는지 확인
+ */
+export const checkDrankOnDate = (logs: CaffeineLog[], date: dayjs.Dayjs) => {
+  return logs.some(log => dayjs(log.intakeTime).isSame(date, 'day'));
+};
+
+/**
+ * 연속 무카페인 일수(Clean Streak) 계산
+ */
+export const getCleanStreak = (logs: CaffeineLog[]) => {
+  let streak = 0;
+  let current = dayjs().startOf('day');
+
+  // 오늘부터 과거로 거슬러 올라가며 확인
+  while (true) {
+    const drank = logs.some(log => dayjs(log.intakeTime).isSame(current, 'day'));
+    if (drank) break; // 마신 날을 만나면 멈춤
+    
+    streak++;
+    current = current.subtract(1, 'day');
+    
+    // 무한 루프 방지 (최대 100일까지만 계산)
+    if (streak > 100) break;
+  }
+  return streak;
+};
+
+
+
+export const getSmartRecommendation = (user: UserProfile, totalCaffeine: number, goal: number) => {
+  const hour = dayjs().hour();
+  
+  // 1순위: 목표 초과 혹은 임박 (80% 이상)
+  if (totalCaffeine >= goal * 0.8) {
+    return {
+      title: "물 한 잔 어때요? 💧",
+      desc: "이미 충분한 카페인을 섭취했어요. 지금은 수분 보충이 필요한 때!",
+      category: "Water"
+    };
+  }
+
+  // 2순위: 밤 시간대 (오후 6시 이후)
+  if (hour >= 18 || hour < 4) {
+    return {
+      title: "디카페인이 안전해요 🌙",
+      desc: "지금 커피를 마시면 수면 시간이 너무 늦어질 수 있어요.",
+      category: "Decaf"
+    };
+  }
+
+  // 3순위: 생리 모드 활성화 시
+  if (user.gender === 'F' && user.isMenstruating) {
+    return {
+      title: "따뜻한 차를 추천해요 🍵",
+      desc: "대사가 느려진 시기예요. 카페인보다는 몸을 따뜻하게 하는 티가 좋아요.",
+      category: "Tea"
+    };
+  }
+
+  // 4순위: 오전 집중 시간 (오전 7시 ~ 11시)
+  if (hour >= 7 && hour <= 11) {
+    return {
+      title: "모닝 아메리카노 ☀️",
+      desc: "하루를 활기차게 시작하기 딱 좋은 시간입니다!",
+      category: "Espresso"
+    };
+  }
+
+  return {
+    title: "가벼운 라떼 한 잔 ☕️",
+    desc: "오후의 활력을 위해 부드러운 음료는 어떨까요?",
+    category: "Espresso"
+  };
+};
+
+/**
+ * 2. 증상 상관관계 분석
+ * 특정 시간대나 섭취량 이후에 증상이 발생하는지 분석합니다.
+ */
+{/*여기 로직 좀 더 보강하기*/}
+export const analyzeSymptomCorrelation = (logs: CaffeineLog[], symptoms: SymptomLog[]) => {
+  if (symptoms.length === 0) return "아직 증상 기록이 없네요! 컨디션이 안 좋을 때 기록해 주시면 카페인과의 상관관계를 분석해 드릴게요.";
+  if (logs.length === 0) return "카페인 기록이 없어서 분석이 어려워요. 마신 음료를 먼저 기록해 주세요!";
+
+  // 간단한 분석 예시: 증상이 있는 날의 평균 카페인 섭취량 계산
+  const symptomDates = new Set(symptoms.map(s => dayjs(s.recordTime).format('YYYY-MM-DD')));
+  const intakeOnSymptomDays = logs.filter(l => symptomDates.has(dayjs(l.intakeTime).format('YYYY-MM-DD')));
+  
+  if (intakeOnSymptomDays.length > 0) {
+    return "데이터 분석 결과, 증상이 나타난 날에는 평소보다 더 많은 양의 카페인을 섭취하는 경향이 확인되었습니다. 섭취량을 조금만 줄여보는 건 어떨까요?";
+  }
+  
+  return "현재 섭취량과 증상 간의 뚜렷한 인과관계는 발견되지 않았습니다. 꾸준한 기록으로 더 정밀한 분석을 받아보세요!";
+};

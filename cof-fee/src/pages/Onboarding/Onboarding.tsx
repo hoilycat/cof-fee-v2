@@ -1,3 +1,4 @@
+import dayjs from "dayjs";
 import { useState } from 'react';
 import { useSetAtom } from 'jotai';
 import { userProfileAtom, dailyGoalAtom } from '../../hooks/useCaffeineStore';
@@ -37,7 +38,7 @@ const Onboarding = () => {
     const safeGoal = Math.min(Number(weight || 60) * 6, 400); 
 
     setUserProfile({
-      nickname: nickname || '물갱이',
+      nickname: nickname || '물괭이',
       weight: Number(weight || 60),
       gender,
       dsm5Score: score,
@@ -47,6 +48,7 @@ const Onboarding = () => {
       hasCompletedOnboarding: true,
       isMenstruating: false, // 온보딩 시에는 기본적으로 꺼둠
       isDarkMode: false,     // 온보딩 시에는 기본적으로 라이트 모드
+      challengeStartedAt: dayjs().format('YYYY-MM-DD'),
     });
     setDailyGoal(isTapering ? safeGoal * 0.75 : safeGoal); // 감량 트랙이면 첫 주 75% 설정
   };

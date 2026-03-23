@@ -18,6 +18,7 @@ export interface UserProfile {
   baseIntake: number;     // 평소 하루 평균 섭취량
   hasCompletedOnboarding: boolean; // 온보딩(진단) 완료 여부
   isDarkMode: boolean; // 다크모드 여부 추가
+  challengeStartedAt: string; 
 }
 
 // 2. 카페인 섭취 기록
@@ -52,7 +53,8 @@ export const userProfileAtom = atomWithStorage<UserProfile>('cof-fee-user', {
   taperingWeek: 0,
   baseIntake: 0,
   hasCompletedOnboarding: false, // 처음 켜면 false
-  isDarkMode: false // 기본값은 라이트모드
+  isDarkMode: false, // 기본값은 라이트모드
+  challengeStartedAt: '',
 });
 
 export const caffeineLogsAtom = atomWithStorage<CaffeineLog[]>('caffeine-logs',[]);
