@@ -14,3 +14,14 @@ html, body {
   width: 100%;
   min-height: 100vh;
 }
+
+@layer utilities {
+  /* 스크롤바 숨기기 클래스 */
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    -ms-overflow-style: none; /* IE and Edge */
+    scrollbar-width: none; /* Firefox */
+  }
+}

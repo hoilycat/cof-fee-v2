@@ -1,4 +1,5 @@
 import { atomWithStorage } from 'jotai/utils';
+import { type CoffeeMenu } from '../lib/caffeineData'; 
 
 
 
@@ -19,6 +20,8 @@ export interface UserProfile {
   hasCompletedOnboarding: boolean; // 온보딩(진단) 완료 여부
   isDarkMode: boolean; // 다크모드 여부 추가
   challengeStartedAt: string; 
+  sensitivity: 'FAST' | 'NORMAL' | 'SLOW'; // 카페인 대사 속도
+  preferredBedtime: string;
 }
 
 // 2. 카페인 섭취 기록
@@ -39,6 +42,11 @@ export interface SymptomLog {
   severity: 1 | 2 | 3 | 4 | 5;
 }
 
+
+// 직접 입력한 음료를 저장할 Atom 추가
+export const customMenusAtom = atomWithStorage<CoffeeMenu[]>('custom-menus', []);
+
+
 // ==========================================
 // Jotai Atoms (로컬 스토리지에 자동 저장됨)
 // ==========================================
@@ -55,6 +63,8 @@ export const userProfileAtom = atomWithStorage<UserProfile>('cof-fee-user', {
   hasCompletedOnboarding: false, // 처음 켜면 false
   isDarkMode: false, // 기본값은 라이트모드
   challengeStartedAt: '',
+  sensitivity: 'NORMAL',
+  preferredBedtime: '23:00',
 });
 
 export const caffeineLogsAtom = atomWithStorage<CaffeineLog[]>('caffeine-logs',[]);

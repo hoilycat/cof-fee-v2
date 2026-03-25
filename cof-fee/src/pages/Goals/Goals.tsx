@@ -1,7 +1,7 @@
 import { useAtom, useAtomValue } from 'jotai';
 import { userProfileAtom, caffeineLogsAtom } from '../../hooks/useCaffeineStore';
 import { motion } from 'framer-motion';
-import { getReceptorRecovery, getCleanStreak, checkDrankOnDate, getTotalSavedMoney } from '../../lib/utiles';
+import { getReceptorRecovery, getCleanStreak, checkDrankOnDate, getTotalSavedMoney, getNow } from '../../lib/utiles';
 import { ChevronLeft, ChevronRight, Trophy, Heart, Calendar  } from 'lucide-react';
 import dayjs from 'dayjs';
 import { useState } from 'react';
@@ -20,7 +20,7 @@ export const Goals = () => {
 
 
   // 캘린더 날짜 관리를 위한 상태
-  const [currentMonth, setCurrentMonth] = useState(dayjs());
+  const [currentMonth, setCurrentMonth] = useState(getNow());
 
   const recovery = getReceptorRecovery(logs);
   const streak = getCleanStreak(logs, user.challengeStartedAt);
@@ -30,7 +30,7 @@ export const Goals = () => {
 
   // 챌린지 며칠째인지 계산 (D+Day)
   const startDate = dayjs(user.challengeStartedAt);
-  const daysSinceStart = dayjs().diff(startDate, 'day') + 1;
+  const daysSinceStart = getNow().diff(startDate, 'day') + 1;
 
 
   // --- 캘린더 생성 로직 ---
@@ -198,7 +198,7 @@ export const Goals = () => {
              {calendarDays.map((date, i) => {
               const isCurrentMonth = date.isSame(currentMonth, 'month');
               const hasCaffeine = checkDrankOnDate(logs, date);
-              const isToday = date.isSame(dayjs(), 'day');
+              const isToday = date.isSame(getNow(), 'day');
 
               // 1. 챌린지 시작일 가져오기 (dayjs 객체로 변환)
               const challengeStartDate = user.challengeStartedAt ? dayjs(user.challengeStartedAt).startOf('day') : null;
@@ -207,7 +207,7 @@ export const Goals = () => {
               // 조건: 시작일이 존재함 && (시작일과 같거나 이후임) && (오늘과 같거나 이전임)
               const isChallengeDay = challengeStartDate && 
                 (date.isSame(challengeStartDate, 'day') || date.isAfter(challengeStartDate, 'day')) &&
-                (date.isSame(dayjs(), 'day') || date.isBefore(dayjs(), 'day'));
+                (date.isSame(getNow(), 'day') || date.isBefore(getNow(), 'day'));
 
 
               return (

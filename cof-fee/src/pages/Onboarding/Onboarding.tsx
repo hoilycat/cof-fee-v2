@@ -1,4 +1,5 @@
-import dayjs from "dayjs";
+// import dayjs from "dayjs";
+import { getNow } from '../../lib/utiles'
 import { useState } from 'react';
 import { useSetAtom } from 'jotai';
 import { userProfileAtom, dailyGoalAtom } from '../../hooks/useCaffeineStore';
@@ -37,7 +38,7 @@ const Onboarding = () => {
     // 몸무게 비례 안전 권장량 세팅 (최대 400mg 제한)
     const safeGoal = Math.min(Number(weight || 60) * 6, 400); 
 
-    setUserProfile({
+     setUserProfile({
       nickname: nickname || '물괭이',
       weight: Number(weight || 60),
       gender,
@@ -48,8 +49,13 @@ const Onboarding = () => {
       hasCompletedOnboarding: true,
       isMenstruating: false, // 온보딩 시에는 기본적으로 꺼둠
       isDarkMode: false,     // 온보딩 시에는 기본적으로 라이트 모드
-      challengeStartedAt: dayjs().format('YYYY-MM-DD'),
+      challengeStartedAt: getNow().format('YYYY-MM-DD'),
+      
+      // 아래 두 줄(새로 추가된 속성)을 추가하여 에러를 해결합니다.
+      sensitivity: 'NORMAL',      // 기본 민감도는 '보통'으로 설정
+      preferredBedtime: '23:00',  // 기본 취침 시간은 밤 11시로 설정
     });
+    
     setDailyGoal(isTapering ? safeGoal * 0.75 : safeGoal); // 감량 트랙이면 첫 주 75% 설정
   };
 

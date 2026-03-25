@@ -1,7 +1,16 @@
 import dayjs from "dayjs";
-import type { CaffeineLog, UserProfile } from '../hooks/useCaffeineStore';
-import { type SymptomLog } from '../hooks/useCaffeineStore';
+import type { CaffeineLog, UserProfile, SymptomLog } from '../hooks/useCaffeineStore';
 
+
+
+/**
+ * [타임머신] 모든 시간 계산의 기준점
+ * 개발 모드에서 로컬 스토리지의 'debug-offset'을 읽어 현재 시간을 조작합니다.
+ */
+export const getNow = () => {
+  const offset = Number(localStorage.getItem('debug-date-offset') || 0);
+  return dayjs().add(offset, 'day');
+};
 
 
 /**
@@ -9,7 +18,7 @@ import { type SymptomLog } from '../hooks/useCaffeineStore';
  * C_now = C_initial * (0.5)^(t / halfLife)
  */
 export const calculateCurrentCaffeine = (mg: number, intakeTime: string, halfLife: number) => {
-  const now = dayjs();
+  const now = getNow();
   const diffHours = now.diff(dayjs(intakeTime), "hour", true);
   
   if (diffHours < 0) return mg;
@@ -30,7 +39,7 @@ export const getTotalRemainingCaffeine = (logs: CaffeineLog[], halfLife: number)
 export const getHoursSinceLastDrink = (logs: CaffeineLog[]) => {
   if (logs.length === 0) return 0;
   const lastLog = [...logs].sort((a, b) => dayjs(b.intakeTime).valueOf() - dayjs(a.intakeTime).valueOf())[0];
-  return dayjs().diff(dayjs(lastLog.intakeTime), 'hour', true);
+  return getNow().diff(dayjs(lastLog.intakeTime), 'hour', true);
 };
 
 
@@ -52,20 +61,29 @@ export const getPersonalizedGoal = (user: UserProfile) => {
   return Math.round(goal);
 };
 
+
+/**
+ * 1. 개인화된 반감기 계산 (민감도 반영)
+ * FAST(4시간), NORMAL(5시간), SLOW(8시간)
+ */
 export const getDynamicHalfLife = (user: UserProfile) => {
-  // 기본 5시간, 생리 중이면 대사가 느려지므로 7.5시간으로 연장
-  if ( user.gender === 'F' && user.isMenstruating ){
-    return 7.5;
+  let base = 5;
+  if (user.sensitivity === 'FAST') base = 4;
+  if (user.sensitivity === 'SLOW') base = 8;
+  
+  // 생리 중이면 대사가 약 1.5배 느려짐
+  if (user.gender === 'F' && user.isMenstruating) {
+    return base * 1.5;
   }
-  return 5;
-};
+  return base;
+}
 
 
 /**
  *  '3일의 법칙' 감지기 (연속 3일 섭취 여부 파악)
  */
 export const checkThreeDayRule = (logs: CaffeineLog[]) => {
-  const today = dayjs().startOf('day');
+  const today = getNow().startOf('day');
   const daysWithCaffeine = new Set(
     logs.map(log => dayjs(log.intakeTime).startOf('day').format('YYYY-MM-DD'))
   );
@@ -90,7 +108,7 @@ export const getWithdrawalWarning = (logs: CaffeineLog[]) => {
   
   // 가장 마지막에 마신 커피 시간
   const lastLog = [...logs].sort((a, b) => dayjs(b.intakeTime).valueOf() - dayjs(a.intakeTime).valueOf())[0];
-  const hoursSinceLastDrink = dayjs().diff(dayjs(lastLog.intakeTime), "hour", true);
+  const hoursSinceLastDrink = getNow().diff(dayjs(lastLog.intakeTime), "hour", true);
 
   if (hoursSinceLastDrink >= 12 && hoursSinceLastDrink <= 24) {
     return {
@@ -112,7 +130,7 @@ export const getSleepStatus = (totalCaffeine: number) => {
 
 //카페인 함량에 따른 상태
 export const getCharacterStatus = (totalCaffeine: number, goal: number) => {
-  const hour = dayjs().hour();
+  const hour = getNow().hour();
   const percentage = (totalCaffeine / goal) * 100;
 
   // 밤 10시(22시) 이후인데 잔류량이 50mg(수면 방해 기준) 이상인 경우
@@ -144,7 +162,7 @@ export const getArousalStage = (totalCaffeine: number) => {
   if (totalCaffeine >= 200) return { label: "강한 각성 ⚡️", color: "#E05252", tip: "심박수가 빠를 수 있어요. 물을 드세요!" };
   if (totalCaffeine >= 100) return { label: "집중 모드 🔥", color: "#D97706", tip: "업무와 공부에 최적인 상태입니다." };
   if (totalCaffeine >= 50) return { label: "평온한 상태 ☕️", color: "#E57B3E", tip: "은은한 에너지가 남아있어요." };
-  return { label: "카페인 프리 🥔", color: "#A3978F", tip: "뇌가 휴식하고 있는 깨끗한 상태!" };
+  return { label: "카페인 프리 ☘️", color: "#A3978F", tip: "뇌가 휴식하고 있는 깨끗한 상태!" };
 };
 
 /**
@@ -155,7 +173,7 @@ export const getReceptorRecovery = (logs: CaffeineLog[]) => {
   if (logs.length === 0) return 100;
   // 최근 3일간의 평균 섭취량이 적을수록 회복률이 높다고 가정
   const recentIntake = logs
-    .filter(l => dayjs(l.intakeTime).isAfter(dayjs().subtract(3, 'day')))
+    .filter(l => dayjs(l.intakeTime).isAfter(getNow().subtract(3, 'day')))
     .reduce((sum, l) => sum + l.caffeineAmount, 0) / 3;
   
   const recovery = Math.max(0, 100 - (recentIntake / 400) * 100);
@@ -177,18 +195,24 @@ export const getCleanStreak = (logs: CaffeineLog[], startDateStr: string) => {
   
   if (!startDateStr) return 0; // 시작일 없으면 0일
   let streak = 0;
-  let current = dayjs().startOf('day');
+  let current = getNow().startOf('day');
+
+
+  // 문자열을 날짜 객체로 변환하는 과정.
+  const startDate = dayjs(startDateStr).startOf('day'); 
 
   // 오늘부터 과거로 거슬러 올라가며 확인
   while (true) {
+    // 만약 챌린지 시작일보다 더 과거로 갔다면 멈춤 (101일 방지)
+    if (current.isBefore(startDate)) break;
+
     const drank = logs.some(log => dayjs(log.intakeTime).isSame(current, 'day'));
     if (drank) break; // 마신 날을 만나면 멈춤
     
     streak++;
     current = current.subtract(1, 'day');
     
-    // 무한 루프 방지 (최대 100일까지만 계산)
-    if (streak > 100) break;
+    if (streak > 365) break; // 안전장치를 1년으로 넉넉하게 조정
   }
   return streak;
 };
@@ -196,7 +220,7 @@ export const getCleanStreak = (logs: CaffeineLog[], startDateStr: string) => {
 
 
 export const getSmartRecommendation = (user: UserProfile, totalCaffeine: number, goal: number) => {
-  const hour = dayjs().hour();
+  const hour = getNow().hour();
   
   // 1순위: 목표 초과 혹은 임박 (80% 이상)
   if (totalCaffeine >= goal * 0.8) {
@@ -253,14 +277,30 @@ export const getCaffeineAtTime = (logs: CaffeineLog[], targetTime: string, halfL
   }, 0);
 };
 
-
-
 /**
  * 2. 초정밀 증상 상관관계 분석 (Pseudo-AI)
  */
 export const analyzeSymptomCorrelation = (logs: CaffeineLog[], symptoms: SymptomLog[]) => {
   if (symptoms.length === 0) return "아직 데이터가 부족합니다. 컨디션이 변할 때 기록해 주시면 분석을 시작할게요.";
+
+  const lastSymptom = [...symptoms].sort((a, b) => dayjs(b.recordTime).valueOf() - dayjs(a.recordTime).valueOf())[0];
   
+  // 증상 발생 전 12시간 이내의 기록 확인
+  const recentLogs = logs.filter(l => {
+    const hoursDiff = dayjs(lastSymptom.recordTime).diff(dayjs(l.intakeTime), 'hour', true);
+    return hoursDiff >= 0 && hoursDiff <= 12;
+  });
+
+  const hiddenKeywords = ['콜라', '초콜릿', '녹차', '홍차', '에너지', '박카스', '밀크티'];
+  const drankHidden = recentLogs.filter(l => 
+    hiddenKeywords.some(k => l.beverageName.includes(k))
+  );
+
+  if (lastSymptom.type === 'HEADACHE' && drankHidden.length > 0) {
+    const names = drankHidden.map(l => l.beverageName.split(' ')[0]).join(', ');
+    return `🕵️‍♂️ 범인을 찾은 것 같아요! 커피는 조심하셨지만, 최근 드신 [${names}]의 숨은 카페인이 두통을 유발했을 수 있습니다.`;
+  }
+
   // 모든 증상 기록 시점의 카페인 농도를 추적
   const symptomData = symptoms.map(s => ({
     type: s.type,
@@ -285,6 +325,8 @@ export const analyzeSymptomCorrelation = (logs: CaffeineLog[], symptoms: Symptom
 };
 
 
+
+
 /**
  *  정직한 누적 아낀 돈 계산 (버그 해결 버전)
  */
@@ -292,7 +334,7 @@ export const getTotalSavedMoney = (logs: CaffeineLog[], startDateStr: string) =>
   if (!startDateStr) return 0;
   
   const startDate = dayjs(startDateStr).startOf('day');
-  const today = dayjs().startOf('day');
+  const today = getNow().startOf('day');
   const totalDays = today.diff(startDate, 'day') + 1;
 
   // 중복 날짜를 제거한 '커피 마신 날' 목록
@@ -308,18 +350,44 @@ export const getTotalSavedMoney = (logs: CaffeineLog[], startDateStr: string) =>
   return Math.max(0, cleanDays * 4500);
 };
 
+
 /**
  *  수면 예측 디테일 (남은 시간 포함)
  */
-export const predictSleepReadyTime = (totalCaffeine: number, halfLife: number) => {
-  if (totalCaffeine <= 50) return { time: "지금 바로", left: "0분" };
+export const predictSleepReadyTime = (totalCaffeine: number, halfLife: number, preferredBedtime: string = "23:00") => {
+  if (totalCaffeine <= 50) return { time: "지금 바로", left: "0분", isLate: false };
 
   const hoursToWait = halfLife * (Math.log(totalCaffeine / 50) / Math.log(2));
-  const h = Math.floor(hoursToWait);
-  const m = Math.round((hoursToWait - h) * 60);
+  const readyTime = getNow().add(hoursToWait, 'hour');
+  
+  // preferredBedtime이 혹시라도 빈 문자열이거나 undefined일 때를 위한 방어 코드
+  const timeStr = preferredBedtime || "23:00";
+  
+  // 사용자의 목표 취침 시간과 비교
+  const [bedH, bedM] = timeStr.split(':').map(Number);
+  const bedtimeToday = getNow().hour(bedH).minute(bedM);
+  const isLate = readyTime.isAfter(bedtimeToday);
 
   return {
-    time: dayjs().add(hoursToWait, 'hour').format('A h시 m분'),
-    left: `${h > 0 ? h + '시간 ' : ''}${m}분 뒤`
+    
+    time: readyTime.format('A h시 m분'),
+    left: `${Math.floor(hoursToWait)}시간 ${Math.round((hoursToWait % 1) * 60)}분`,
+    isLate
   };
+};
+
+/**
+ * 3. 공복 섭취 통계 분석
+ */
+export const getFastingReport = (logs: CaffeineLog[]) => {
+  const last7Days = logs.filter(l => dayjs(l.intakeTime).isAfter(getNow().subtract(7, 'day')));
+  const fastingCount = last7Days.filter(l => l.isFasting).length;
+  
+  if (fastingCount >= 3) {
+    return {
+      isWarning: true,
+      message: `지난주 공복 섭취가 ${fastingCount}회 있어요. 위 점막 보호를 위해 식후 1시간 뒤를 추천해요! 🤢`
+    };
+  }
+  return { isWarning: false, message: "공복 섭취를 잘 조절하고 계시네요!" };
 };

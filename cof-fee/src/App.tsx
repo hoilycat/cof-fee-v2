@@ -80,7 +80,7 @@ function App() {
 
 
 
- // 진단을 안 받았다면 무조건 온보딩 화면으로!
+ // 진단을 안 받았다면 무조건 온보딩 화면으로
   if (!userProfile.hasCompletedOnboarding) {
     return <Onboarding />;
   }
@@ -89,6 +89,7 @@ function App() {
     <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
       {/* Framer Motion으로 배경색 전환 애니메이션 적용 */}
       <motion.div 
+        key={isDark ? 'dark-mode-root' : 'light-mode-root'} 
         animate={{ backgroundColor: bgColor }}
         transition={{ duration: 0.5 }}
         className="w-full min-h-screen font-sans transition-colors"

@@ -11,7 +11,7 @@ import busybeen from '../../assets/characters/busybeen.png';
 import { SymptomModal } from '../../components/SymptomModal';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Plus, Activity, Coffee, X, Moon } from 'lucide-react';
-import { getSleepActionTip, getArousalStage, getSmartRecommendation  } from '../../lib/utiles';
+import { getSleepActionTip, getArousalStage, getSmartRecommendation, getNow  } from '../../lib/utiles';
 
 const Dashboard = () => { 
   const navigate = useNavigate();
@@ -92,7 +92,7 @@ const Dashboard = () => {
 
   // 오늘 마신 순수 총량 계산하기 (반감기 무시)
   const totalIntakeToday = logs
-    .filter(l => dayjs(l.intakeTime).isAfter(dayjs().startOf('day')))
+    .filter(l => dayjs(l.intakeTime).isAfter(getNow().startOf('day')))
     .reduce((sum, l) => sum + l.caffeineAmount, 0);
 
 
@@ -116,7 +116,7 @@ const Dashboard = () => {
   
   // 수면 팁 가져오기
   const sleepTip = getSleepActionTip(totalCaffeine);
-  const hour = dayjs().hour();
+  const hour = getNow().hour();
 
   const arousal = getArousalStage(totalCaffeine);
 
@@ -151,9 +151,9 @@ const Dashboard = () => {
 
  
  return (
-    <div className="flex flex-col min-h-screen font-sans w-full relative overflow-hidden transition-colors duration-1000">
+    <div className="flex flex-col min-h-screen font-sans w-full relative overflow-hidden transition-colors duration-1000 pb-44">
 
-       {/* 🌌 [신규] 동적 은하수(성운) 레이어 */}
+       {/* 동적 은하수(성운) 레이어 */}
       <div className="absolute inset-0 pointer-events-none z-0">
         <AnimatePresence>
           <motion.div 
@@ -165,7 +165,7 @@ const Dashboard = () => {
           >
             {config.colors.map((color, idx) => (
               <motion.div
-                key={idx}
+                key={`nebula-${idx}`}
                 className="absolute rounded-full"
                 style={{
                   backgroundColor: color,
@@ -190,7 +190,7 @@ const Dashboard = () => {
         </AnimatePresence>
       </div>
 
-      {/* ✨동적 별빛 레이어 */}
+      {/* 동적 별빛 레이어 */}
       {isDark && (
         <div className="absolute inset-0 pointer-events-none z-0">
           <AnimatePresence>
@@ -244,7 +244,7 @@ const Dashboard = () => {
                   className="absolute top-20 right-10 pointer-events-none"
                 >
                   <span className="text-5xl drop-shadow-[0_0_15px_rgba(255,215,0,0.3)]">🌙</span>
-                  <motion.div animate={{ opacity: [0.3, 0.8, 0.3] }} transition={{ repeat: Infinity, duration: 3 }} className="absolute -top-4 -left-8 text-lg">✨</motion.div>
+                  <motion.div key="twinkle-star" animate={{ opacity: [0.3, 0.8, 0.3] }} transition={{ repeat: Infinity, duration: 3 }} className="absolute -top-4 -left-8 text-lg">✨</motion.div>
                 </motion.div>
               ) : (
                 <motion.div 
@@ -343,7 +343,7 @@ const Dashboard = () => {
                   : 'bg-white dark:bg-[#3A312B] border-gray-100 dark:border-white/5' // 일반 상태
               }`}
             >
-              {/* 💡 말풍선 꼬리: 몸체와 색깔을 완벽하게 맞춤 */}
+              {/*  말풍선 꼬리: 몸체와 색깔을 완벽하게 맞춤 */}
               <div 
                 className={`absolute -top-2 left-10 w-4 h-4 rotate-45 border-l border-t transition-colors duration-500 ${
                   (hour >= 21 && totalCaffeine >= 50)
@@ -352,12 +352,12 @@ const Dashboard = () => {
                 }`}
               />
               
-              <p className={`text-sm font-bold text-center leading-relaxed ${
+              <div className={`text-sm font-bold text-center leading-relaxed ${
                 (hour >= 21 && totalCaffeine >= 50) ? 'text-[#FFD1D1]' : 'dark:text-[#ECE0D1]'
               }`}>
                 {isMenstruating && <span className="text-red-400 mr-1">🩸</span>}
                 {currentMessage}
-              </p>
+              </div>
             </motion.div>
           </AnimatePresence>
         </div>
@@ -377,37 +377,43 @@ const Dashboard = () => {
 
       </div>
 
+
       {/* 2. [지능형 플로팅 정보창] */}
-      {/* 화면 좌측 하단(데스크탑) / 중앙 하단(모바일) 배치 */}
       <div className="fixed bottom-32 left-0 lg:left-8 w-full lg:w-auto px-6 lg:px-0 flex flex-col gap-3 z-50 pointer-events-none">
         <AnimatePresence>
           
           {/* A. 수면 예측 팝업 */}
           {showSleepCard && (
             <motion.div 
-              initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}
-              className="pointer-events-auto w-full max-w-[320px] mx-auto lg:mx-0 bg-white/80 dark:bg-[#3A312B]/90 backdrop-blur-xl p-5 rounded-[30px] shadow-2xl border border-white/20 relative group"
+              //상하단 애니메이션을 동일하게 맞춤 (좌측에서 슥- 나타나고 사라짐)
+              initial={{ opacity: 0, x: -30 }} 
+              animate={{ opacity: 1, x: 0 }} 
+              exit={{ opacity: 0, x: -30, scale: 0.9 }} 
+              key="sleep-status-card"
+              className="pointer-events-auto w-full max-w-[320px] mx-auto lg:mx-0 bg-white/80 dark:bg-[#3A312B]/90 backdrop-blur-xl p-5 rounded-[30px] shadow-2xl border border-white/20 relative group transition-all"
             >
+              {/* 닫기 버튼: 평소엔 0, 그룹 호버 시 100 */}
               <button 
                 onClick={() => setShowSleepCard(false)}
-                className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 p-1 hover:bg-gray-100 dark:hover:bg-white/10 rounded-full transition-all"
+                className="absolute top-4 right-4 z-10 opacity-0 group-hover:opacity-100 p-1.5 bg-gray-100 dark:bg-white/10 rounded-full transition-all duration-300"
               >
-                <X size={25} />
+                <X size={16} />
               </button>
-              <div className="flex justify-between items-center mb-2">
+
+              <div className="flex justify-between items-center mb-3">
                 <span className="text-[10px] font-black opacity-30 uppercase tracking-widest">Sleep Safety</span>
-                <Moon size={25} className="text-indigo-400" />
+                {/* 아이콘: 그룹 호버 시 흐릿해짐 */}
+                <Moon size={22} className="text-indigo-400 group-hover:opacity-20 transition-opacity duration-300" />
               </div>
-              <p className="text-sm font-black mb-5 dark:text-[#ECE0D1]">
-                {sleepReadyTime.time} 이후 숙면 가능 
-                <p className="text-sm font-black mt-5 dark:text-[#ECE0D1]">
-                  <p>💡{sleepTip}</p>
-                </p>
-              </p>
-    
+              
+              <div className="space-y-1">
+                <p className="text-sm font-black dark:text-[#ECE0D1]">{sleepReadyTime.time} 이후 숙면 가능</p>
+                <p className="text-[11px] font-bold text-[#A3978F] leading-tight">💡 {sleepTip}</p>
+              </div>
+
               {totalCaffeine > 0 && (
-                <p className="text-[13px] font-bold text-[#E57B3E] mt-1">
-                  💡 배출까지 <span className="underline underline-offset-4">{sleepReadyTime.left}</span> 남음
+                <p className="text-[12px] font-bold text-[#E57B3E] mt-4 pt-3 border-t border-gray-100 dark:border-white/5">
+                  배출까지 <span className="underline underline-offset-4">{sleepReadyTime.left}</span> 남음
                 </p>
               )}
             </motion.div>
@@ -416,28 +422,29 @@ const Dashboard = () => {
           {/* B. 스마트 추천 팝업 */}
           {showRecCard && (
             <motion.div 
-              initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}
-              className="pointer-events-auto w-full max-w-[320px] mx-auto lg:mx-0 bg-[#E57B3E] dark:bg-[#D97706] p-5 rounded-[30px] shadow-2xl text-white relative group"
+              initial={{ opacity: 0, x: -30 }} 
+              animate={{ opacity: 1, x: 0 }} 
+              exit={{ opacity: 0, x: -30, scale: 0.9 }} 
+              key="recommendation-card"
+              className="pointer-events-auto w-full max-w-[320px] mx-auto lg:mx-0 bg-[#E57B3E] dark:bg-[#D97706] p-5 rounded-[30px] shadow-2xl text-white relative group cursor-pointer active:scale-95 transition-all"
+              onClick={() => navigate('/add')}
             >
+              {/* 닫기 버튼: stopPropagation으로 카드 클릭 이벤트 방지 */}
               <button 
-                onClick={() => setShowRecCard(false)}
-                className="absolute top-4 right-4 opacity-30 hover:opacity-100 p-1 hover:bg-black/10 rounded-full transition-all"
+                onClick={(e) => { e.stopPropagation(); setShowRecCard(false); }}
+                className="absolute top-4 right-4 z-10 opacity-0 group-hover:opacity-100 p-1.5 bg-black/10 rounded-full transition-all duration-300"
               >
-                <X size={25} />
+                <X size={16} />
               </button>
-              <div className="flex justify-between items-center mb-2">
-                    <span className="text-[10px] font-black opacity-60 uppercase tracking-widest "
-                    >
-                      Next Drink
-                    </span>
-                <Coffee size={25} className="opacity-50 cursor-pointer hover:opacity-100 transition-opacity" />
+
+              <div className="flex justify-between items-center mb-3">
+                <span className="text-[10px] font-black opacity-60 uppercase tracking-widest">Next Drink</span>
+                {/* 💡 아이콘: 그룹 호버 시 흐릿해짐 */}
+                <Coffee size={22} className="opacity-50 group-hover:opacity-20 transition-opacity duration-300" />
               </div>
-              <h5 
-              onClick={() => {
-                        navigate('/add');
-                      }}
-              className="font-black text-sm cursor-pointer hover:opacity-100 transition-opacity">{rec.title}</h5>
-              <p className="text-[13px] opacity-90 mt-1 leading-relaxed">{rec.desc}</p>
+              
+              <h5 className="font-black text-sm mb-1">{rec.title}</h5>
+              <p className="text-[12px] opacity-90 leading-relaxed">{rec.desc}</p>
             </motion.div>
           )}
           

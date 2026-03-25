@@ -1477,5 +1477,55 @@ export const COFFEE_BRANDS: BrandData[] = [
         sizes: [{ label: '1잔', ml: 200, caffeine: 100 }]
       }
     ]
-  } 
+  },
+
+{
+    id: 'hidden_danger',
+    brand: '기타 음료 및 간식',
+    menus: [
+      {
+        id: 'coke_can',
+        name: '콜라 (캔)',
+        category: 'Beverage',
+        sizes: [{ label: '355ml', ml: 355, caffeine: 35 }]
+      },
+      {
+        id: 'coke_zero',
+        name: '제로 콜라 (캔)',
+        category: 'Beverage',
+        sizes: [{ label: '355ml', ml: 355, caffeine: 35 }]
+      },
+      {
+        id: 'pepsi_zero',
+        name: '펩시 제로 (캔)',
+        category: 'Beverage',
+        sizes: [{ label: '355ml', ml: 355, caffeine: 38 }]
+      },
+      {
+        id: 'green_tea',
+        name: '녹차 (티백/음료)',
+        category: 'Tea',
+        sizes: [{ label: '1잔/1병', ml: 0, caffeine: 25 }]
+      },
+      {
+        id: 'dark_chocolate',
+        name: '다크 초콜릿 (1판)',
+        category: 'Beverage', // 카테고리는 편의상 Beverage로 유지
+        sizes: [{ label: '약 50g', ml: 0, caffeine: 30 }]
+      },
+      {
+        id: 'energy_drink_small',
+        name: '박카스 / 영양강장제',
+        category: 'Beverage',
+        sizes: [{ label: '1병', ml: 100, caffeine: 30 }]
+      },
+      {
+        id: 'headache_pill',
+        name: '카페인 포함 진통제 (기타)',
+        category: 'Beverage',
+        sizes: [{ label: '1알', ml: 0, caffeine: 50 }]
+      }
+    ]
+  }
+
 ];
