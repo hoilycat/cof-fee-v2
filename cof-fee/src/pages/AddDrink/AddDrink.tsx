@@ -8,6 +8,8 @@ import { getNow } from '../../lib/utiles'
 import { useCaffeine } from '../../hooks/useCaffeine';
 import { useDragScroll } from '../../hooks/useDragScroll'; 
 import dayjs from 'dayjs';
+import { Emoji3D } from '../../components/Emoji3D'
+
 
 
 export const AddDrink = () => {
@@ -42,7 +44,7 @@ export const AddDrink = () => {
   const brands = COFFEE_BRANDS.filter(b => b.id !== 'manual');
 
 
-  // 💡 고카페인 전용 경고 문구 (나이트로 커피 등 대응)
+  // 고카페인 전용 경고 문구 (나이트로 커피 등 대응)
   const highCaffeineMessage = selectedMenuInfo?.menu.name.includes("나이트로") 
     ? "⚠️ 나이트로 경고: 일반 커피보다 체내 흡수가 빠르고 카페인 함량이 매우 높습니다. 밤늦게까지 각성 효과가 지속될 수 있어요!"
     : "⚠️ 고카페인 주의: 이 음료는 한 잔만으로도 일일 권장량의 절반을 넘습니다. 대사가 끝날 때까지 10시간 이상 소요됩니다.";
@@ -52,6 +54,10 @@ export const AddDrink = () => {
   const drinkName = isManual 
     ? manualName 
     : selectedMenuInfo ? `${selectedMenuInfo.brand.brand} ${selectedMenuInfo.menu.name} (${selectedSize?.label || ''})` : '';
+
+   // 현재 선택된 음료 이름이 복병인지 체크하는 변수 (버튼 영역에서 사용하기 위함)
+  const isCurrentHidden = drinkName.includes('콜라') || drinkName.includes('초콜릿') || drinkName.includes('녹차') || drinkName.includes('홍차');
+
 
   const allMenus = useMemo(() => {
     const list: { brandName: string; menu: CoffeeMenu; isFav: boolean; key: string; isCustom?:boolean}[] = [];
@@ -352,6 +358,14 @@ const { scrollRef, onDragStart, onDragEnd, onDragMove } = useDragScroll();
               ))}
             </div>
           </div>
+
+          {/* ⚠️ 하단 UI 섹션 안에서 사용 */}
+          {isCurrentHidden && ( 
+            <span className="flex items-center gap-1 bg-orange-50 dark:bg-orange-900/20 px-2 py-1 rounded-lg mb-2">
+              <Emoji3D type="Pill_3D" isDark={user.isDarkMode} size={14} /> 
+              <p className="text-[10px] font-black text-orange-500">숨은 카페인 주의</p>
+            </span>
+          )}
           
           {/* 공복 체크: 구분선 추가로 더 깔끔하게 */}
           <div className="pt-2 border-t border-gray-50 dark:border-white/5">

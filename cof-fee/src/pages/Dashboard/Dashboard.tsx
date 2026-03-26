@@ -12,6 +12,9 @@ import { SymptomModal } from '../../components/SymptomModal';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Plus, Activity, Coffee, X, Moon } from 'lucide-react';
 import { getSleepActionTip, getArousalStage, getSmartRecommendation, getNow  } from '../../lib/utiles';
+import { Emoji3D } from '../../components/Emoji3D';
+
+
 
 const Dashboard = () => { 
   const navigate = useNavigate();
@@ -238,13 +241,11 @@ const Dashboard = () => {
            {/* --- 배경 하늘 요소 (해, 달, 별) --- */}
             <AnimatePresence mode="wait">
               {isDark ? (
-                <motion.div 
-                  key="night-sky"
-                  initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.8 }}
-                  className="absolute top-20 right-10 pointer-events-none"
-                >
-                  <span className="text-5xl drop-shadow-[0_0_15px_rgba(255,215,0,0.3)]">🌙</span>
-                  <motion.div key="twinkle-star" animate={{ opacity: [0.3, 0.8, 0.3] }} transition={{ repeat: Infinity, duration: 3 }} className="absolute -top-4 -left-8 text-lg">✨</motion.div>
+                <motion.div key="night-sky" className="absolute top-20 right-10 pointer-events-none">
+                  <Emoji3D type="Moon_3D" size={80} isDark={true} className="drop-shadow-[0_10px_20px_rgba(165,180,252,0.5)]" />
+                  <div className="absolute -top-4 -left-6">
+                    <Emoji3D type="Sparkles_3D" size={30} isDark={true} className="drop-shadow-lg" />
+                  </div>
                 </motion.div>
               ) : (
                 <motion.div 
@@ -252,7 +253,7 @@ const Dashboard = () => {
                   initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.8 }}
                   className="absolute top-20 right-10 pointer-events-none text-5xl drop-shadow-[0_0_20px_rgba(255,165,0,0.3)]"
                 >
-                  ☀️
+                 <Emoji3D type="Sun_3D" size={90}  isDark={false}  className="drop-shadow-2xl" />
                 </motion.div>
             )}
             </AnimatePresence>
@@ -268,6 +269,12 @@ const Dashboard = () => {
           }}>
           {isTapering ? 'Tapering Track' : 'Safe Track'}
         </span>
+        {/* 💡 생리 모드 활성화 시 배지 추가 */}
+          {isMenstruating && (
+            <span className="px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest shadow-sm bg-rose-500 text-white animate-pulse">
+              Period Mode On 🩸
+            </span>
+          )}
       </div>
 
       {/* 메인 비주얼 스테이지 (캐릭터가 게이지를 안고 있는 형태) */}
