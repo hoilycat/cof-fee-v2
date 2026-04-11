@@ -1,9 +1,9 @@
 import { useAtomValue } from 'jotai';
 import { useState, useEffect } from 'react';
 import { caffeineLogsAtom, symptomLogsAtom, userProfileAtom } from '../../hooks/useCaffeineStore';
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell, ReferenceLine } from 'recharts';
+import { Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell, ReferenceLine, ComposedChart, Scatter } from 'recharts';
 import { Activity, AlertCircle, Coffee, Moon, Sun } from 'lucide-react';
-import { analyzeSymptomCorrelation } from '../../lib/utiles';
+import { analyzeSymptomCorrelation, getFastingReport, getNow  } from '../../lib/utiles'; 
 import dayjs from 'dayjs';
 
 
@@ -13,6 +13,8 @@ export const Stats = () => {
   const symptoms = useAtomValue(symptomLogsAtom);
   const user = useAtomValue(userProfileAtom);//user 객체를 가져오기
   const isDark = user.isDarkMode; 
+  const fastingReport = getFastingReport(logs);
+
 
   useEffect(() => {
   const timer = setTimeout(() => setIsMounted(true), 100);
@@ -22,8 +24,8 @@ export const Stats = () => {
 
   // 최근 7일 데이터 가공
   const chartData = Array.from({ length: 7 }).map((_, i) => {
-    const dateStr = dayjs().subtract(6 - i, 'day').format('MM/DD');
-    const fullDate = dayjs().subtract(6 - i, 'day').format('YYYY-MM-DD');
+    const dateStr = getNow().subtract(6 - i, 'day').format('MM/DD');
+    const fullDate = getNow().subtract(6 - i, 'day').format('YYYY-MM-DD');
     
     const dailyLogs = logs.filter(l => dayjs(l.intakeTime).format('YYYY-MM-DD') === fullDate);
     const dailyCaffeine = dailyLogs.reduce((sum, l) => sum + l.caffeineAmount, 0);
@@ -43,13 +45,18 @@ export const Stats = () => {
     };
   });
 
+ const chartDataWithSymptoms = chartData.map(d => ({
+    ...d,
+    symptomPoint: d.hasSymptom ? d.total : null 
+  }));
+
   // 2. 인사이트 데이터 계산
   const avgCaffeine = Math.round(chartData.reduce((acc, curr) => acc + curr.total, 0) / 7);
   const lateDays = chartData.filter(d => d.lateIntake).length;
   const morningOnlyDays = chartData.filter(d => d.onlyMorning).length;
   const symptomDays = chartData.filter(d => d.hasSymptom).length;
 
-  // 💡 증상 상관관계 분석 텍스트
+  // 증상 상관관계 분석 텍스트
   const correlationText = analyzeSymptomCorrelation(logs, symptoms);
 
 
@@ -69,8 +76,19 @@ export const Stats = () => {
         <h2 className="text-3xl font-black text-[#5C3D2E] dark:text-[#F5E8D3]">{user.nickname}님의 분석 리포트</h2>
         <p className="text-gray-500 dark:text-white/40 font-medium mt-1">최근 7일간의 카페인과 몸의 반응입니다</p>
       </header>
+      
+      {/* 1. 공복 섭취 경고 카드 */}
+      {fastingReport.isWarning && (
+        <div className="bg-orange-50 dark:bg-orange-950/20 p-5 rounded-[30px] border border-orange-200 mb-8 flex items-start gap-4">
+          <span className="text-2xl">🤢</span>
+          <div>
+            <h5 className="font-black text-sm text-orange-800 dark:text-orange-200">위장 건강 주의</h5>
+            <p className="text-xs font-medium text-orange-700/70 dark:text-orange-400/70">{fastingReport.message}</p>
+          </div>
+        </div>
+      )}
 
-      {/* 📊 메인 차트 카드 */}
+      {/* 메인 차트 카드 */}
       <div className="bg-white dark:bg-[#3A312B] p-6 rounded-[35px] shadow-sm border border-gray-100 dark:border-white/5 mb-8 relative">
         <div className="flex justify-between items-center mb-8 px-2">
           <h4 className="text-sm font-black dark:text-[#ECE0D1] flex items-center gap-2">
@@ -82,7 +100,7 @@ export const Stats = () => {
         <div className="h-64 w-full" style={{ minHeight: '256px', width: '100%', height: '256px', position: 'relative' }}>
           {isMounted && (
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={chartData} margin={{ top: 20, right: 10, left: -20, bottom: 0 }}>
+              <ComposedChart data={chartDataWithSymptoms} margin={{ top: 20, right: 10, left: -20, bottom: 0 }}>
                 <XAxis dataKey="date" fontSize={11} axisLine={false} tickLine={false} />
                 <YAxis fontSize={11} axisLine={false} tickLine={false} /> 
                 <Tooltip 
@@ -101,7 +119,9 @@ export const Stats = () => {
                     />
                   ))}
                 </Bar>
-              </BarChart>
+                                {/* 증상이 있는 지점에 Scatter(점) 표시 */}
+                <Scatter dataKey="symptomPoint" fill="#D97706" shape="circle" />
+              </ComposedChart>
             </ResponsiveContainer>
             )}
         </div>   
@@ -111,7 +131,7 @@ export const Stats = () => {
         </p>
       </div>
 
-      {/* 💡 데이터 분석 인사이트 카드 섹션 */}
+      {/* 데이터 분석 인사이트 카드 섹션 */}
       <div className="grid grid-cols-2 gap-4 mb-8">
         <div className="bg-white dark:bg-[#3A312B] p-5 rounded-[30px] border border-gray-100 dark:border-white/5">
           <p className="text-[10px] font-black opacity-40 uppercase mb-2 dark:text-white">일일 평균</p>
@@ -129,13 +149,13 @@ export const Stats = () => {
         </div>
       </div>
 
-      {/* 🧠 AI 컨디션 분석 가이드 */}
+      {/* 컨디션 분석 가이드 */}
       <div className="bg-[#F4F1EA] dark:bg-[#3A312B] p-6 rounded-[35px] border border-[#E57B3E]/10">
         <h3 className="font-black text-[#5C3D2E] dark:text-[#ECE0D1] mb-4 flex items-center gap-2 text-sm uppercase tracking-wider">
           <AlertCircle size={18} className="text-[#E57B3E]" /> 오늘의 패턴 분석
         </h3>
         <ul className="space-y-4">
-          {/* 1. 평균 섭취량 분석 (Coffee 아이콘 사용!) */}
+          {/* 평균 섭취량 분석 (Coffee 아이콘 사용!) */}
           <li className="flex gap-3">
             <div className="w-8 h-8 rounded-full bg-white dark:bg-[#483C32] flex items-center justify-center flex-shrink-0 shadow-sm">
               <Coffee size={14} className="text-[#E57B3E]" />
@@ -178,7 +198,7 @@ export const Stats = () => {
             <span className="text-[#E57B3E] font-black">{topSymptom[1]}회 발생</span>
           </div>
         ) : (
-          <p className="text-xs text-gray-400 font-medium">기록된 증상이 아직 없습니다.</p>
+          <p className="text-xs text-gray-400  dark:text-[#A3978F] font-medium">기록된 증상이 아직 없습니다.</p>
         )}
       </div>
 
@@ -194,13 +214,13 @@ export const Stats = () => {
             "{correlationText}"
           </p>
         </div>
-        <p className="text-[10px] text-gray-400 mt-4 px-2">
+        <p className="text-[10px] text-gray-400  dark:text-[#A3978F] mt-4 px-2">
           * 이 분석은 회원님이 기록하신 카페인 섭취 시간과 신체 증상 기록을 대조하여 도출된 개인 맞춤형 결과입니다.
         </p>
       </div>
       {/* 팁 섹션 */}
       <div className="mt-8 px-4">
-        <p className="text-[10px] text-gray-400 font-medium leading-relaxed italic text-center">
+        <p className="text-[10px] text-gray-400  dark:text-[#A3978F] font-medium leading-relaxed italic text-center">
             * 증상 기록이 많아질수록 더 정확한 인과관계 분석이 가능해집니다. <br/>
             컨디션이 평소와 다를 때 꼭 기록해 주세요!
         </p>

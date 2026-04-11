@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion';
-import { useSetAtom } from 'jotai';
-import { symptomLogsAtom, type SymptomLog } from '../hooks/useCaffeineStore';
+import { useAtom, useSetAtom } from 'jotai';
+import { symptomLogsAtom, userProfileAtom, type SymptomLog } from '../hooks/useCaffeineStore';
 import { X } from 'lucide-react';
 
 const SYMPTOMS = [
@@ -12,6 +12,7 @@ const SYMPTOMS = [
 
 export const SymptomModal = ({ onClose }: { onClose: () => void }) => {
   const setSymptomLogs = useSetAtom(symptomLogsAtom);
+  const [user, setUser] = useAtom(userProfileAtom); // 유저 정보 가져오기
   
   const handleRecord = (type: SymptomLog['type']) => {
     const newLog :SymptomLog = {
@@ -24,6 +25,14 @@ export const SymptomModal = ({ onClose }: { onClose: () => void }) => {
     alert("상태가 기록되었습니다. 나중에 통계에서 분석해 드릴게요!");
     onClose();
   };
+
+  // 생리 상태 토글 함수 추가
+  const toggleMenstruation = () => {
+    setUser({ ...user, isMenstruating: !user.isMenstruating });
+    alert(user.isMenstruating ? "생리 모드를 종료합니다. 대사 속도가 정상으로 돌아옵니다." : "생리 모드를 시작합니다. 카페인 분해가 느려집니다. 🩸");
+    onClose();
+  };
+
 
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="fixed inset-0 z-[100] flex items-end justify-center bg-black/60 p-4">
@@ -38,6 +47,20 @@ export const SymptomModal = ({ onClose }: { onClose: () => void }) => {
               {s.label}
             </button>
           ))}
+
+         {/* 💡 여성 사용자일 때만 '생리 중' 버튼 추가 */}
+          {user.gender === 'F' && (
+            <button 
+              onClick={toggleMenstruation} 
+              className={`p-5 rounded-[25px] text-sm font-black transition-all col-span-2 border-2 ${
+                user.isMenstruating 
+                ? 'bg-rose-100 border-rose-400 text-rose-600 dark:bg-rose-900/30' 
+                : 'bg-gray-50 border-transparent dark:bg-[#483C32] dark:text-[#ECE0D1]'
+              }`}
+            >
+              {user.isMenstruating ? '🩸 생리 종료 기록하기' : '🩸 생리 시작 기록하기'}
+            </button>
+          )}
         </div>
       </motion.div>
     </motion.div>
