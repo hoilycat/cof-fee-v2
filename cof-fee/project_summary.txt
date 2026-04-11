@@ -1,0 +1,3742 @@
+
+
+==================================================FILE:.\code_gather.py
+==================================================
+
+import os
+
+#모으고 싶은 확장자 설정
+extentions = ['.js','.jsx','.ts','.tsx','.css','.py']
+output_file = 'project_summary.txt'
+
+with open(output_file, 'w', encoding='utf-8') as f:
+    for root, dirs, files in os.walk('.'):
+
+        #제외할 폴더
+        if 'node_modules' in root or '.git' in root:
+            continue
+        for file in files:
+            if any(file.endswith(ext) for ext in extentions):
+                file_path = os.path.join(root, file)
+                f.write(f"\n\n{'='*50}")
+                f.write(f"FILE:{file_path}\n")
+                f.write(f"{'='*50}\n\n")
+                with open(file_path, 'r', encoding='utf-8') as code_f:
+                    f.write(code_f.read())
+                    
+print(f"모든 코드가{output_file}에 저장 되었습니다")
+
+==================================================FILE:.\eslint.config.js
+==================================================
+
+import js from '@eslint/js'
+import globals from 'globals'
+import reactHooks from 'eslint-plugin-react-hooks'
+import reactRefresh from 'eslint-plugin-react-refresh'
+import tseslint from 'typescript-eslint'
+import { defineConfig, globalIgnores } from 'eslint/config'
+
+export default defineConfig([
+  globalIgnores(['dist']),
+  {
+    files: ['**/*.{ts,tsx}'],
+    extends: [
+      js.configs.recommended,
+      tseslint.configs.recommended,
+      reactHooks.configs.flat.recommended,
+      reactRefresh.configs.vite,
+    ],
+    languageOptions: {
+      ecmaVersion: 2020,
+      globals: globals.browser,
+    },
+  },
+])
+
+
+==================================================FILE:.\postcss.config.js
+==================================================
+
+export default {
+  plugins: {
+    tailwindcss: {},
+    autoprefixer: {},
+  },
+}
+
+
+==================================================FILE:.\tailwind.config.js
+==================================================
+
+/** @type {import('tailwindcss').Config} */
+export default {
+  content: ["./index.html", "./src/**/*.{ts,tsx}"],
+  darkMode: 'class',
+  theme: { 
+    extend: {
+      
+    }, 
+  },
+  plugins: [],
+}
+
+
+==================================================FILE:.\vite.config.ts
+==================================================
+
+import { defineConfig } from 'vite'
+import react from '@vitejs/plugin-react'
+
+// https://vite.dev/config/
+export default defineConfig({
+  plugins: [react()],
+})
+
+
+==================================================FILE:.\src\App.tsx
+==================================================
+
+import { BrowserRouter, Routes, Route, Link, useLocation } from 'react-router-dom';
+import { useAtomValue } from 'jotai';
+import { useEffect } from 'react';
+import { userProfileAtom } from './hooks/useCaffeineStore';
+import { motion } from 'framer-motion';
+import Dashboard from './pages/Dashboard/Dashboard';
+import { AddDrink } from './pages/AddDrink/AddDrink';
+import { Settings } from './pages/Settings/Settings';
+import Onboarding from './pages/Onboarding/Onboarding';
+import { History } from './pages/History/History'; 
+import { Goals } from './pages/Goals/Goals';
+import { Stats } from './pages/Stats/Stats';
+import { HouseHeart, NotebookPen, Goal, ChartArea, Settings as SettingIcon } from 'lucide-react';
+
+
+const BottomNav = () => {
+  const location = useLocation();
+  const currentPath = location.pathname;
+
+  const navItems =[
+    { path: '/', icon: <HouseHeart size ={20}/>, label: '홈' },
+    { path: '/history', icon: <NotebookPen size={20}/>, label: '기록' },
+    { path: '/goals', icon: <Goal size={20}/>, label: '목표' },
+    { path: '/stats', icon: <ChartArea size={20} />, label: '통계' },
+    { path: '/settings', icon: <SettingIcon size={20}/>, label: '설정' },
+  ];
+
+  
+  return (
+    <nav className="fixed bottom-0 left-0 w-full bg-white dark:bg-[#3A312B] border-t border-gray-200 dark:border-white/5 pb-safe pt-2 px-6 flex justify-around items-center z-50 transition-color">
+      {navItems.map((item) => {
+        const isActive = currentPath === item.path;
+        return (
+          <Link 
+            key={item.label} 
+            to={item.path} 
+            className={`flex flex-col items-center p-3 transition-colors ${isActive ? 'text-[#E57B3E] drop-shadow-[0_0_8px_rgba(229,123,62,0.6)] scale-110 dark:text-[#D97706]' : 'text-gray-400 dark:text-[#A3978F]'}`}          
+            >
+            <span className="text-2xl mb-1">{item.icon}</span>
+            <span className={`text-[11px] ${isActive ? 'font-bold' : 'font-medium'}`}>{item.label}</span>
+          </Link>
+        );
+      })}
+    </nav>
+  );
+};
+
+function App() {
+  const userProfile = useAtomValue(userProfileAtom);
+  const isDark = userProfile.isDarkMode;
+
+
+  // 테마에 따른 배경색 정의
+  const bgColor = isDark ? '#483C32' : '#FDFAF6';
+  const textColor = isDark ? '#F5E8D3' : '#5C3D2E';
+
+// 테마별 색상 정의
+  const theme = isDark ? {
+    bg: '#483C32',
+    nav: '#3A312B', 
+    text: '#F5E8D3',   
+    navText: '#A3978F',
+    active: '#E57B3E'  
+  } : {
+    bg: '#FDFAF6',
+    nav: '#FFFFFF',
+    text: '#5C3D2E',
+    navText: '#94A3B8',
+    active: '#E57B3E'
+  };
+
+  //테마가 바뀔 때마다 번갈아 작동
+  useEffect(() => {
+    if (isDark) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  }, [isDark]);
+
+
+
+ // 진단을 안 받았다면 무조건 온보딩 화면으로!
+  if (!userProfile.hasCompletedOnboarding) {
+    return <Onboarding />;
+  }
+
+  return (
+    <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+      {/* Framer Motion으로 배경색 전환 애니메이션 적용 */}
+      <motion.div 
+        animate={{ backgroundColor: bgColor }}
+        transition={{ duration: 0.5 }}
+        className="w-full min-h-screen font-sans transition-colors"
+        style={{ color: textColor }}
+      >
+        <Routes>
+          <Route path="/" element={<Dashboard />} />
+          <Route path="/add" element={<AddDrink />} />
+          <Route path="/settings" element={<Settings />} />
+          <Route path="/history" element={<History />} />
+          <Route path="/goals" element={<Goals/>} />
+          <Route path="/stats" element={<Stats />} />
+        </Routes>
+        {/* 하단 바에 테마 전달 */}
+        <nav 
+          className="fixed bottom-0 left-0 w-full border-t border-opacity-10 flex justify-around items-center z-50 pb-safe pt-2 transition-colors"
+          style={{ backgroundColor: theme.nav, borderColor: isDark ? '#FFFFFF' : '#000000' }}
+        >
+        <BottomNav />
+        </nav>
+      </motion.div>
+    </BrowserRouter>
+  );
+}
+
+export default App;
+
+==================================================FILE:.\src\main.tsx
+==================================================
+
+import { StrictMode } from 'react'
+import { createRoot } from 'react-dom/client'
+import '../styles/index.css'
+import App from './App.tsx'
+
+createRoot(document.getElementById('root')!).render(
+  <StrictMode>
+    <App />
+  </StrictMode>,
+)
+
+
+==================================================FILE:.\src\components\SymptomModal.tsx
+==================================================
+
+import { motion } from 'framer-motion';
+import { useSetAtom } from 'jotai';
+import { symptomLogsAtom, type SymptomLog } from '../hooks/useCaffeineStore';
+import { X } from 'lucide-react';
+
+const SYMPTOMS = [
+  { id: 'HEADACHE', label: '두통 🤕' },
+  { id: 'FATIGUE', label: '무기력/피로 😴' },
+  { id: 'CRAMPS', label: '근육경련/떨림 🫨' },
+  { id: 'RUNNY_NOSE', label: '콧물/재채기 🤧' },
+];
+
+export const SymptomModal = ({ onClose }: { onClose: () => void }) => {
+  const setSymptomLogs = useSetAtom(symptomLogsAtom);
+  
+  const handleRecord = (type: SymptomLog['type']) => {
+    const newLog :SymptomLog = {
+      id: crypto.randomUUID(),
+      type,
+      recordTime: new Date().toISOString(),
+      severity: 3 as const
+    };
+    setSymptomLogs(prev => [...prev, newLog]);
+    alert("상태가 기록되었습니다. 나중에 통계에서 분석해 드릴게요!");
+    onClose();
+  };
+
+  return (
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="fixed inset-0 z-[100] flex items-end justify-center bg-black/60 p-4">
+      <motion.div initial={{ y: 100 }} animate={{ y: 0 }} className="w-full max-w-md bg-white dark:bg-[#3A312B] rounded-[40px] p-8">
+        <div className="flex justify-between items-center mb-6">
+          <h3 className="text-xl font-black dark:text-[#F5E8D3]">지금 몸 상태는?</h3>
+          <button onClick={onClose} className="p-2 dark:text-[#A3978F]"><X /></button>
+        </div>
+        <div className="grid grid-cols-2 gap-3">
+          {SYMPTOMS.map(s => (
+            <button key={s.id} onClick={() => handleRecord(s.id as SymptomLog['type'])} className="p-5 rounded-[25px] bg-[#F4F1EA] dark:bg-[#483C32] text-sm font-bold dark:text-[#ECE0D1] hover:scale-95 transition-transform">
+              {s.label}
+            </button>
+          ))}
+        </div>
+      </motion.div>
+    </motion.div>
+  );
+};
+
+==================================================FILE:.\src\hooks\useCaffeine.ts
+==================================================
+
+// src/hooks/useCaffeine.ts
+import { useAtomValue } from 'jotai';
+import { caffeineLogsAtom, dailyGoalAtom, userProfileAtom } from './useCaffeineStore'; // dailyGoalAtom 추가
+import { getTotalRemainingCaffeine, 
+        //  getSleepStatus, 
+         getCharacterStatus, 
+         getPersonalizedGoal, 
+         getDynamicHalfLife  
+} from '../lib/utiles';
+import { predictSleepReadyTime, getHoursSinceLastDrink, getWithdrawalWarning } from '../lib/utiles';
+
+export const useCaffeine = () => {
+    const logs = useAtomValue(caffeineLogsAtom);
+    const user = useAtomValue(userProfileAtom); // 1. 유저 정보를 가져오기.
+    const dailyGoal = useAtomValue(dailyGoalAtom); // 사용자가 설정한 일반 목표량
+    
+    // 1. 동적 반감기 결정
+    const halfLife = getDynamicHalfLife(user);
+    // 2. 구한 반감기를 넣어서 잔존량 계산하기
+    const totalCaffeine = getTotalRemainingCaffeine(logs, halfLife);
+    
+    
+    // 2. '이별 트랙'이면 감량 목표를, 아니면 일반 목표를 사용하도록 계산
+    const currentGoal = user.isTapering ? getPersonalizedGoal(user) : dailyGoal;
+    
+    // const sleepStatus = getSleepStatus(totalCaffeine);
+
+
+
+        // 수면 예측 시간 계산
+    const sleepReadyTime = predictSleepReadyTime(totalCaffeine, halfLife);
+    
+    // 금단 증상 분석
+    const withdrawalInfo = getWithdrawalWarning(logs);
+    const hoursSinceLastDrink = getHoursSinceLastDrink(logs);
+
+    
+    // 3. characterStatus 계산 시 계산된 currentGoal을 전달
+    const characterStatus = getCharacterStatus(totalCaffeine, currentGoal);
+
+    return { 
+        totalCaffeine, 
+        goal: currentGoal, // UI에서 보여줄 현재 목표
+        // sleepStatus, 
+        characterStatus, 
+        isTapering: user.isTapering,
+        isMenstruating: user.isMenstruating,
+        sleepReadyTime, // 대시보드에 전달
+        withdrawalInfo, // 대시보드에 전달
+        hoursSinceLastDrink
+    };
+};
+
+
+==================================================FILE:.\src\hooks\useCaffeineStore.ts
+==================================================
+
+import { atomWithStorage } from 'jotai/utils';
+
+
+
+export const favoriteDrinksAtom = atomWithStorage<string[]>('favorite-drinks', []);
+
+
+
+// 1. 사용자 정보 (기획서 반영)
+export interface UserProfile {
+  nickname: string;
+  weight: number;         // 몸무게 (권장량 및 반감기 계산용)
+  gender: 'M' | 'F' | ''; // 성별 (여성 건강 케어 연동용)
+  isMenstruating: boolean; // 생리 중 여부 추가
+  dsm5Score: number;      // 카페인 사용 장애(CUD) 진단 점수 (0~9)
+  isTapering: boolean;    // 4주 감량 챌린지(이별 트랙) 진행 여부
+  taperingWeek: number;   // 현재 감량 주차 (1~4)
+  baseIntake: number;     // 평소 하루 평균 섭취량
+  hasCompletedOnboarding: boolean; // 온보딩(진단) 완료 여부
+  isDarkMode: boolean; // 다크모드 여부 추가
+  challengeStartedAt: string; 
+}
+
+// 2. 카페인 섭취 기록
+export interface CaffeineLog {
+  id: string;
+  caffeineAmount: number;
+  intakeTime: string;
+  beverageName: string;
+  isFasting: boolean;
+  price: number;
+}
+
+// 3. 신체 증상 기록 (두통, 콧물 등)
+export interface SymptomLog {
+  id: string;
+  type: 'HEADACHE' | 'RUNNY_NOSE' | 'CRAMPS' | 'FATIGUE';
+  recordTime: string;
+  severity: 1 | 2 | 3 | 4 | 5;
+}
+
+// ==========================================
+// Jotai Atoms (로컬 스토리지에 자동 저장됨)
+// ==========================================
+
+export const userProfileAtom = atomWithStorage<UserProfile>('cof-fee-user', {
+  nickname: '',
+  weight: 60, 
+  gender: '',
+  isMenstruating: false, 
+  dsm5Score: 0,
+  isTapering: false,
+  taperingWeek: 0,
+  baseIntake: 0,
+  hasCompletedOnboarding: false, // 처음 켜면 false
+  isDarkMode: false, // 기본값은 라이트모드
+  challengeStartedAt: '',
+});
+
+export const caffeineLogsAtom = atomWithStorage<CaffeineLog[]>('caffeine-logs',[]);
+export const symptomLogsAtom = atomWithStorage<SymptomLog[]>('symptom-logs',[]);
+
+export const dailyGoalAtom = atomWithStorage<number>('daily-goal', 400);
+
+==================================================FILE:.\src\lib\caffeineData.ts
+==================================================
+
+export interface SizeOption {
+  label: string;
+  ml: number;
+  caffeine: number;
+}
+
+export interface CoffeeMenu {
+  id: string;
+  name: string;
+  category: 'Espresso' | 'ColdBrew' | 'Decaf' | 'Tea' | 'Frappuccino' | 'Beverage'; // 카테고리 조금 더 세분화했습니다
+  sizes: SizeOption[];
+}
+
+export interface BrandData {
+  id: string;
+  brand: string;
+  menus: CoffeeMenu[];
+}
+
+export const COFFEE_BRANDS: BrandData[] = [
+  // =================================================================
+  // 1. 스타벅스 (Starbucks)
+  // =================================================================
+  {
+    id: 'sbux',
+    brand: '스타벅스',
+    menus: [
+      // 1. 콜드 브루
+      {
+        id: 'sbux_nitro_cold',
+        name: '나이트로 콜드 브루',
+        category: 'ColdBrew',
+        sizes: [{ label: 'Tall', ml: 355, caffeine: 245 }]
+      },
+      {
+        id: 'sbux_reserve_nitro',
+        name: '리저브 나이트로',
+        category: 'ColdBrew',
+        sizes: [{ label: 'Tall', ml: 355, caffeine: 190 }]
+      },
+      {
+        id: 'sbux_reserve_cold',
+        name: '리저브 콜드 브루',
+        category: 'ColdBrew',
+        sizes: [{ label: 'Tall', ml: 355, caffeine: 190 }]
+      },
+      {
+        id: 'sbux_nitro_vanilla',
+        name: '나이트로 바닐라 크림',
+        category: 'ColdBrew',
+        sizes: [{ label: 'Tall', ml: 355, caffeine: 232 }]
+      },
+      {
+        id: 'sbux_dolce_cold',
+        name: '돌체 콜드 브루',
+        category: 'ColdBrew',
+        sizes: [{ label: 'Tall', ml: 355, caffeine: 155 }]
+      },
+      {
+        id: 'sbux_vanilla_cream_cold',
+        name: '바닐라 크림 콜드브루',
+        category: 'ColdBrew',
+        sizes: [
+            { label: 'Tall', ml: 355, caffeine: 155 },
+            { label: 'Standard', ml: 0, caffeine: 125 } // 용량 미표기 항목
+        ]
+      },
+      {
+        id: 'sbux_makgeolli_cold',
+        name: '막걸리향 크림 콜드브루',
+        category: 'ColdBrew',
+        sizes: [{ label: 'Tall', ml: 355, caffeine: 53 }]
+      },
+      {
+        id: 'sbux_mint_cold',
+        name: '민트 콜드브루',
+        category: 'ColdBrew',
+        sizes: [{ label: 'Grande', ml: 473, caffeine: 415 }]
+      },
+      {
+        id: 'sbux_bergamot_cold',
+        name: '베르가못 콜드 브루',
+        category: 'ColdBrew',
+        sizes: [{ label: 'Tall', ml: 355, caffeine: 90 }]
+      },
+      {
+        id: 'sbux_bw_cold',
+        name: '블랙 & 화이트 콜드브루',
+        category: 'ColdBrew',
+        sizes: [{ label: 'Tall', ml: 355, caffeine: 190 }]
+      },
+      {
+        id: 'sbux_smoked_cold',
+        name: '스모크드 콜드 패션드',
+        category: 'ColdBrew',
+        sizes: [{ label: 'Tall', ml: 355, caffeine: 135 }]
+      },
+      {
+        id: 'sbux_sig_black_cold',
+        name: '시그니쳐 더 블랙 콜드브루',
+        category: 'ColdBrew',
+        sizes: [{ label: 'Bottle', ml: 500, caffeine: 680 }]
+      },
+      {
+        id: 'sbux_yeoju_hazel_cold',
+        name: '여주 윤슬 헤이즐넛 콜드브루',
+        category: 'ColdBrew',
+        sizes: [{ label: 'Tall', ml: 355, caffeine: 53 }]
+      },
+      {
+        id: 'sbux_oat_cold',
+        name: '오트 콜드 브루',
+        category: 'ColdBrew',
+        sizes: [{ label: 'Tall', ml: 355, caffeine: 65 }]
+      },
+      {
+        id: 'sbux_jeju_bijarim_cold',
+        name: '제주 비자림 리저브 콜드 브루',
+        category: 'ColdBrew',
+        sizes: [{ label: 'Grande', ml: 473, caffeine: 250 }]
+      },
+      {
+        id: 'sbux_coldbrew_plain',
+        name: '콜드브루',
+        category: 'ColdBrew',
+        sizes: [
+          { label: 'Tall', ml: 355, caffeine: 155 },
+          { label: 'Trenta', ml: 887, caffeine: 350 }
+        ]
+      },
+      {
+        id: 'sbux_malt',
+        name: '콜드 브루 몰트',
+        category: 'ColdBrew',
+        sizes: [{ label: 'Tall', ml: 355, caffeine: 190 }]
+      },
+      {
+        id: 'sbux_malt_float',
+        name: '콜드 브루 몰트 플로트',
+        category: 'ColdBrew',
+        sizes: [{ label: 'Tall', ml: 355, caffeine: 190 }]
+      },
+      // 2. 브루드 커피
+      {
+        id: 'sbux_brewed',
+        name: '브루드 커피',
+        category: 'Espresso',
+        sizes: [
+          { label: 'Hot Tall', ml: 355, caffeine: 260 },
+          { label: 'Ice Tall', ml: 355, caffeine: 140 }
+        ]
+      },
+      // 3. 에스프레소 & 라떼
+      {
+        id: 'sbux_friends_cinnamon',
+        name: '프렌즈 시나몬 돌체폼 카푸치노',
+        category: 'Espresso',
+        sizes: [
+          { label: 'Reserve Hot Tall', ml: 355, caffeine: 210 },
+          { label: 'Reserve Ice Tall', ml: 355, caffeine: 210 },
+          { label: 'Hot Tall', ml: 355, caffeine: 75 },
+          { label: 'Ice Tall', ml: 355, caffeine: 75 }
+        ]
+      },
+      {
+        id: 'sbux_double_esp_cream',
+        name: '더블 에스프레소 크림 라떼',
+        category: 'Espresso',
+        sizes: [
+            { label: 'Hot Tall', ml: 355, caffeine: 90 },
+            { label: 'Ice Tall', ml: 355, caffeine: 90 }
+        ]
+      },
+      {
+        id: 'sbux_con_panna',
+        name: '에스프레소 콘 파나',
+        category: 'Espresso',
+        sizes: [{ label: 'Solo', ml: 22, caffeine: 75 }]
+      },
+      {
+        id: 'sbux_macchiato',
+        name: '에스프레소 마키아또',
+        category: 'Espresso',
+        sizes: [{ label: 'Solo', ml: 22, caffeine: 75 }]
+      },
+      {
+        id: 'sbux_1st_ame',
+        name: '스타벅스 1호점 카페 아메리카노',
+        category: 'Espresso',
+        sizes: [
+            { label: 'Hot', ml: 0, caffeine: 210 },
+            { label: 'Ice', ml: 0, caffeine: 210 }
+        ]
+      },
+      {
+        id: 'sbux_ame',
+        name: '카페 아메리카노',
+        category: 'Espresso',
+        sizes: [
+            { label: 'Hot Tall', ml: 355, caffeine: 150 },
+            { label: 'Ice Tall', ml: 355, caffeine: 150 }
+        ]
+      },
+      {
+        id: 'sbux_caramel_macc',
+        name: '카라멜 마키아또',
+        category: 'Espresso',
+        sizes: [
+            { label: 'Hot Tall', ml: 355, caffeine: 75 },
+            { label: 'Ice Tall', ml: 355, caffeine: 75 }
+        ]
+      },
+      {
+        id: 'sbux_cappuccino',
+        name: '카푸치노',
+        category: 'Espresso',
+        sizes: [
+            { label: 'Hot Tall', ml: 355, caffeine: 75 },
+            { label: 'Ice Tall', ml: 355, caffeine: 75 }
+        ]
+      },
+      {
+        id: 'sbux_lavender_breve',
+        name: '라벤더 카페 브레베',
+        category: 'Espresso',
+        sizes: [
+            { label: 'Hot Tall', ml: 355, caffeine: 105 },
+            { label: 'Ice Tall', ml: 355, caffeine: 105 }
+        ]
+      },
+      {
+        id: 'sbux_milk_caramel',
+        name: '밀크카라멜 라떼',
+        category: 'Espresso',
+        sizes: [
+            { label: 'Hot Tall', ml: 355, caffeine: 75 },
+            { label: 'Ice Tall', ml: 355, caffeine: 75 }
+        ]
+      },
+      {
+        id: 'sbux_vanilla_latte',
+        name: '바닐라 라떼',
+        category: 'Espresso',
+        sizes: [
+            { label: 'Hot Tall', ml: 355, caffeine: 75 },
+            { label: 'Ice Tall', ml: 355, caffeine: 75 }
+        ]
+      },
+      {
+        id: 'sbux_vanilla_bean_latte',
+        name: '바닐라 빈 라떼',
+        category: 'Espresso',
+        sizes: [
+            { label: 'Hot Tall', ml: 355, caffeine: 210 },
+            { label: 'Ice Tall', ml: 355, caffeine: 210 }
+        ]
+      },
+      {
+        id: 'sbux_burnt_caramel',
+        name: '번트 카라멜 라떼',
+        category: 'Espresso',
+        sizes: [{ label: 'Tall', ml: 355, caffeine: 210 }]
+      },
+      {
+        id: 'sbux_sakerato_bianco',
+        name: '사케라또 비안코 오버 아이스',
+        category: 'Espresso',
+        sizes: [{ label: 'Tall', ml: 355, caffeine: 315 }]
+      },
+      {
+        id: 'sbux_1st_latte',
+        name: '스타벅스 1호점 카페 라떼',
+        category: 'Espresso',
+        sizes: [
+            { label: 'Hot', ml: 0, caffeine: 210 },
+            { label: 'Ice', ml: 0, caffeine: 210 }
+        ]
+      },
+      {
+        id: 'sbux_1st_cream',
+        name: '스타벅스 1호점 크림 라떼',
+        category: 'Espresso',
+        sizes: [
+            { label: 'Hot', ml: 0, caffeine: 210 },
+            { label: 'Ice', ml: 0, caffeine: 75 }
+        ]
+      },
+      {
+        id: 'sbux_honey_hotteok',
+        name: '스타벅스 꿀 호떡 라떼',
+        category: 'Espresso',
+        sizes: [
+            { label: 'Hot Tall', ml: 355, caffeine: 75 },
+            { label: 'Ice Tall', ml: 355, caffeine: 75 }
+        ]
+      },
+      {
+        id: 'sbux_dolce',
+        name: '스타벅스 돌체 라떼',
+        category: 'Espresso',
+        sizes: [
+            { label: 'Hot Tall', ml: 355, caffeine: 150 },
+            { label: 'Ice Tall', ml: 355, caffeine: 105 }
+        ]
+      },
+      {
+        id: 'sbux_injeolmi',
+        name: '인절미 크림 라떼',
+        category: 'Espresso',
+        sizes: [
+            { label: 'Hot Tall', ml: 355, caffeine: 75 },
+            { label: 'Ice Tall', ml: 355, caffeine: 75 }
+        ]
+      },
+      {
+        id: 'sbux_jeju_bijarim_latte',
+        name: '제주 비자림 리저브 에스프레소 라떼',
+        category: 'Espresso',
+        sizes: [{ label: 'Tall', ml: 355, caffeine: 210 }]
+      },
+      {
+        id: 'sbux_latte',
+        name: '카페 라떼',
+        category: 'Espresso',
+        sizes: [
+            { label: 'Hot Tall', ml: 355, caffeine: 75 },
+            { label: 'Ice Tall', ml: 355, caffeine: 75 }
+        ]
+      },
+      {
+        id: 'sbux_cortado',
+        name: '코르타도',
+        category: 'Espresso',
+        sizes: [{ label: 'Short', ml: 237, caffeine: 255 }]
+      },
+      {
+        id: 'sbux_mocha',
+        name: '카페 모카',
+        category: 'Espresso',
+        sizes: [
+            { label: 'Hot Tall', ml: 355, caffeine: 95 },
+            { label: 'Ice Tall', ml: 355, caffeine: 95 }
+        ]
+      },
+      {
+        id: 'sbux_white_choco_mocha',
+        name: '화이트 초콜릿 모카',
+        category: 'Espresso',
+        sizes: [
+            { label: 'Hot Tall', ml: 355, caffeine: 75 },
+            { label: 'Ice Tall', ml: 355, caffeine: 75 }
+        ]
+      },
+      {
+        id: 'sbux_classic_mint_mocha',
+        name: '클래식 민트 모카',
+        category: 'Espresso',
+        sizes: [{ label: 'Grande', ml: 473, caffeine: 210 }]
+      },
+      {
+        id: 'sbux_flat_white',
+        name: '플랫 화이트',
+        category: 'Espresso',
+        sizes: [
+            { label: 'Hot Tall', ml: 355, caffeine: 130 },
+            { label: 'Ice Tall', ml: 355, caffeine: 130 }
+        ]
+      },
+      {
+        id: 'sbux_double_shot_flavors',
+        name: '스타벅스 더블 샷 (바닐라/커피/헤이즐넛)',
+        category: 'Espresso',
+        sizes: [
+            { label: 'Vanilla 207ml', ml: 207, caffeine: 105 },
+            { label: 'Coffee 207ml', ml: 207, caffeine: 150 },
+            { label: 'Hazelnut 207ml', ml: 207, caffeine: 150 }
+        ]
+      },
+      {
+        id: 'sbux_affogato',
+        name: '아포가토 (사케라또/클래식)',
+        category: 'Espresso',
+        sizes: [
+            { label: 'Sakerato Tall', ml: 355, caffeine: 210 },
+            { label: 'Classic Tall', ml: 355, caffeine: 210 }
+        ]
+      },
+      {
+        id: 'sbux_sparkling_citrus',
+        name: '스파클링 시트러스 에스프레소',
+        category: 'Espresso',
+        sizes: [{ label: 'Tall', ml: 355, caffeine: 105 }]
+      },
+      {
+        id: 'sbux_espresso',
+        name: '에스프레소',
+        category: 'Espresso',
+        sizes: [{ label: 'Solo', ml: 22, caffeine: 75 }]
+      },
+      // 4. 프라푸치노
+      {
+        id: 'sbux_frap_choco_banana',
+        name: '초코 바나나 마카다미아 오트 프라푸치노',
+        category: 'Frappuccino',
+        sizes: [{ label: 'Grande', ml: 473, caffeine: 5 }]
+      },
+      {
+        id: 'sbux_frap_double_esp',
+        name: '더블 에스프레소 칩 프라푸치노',
+        category: 'Frappuccino',
+        sizes: [{ label: 'Tall', ml: 355, caffeine: 130 }]
+      },
+      {
+        id: 'sbux_frap_esp',
+        name: '에스프레소 프라푸치노',
+        category: 'Frappuccino',
+        sizes: [{ label: 'Tall', ml: 355, caffeine: 120 }]
+      },
+      {
+        id: 'sbux_frap_java',
+        name: '자바 칩 프라푸치노',
+        category: 'Frappuccino',
+        sizes: [{ label: 'Tall', ml: 355, caffeine: 100 }]
+      },
+      {
+        id: 'sbux_frap_caramel',
+        name: '카라멜 프라푸치노',
+        category: 'Frappuccino',
+        sizes: [{ label: 'Tall', ml: 355, caffeine: 85 }]
+      },
+      {
+        id: 'sbux_frap_strawberry',
+        name: '딸기 글레이즈드 크림 프라푸치노',
+        category: 'Frappuccino',
+        sizes: [{ label: 'Tall', ml: 355, caffeine: 5 }]
+      },
+      {
+        id: 'sbux_frap_matcha',
+        name: '제주 말차 크림 프라푸치노 (일반/베르가못/인절미)',
+        category: 'Frappuccino',
+        sizes: [
+            { label: 'Normal Tall', ml: 355, caffeine: 60 },
+            { label: 'Bergamot Grande', ml: 473, caffeine: 30 },
+            { label: 'Injeolmi Grande', ml: 473, caffeine: 37 }
+        ]
+      },
+      {
+        id: 'sbux_frap_choco_chip',
+        name: '초콜릿 크림 칩 프라푸치노',
+        category: 'Frappuccino',
+        sizes: [{ label: 'Tall', ml: 355, caffeine: 10 }]
+      },
+      // 5. 블렌디드 & 리프레셔 & 티
+      {
+        id: 'sbux_blended_milktea',
+        name: '스타벅스 클래식 밀크티 블렌디드',
+        category: 'Beverage',
+        sizes: [{ label: 'Tall', ml: 355, caffeine: 60 }]
+      },
+      {
+        id: 'sbux_blended_matcha_yuzu',
+        name: '말차 폭포 유자 블렌디드',
+        category: 'Beverage',
+        sizes: [{ label: 'Tall', ml: 355, caffeine: 65 }]
+      },
+      {
+        id: 'sbux_refresher',
+        name: '스타벅스 리프레셔',
+        category: 'Beverage',
+        sizes: [
+            { label: 'Tall', ml: 355, caffeine: 30 },
+            { label: 'Strawberry Trenta', ml: 887, caffeine: 73 }
+        ]
+      },
+      {
+        id: 'sbux_fizzio',
+        name: '피지오 (홉/쿨라임/피치)',
+        category: 'Beverage',
+        sizes: [
+            { label: 'Golden Mandarin Hop', ml: 0, caffeine: 16 },
+            { label: 'Cool Lime Tall', ml: 355, caffeine: 100 },
+            { label: 'Peach Strawberry Tall', ml: 355, caffeine: 37 }
+        ]
+      },
+      {
+        id: 'sbux_tea_earlgrey',
+        name: '얼 그레이 티 (라떼/티)',
+        category: 'Tea',
+        sizes: [
+            { label: 'Berry Tea Latte Tall', ml: 355, caffeine: 30 },
+            { label: 'Tea Tall', ml: 355, caffeine: 70 },
+            { label: 'Ice Tea Tall', ml: 355, caffeine: 50 },
+            { label: 'Vanilla Tea Latte Tall', ml: 355, caffeine: 55 },
+            { label: 'Ice Vanilla Tea Latte Tall', ml: 355, caffeine: 29 }
+        ]
+      },
+      {
+        id: 'sbux_tea_black',
+        name: '잉글리쉬 브렉퍼스트 티',
+        category: 'Tea',
+        sizes: [
+            { label: 'Hot Tall', ml: 355, caffeine: 70 },
+            { label: 'Ice Tall', ml: 355, caffeine: 40 }
+        ]
+      },
+      {
+        id: 'sbux_tea_grapefruit',
+        name: '자몽 허니 블랙 티',
+        category: 'Tea',
+        sizes: [
+            { label: 'Hot Tall', ml: 355, caffeine: 70 },
+            { label: 'Ice Tall', ml: 355, caffeine: 30 },
+            { label: 'Jeju Palsak Tall', ml: 355, caffeine: 70 },
+            { label: 'Ice Trenta', ml: 887, caffeine: 75 }
+        ]
+      },
+      {
+        id: 'sbux_tea_matcha_latte',
+        name: '제주 말차 라떼',
+        category: 'Tea',
+        sizes: [
+            { label: 'Hot Tall', ml: 355, caffeine: 60 },
+            { label: 'Ice Tall', ml: 355, caffeine: 60 },
+            { label: 'Injeolmi Hot', ml: 0, caffeine: 58 },
+            { label: 'Injeolmi Ice Tall', ml: 355, caffeine: 52 },
+            { label: 'Tiramisu Hot Tall', ml: 355, caffeine: 75 },
+            { label: 'French Vanilla Tall', ml: 355, caffeine: 40 }
+        ]
+      },
+      {
+        id: 'sbux_tea_milktea',
+        name: '클래식 밀크 티',
+        category: 'Tea',
+        sizes: [
+            { label: 'Hot Tall', ml: 355, caffeine: 190 },
+            { label: 'Ice Tall', ml: 355, caffeine: 80 },
+            { label: 'Bottle 500ml', ml: 500, caffeine: 195 }
+        ]
+      },
+      {
+        id: 'sbux_others',
+        name: '기타 제조 음료 (초콜릿 등)',
+        category: 'Beverage',
+        sizes: [
+            { label: 'Signature Hot Choco Tall', ml: 355, caffeine: 15 },
+            { label: 'Ice Signature Choco Tall', ml: 355, caffeine: 5 },
+            { label: 'Strawberry Cold Foam Choco', ml: 0, caffeine: 5 },
+            { label: 'Tiramisu Choco Tall', ml: 355, caffeine: 10 }
+        ]
+      }
+    ],
+  },
+
+  // =================================================================
+  // 2. 투썸플레이스 (Twosome Place)
+  // =================================================================
+  {
+    id: 'twosome',
+    brand: '투썸플레이스',
+    menus: [
+      {
+        id: 'twosome_cold_decaf',
+        name: '디카페인 콜드브루 (라떼 포함)',
+        category: 'Decaf',
+        sizes: [
+            { label: 'Cold Brew 414ml', ml: 414, caffeine: 8 },
+            { label: 'Latte 414ml', ml: 414, caffeine: 13 }
+        ]
+      },
+      {
+        id: 'twosome_vanilla_bean',
+        name: '바닐라빈 라떼',
+        category: 'Espresso',
+        sizes: [{ label: 'Regular', ml: 355, caffeine: 184 }]
+      },
+      {
+        id: 'twosome_ame',
+        name: '아메리카노',
+        category: 'Espresso',
+        sizes: [{ label: 'Regular', ml: 355, caffeine: 184 }]
+      },
+      {
+        id: 'twosome_latte',
+        name: '카페 라떼',
+        category: 'Espresso',
+        sizes: [{ label: 'Regular', ml: 355, caffeine: 184 }]
+      },
+      {
+        id: 'twosome_cap',
+        name: '카푸치노',
+        category: 'Espresso',
+        sizes: [{ label: 'Regular', ml: 355, caffeine: 184 }]
+      },
+      {
+        id: 'twosome_vanilla_latte',
+        name: '바닐라 라떼',
+        category: 'Espresso',
+        sizes: [{ label: 'Regular', ml: 355, caffeine: 184 }]
+      },
+      {
+        id: 'twosome_caramel_macc',
+        name: '카라멜 마키아또',
+        category: 'Espresso',
+        sizes: [{ label: 'Regular', ml: 355, caffeine: 184 }]
+      },
+      {
+        id: 'twosome_mocha',
+        name: '카페 모카',
+        category: 'Espresso',
+        sizes: [{ label: 'Regular', ml: 355, caffeine: 192 }]
+      },
+      {
+        id: 'twosome_cold_vanilla',
+        name: '바닐라빈 콜드브루 라떼',
+        category: 'ColdBrew',
+        sizes: [{ label: 'Regular', ml: 414, caffeine: 132 }]
+      },
+      {
+        id: 'twosome_coldbrew',
+        name: '콜드브루',
+        category: 'ColdBrew',
+        sizes: [{ label: 'Regular', ml: 414, caffeine: 212 }]
+      },
+      {
+        id: 'twosome_cold_latte',
+        name: '콜드브루 라떼',
+        category: 'ColdBrew',
+        sizes: [{ label: 'Regular', ml: 414, caffeine: 212 }]
+      },
+      {
+        id: 'twosome_ashotchu',
+        name: '아샷추 (애플/민트/피치)',
+        category: 'Tea',
+        sizes: [
+            { label: 'Apple 591ml', ml: 591, caffeine: 92 },
+            { label: 'Mint 591ml', ml: 591, caffeine: 92 },
+            { label: 'Peach 591ml', ml: 591, caffeine: 92 }
+        ]
+      },
+      {
+        id: 'twosome_banana',
+        name: '바나나 샷 (라떼/아메리카노)',
+        category: 'Espresso',
+        sizes: [
+            { label: 'Latte 355ml', ml: 355, caffeine: 92 },
+            { label: 'Americano 473ml', ml: 473, caffeine: 184 }
+        ]
+      },
+      {
+        id: 'twosome_longblack',
+        name: '롱 블랙',
+        category: 'Espresso',
+        sizes: [{ label: 'Regular', ml: 237, caffeine: 184 }]
+      },
+      {
+        id: 'twosome_short_latte',
+        name: '숏 라떼',
+        category: 'Espresso',
+        sizes: [{ label: 'Regular', ml: 296, caffeine: 184 }]
+      },
+      {
+        id: 'twosome_peanut',
+        name: '피넛 헤이즐넛 라떼',
+        category: 'Espresso',
+        sizes: [{ label: 'Regular', ml: 355, caffeine: 184 }]
+      },
+      {
+        id: 'twosome_einspanner',
+        name: '아인슈페너',
+        category: 'Espresso',
+        sizes: [{ label: 'Regular', ml: 355, caffeine: 184 }]
+      },
+      {
+        id: 'twosome_dalgona',
+        name: '달고나 라떼',
+        category: 'Espresso',
+        sizes: [{ label: 'Regular', ml: 355, caffeine: 40 }]
+      },
+      {
+        id: 'twosome_spanish',
+        name: '스페니쉬 연유 라떼',
+        category: 'Espresso',
+        sizes: [{ label: 'Regular', ml: 355, caffeine: 184 }]
+      },
+      {
+        id: 'twosome_espresso',
+        name: '에스프레소',
+        category: 'Espresso',
+        sizes: [{ label: '1 Shot', ml: 23, caffeine: 92 }]
+      },
+      {
+        id: 'twosome_oat_white',
+        name: '오트 화이트 라떼',
+        category: 'Espresso',
+        sizes: [{ label: 'Regular', ml: 355, caffeine: 10 }]
+      }
+    ],
+  },
+
+  // =================================================================
+  // 3. 커피빈 (Coffee Bean)
+  // =================================================================
+  {
+    id: 'cbean',
+    brand: '커피빈',
+    menus: [
+      {
+        id: 'cbean_mocha',
+        name: '카페 모카',
+        category: 'Espresso',
+        sizes: [
+            { label: 'Ice', ml: 0, caffeine: 102 },
+            { label: 'Hot', ml: 0, caffeine: 102 }
+        ]
+      },
+      {
+        id: 'cbean_brown_macchiatone',
+        name: '브라운 마끼아토네',
+        category: 'Espresso',
+        sizes: [{ label: 'Standard', ml: 0, caffeine: 91 }]
+      },
+      {
+        id: 'cbean_macchiatone',
+        name: '마끼아토네',
+        category: 'Espresso',
+        sizes: [{ label: 'Standard', ml: 0, caffeine: 91 }]
+      },
+      {
+        id: 'cbean_hazelnut_latte',
+        name: '헤이즐넛 라떼',
+        category: 'Espresso',
+        sizes: [
+            { label: 'Ice', ml: 0, caffeine: 91 },
+            { label: 'Hot', ml: 0, caffeine: 91 }
+        ]
+      },
+      {
+        id: 'cbean_latte',
+        name: '카페 라떼',
+        category: 'Espresso',
+        sizes: [
+            { label: 'Hot', ml: 0, caffeine: 91 },
+            { label: 'Ice', ml: 0, caffeine: 91 }
+        ]
+      },
+      {
+        id: 'cbean_ame',
+        name: '아메리카노',
+        category: 'Espresso',
+        sizes: [
+            { label: 'Hot', ml: 0, caffeine: 182 },
+            { label: 'Ice', ml: 0, caffeine: 91 }, // 텍스트 파일상 아이스 0mg 표기는 디카페인 오기 같으나, 헤이즐넛 아이스가 91이므로 91로 추정/보정하거나 원본 데이터 유지
+            { label: 'Hazelnut Hot', ml: 0, caffeine: 182 },
+            { label: 'Hazelnut Ice', ml: 0, caffeine: 91 }
+        ]
+      },
+      {
+        id: 'cbean_cappuccino',
+        name: '카푸치노',
+        category: 'Espresso',
+        sizes: [{ label: 'Hot', ml: 0, caffeine: 91 }]
+      },
+      {
+        id: 'cbean_vanilla_latte',
+        name: '바닐라 라떼',
+        category: 'Espresso',
+        sizes: [
+            { label: 'Hot', ml: 0, caffeine: 91 },
+            { label: 'Ice', ml: 0, caffeine: 91 }
+        ]
+      },
+      {
+        id: 'cbean_cafesua',
+        name: '카페수아 (연유)',
+        category: 'Espresso',
+        sizes: [
+            { label: 'Hot', ml: 0, caffeine: 182 },
+            { label: 'Ice', ml: 0, caffeine: 182 }
+        ]
+      },
+      {
+        id: 'cbean_caramel_macc',
+        name: '캐러멜 마키아또',
+        category: 'Espresso',
+        sizes: [
+            { label: 'Hot', ml: 0, caffeine: 91 },
+            { label: 'Ice', ml: 0, caffeine: 91 }
+        ]
+      },
+      {
+        id: 'cbean_flatwhite',
+        name: '플랫 화이트',
+        category: 'Espresso',
+        sizes: [{ label: 'Standard', ml: 0, caffeine: 198 }]
+      },
+      {
+        id: 'cbean_espresso',
+        name: '에스프레소',
+        category: 'Espresso',
+        sizes: [
+            { label: 'Ice', ml: 0, caffeine: 273 }, // 파일 데이터 그대로 반영
+            { label: 'Macchiato Double', ml: 0, caffeine: 198 }
+        ]
+      }
+    ],
+  },
+
+  // =================================================================
+  // 4. 컴포즈 커피 (Compose Coffee)
+  // =================================================================
+  {
+    id: 'compose',
+    brand: '컴포즈커피',
+    menus: [
+      {
+        id: 'compose_ame',
+        name: '아메리카노',
+        category: 'Espresso',
+        sizes: [
+            { label: 'Hot 20oz', ml: 591, caffeine: 156 },
+            { label: 'Ice 20oz', ml: 591, caffeine: 156 },
+            { label: 'BigPose 32oz', ml: 946, caffeine: 312 }
+        ]
+      },
+      {
+        id: 'compose_latte',
+        name: '카페라떼',
+        category: 'Espresso',
+        sizes: [
+            { label: 'Hot 20oz', ml: 591, caffeine: 208 },
+            { label: 'Ice 20oz', ml: 591, caffeine: 208 }
+        ]
+      },
+      {
+        id: 'compose_cap',
+        name: '카푸치노',
+        category: 'Espresso',
+        sizes: [{ label: '20oz', ml: 591, caffeine: 208 }]
+      },
+      {
+        id: 'compose_vanilla',
+        name: '바닐라라떼',
+        category: 'Espresso',
+        sizes: [
+            { label: 'Hot 20oz', ml: 591, caffeine: 208 },
+            { label: 'Ice 20oz', ml: 591, caffeine: 208 }
+        ]
+      },
+      {
+        id: 'compose_hazelnut',
+        name: '헤이즐넛 라떼',
+        category: 'Espresso',
+        sizes: [
+            { label: 'Hot 20oz', ml: 591, caffeine: 208 },
+            { label: 'Ice 20oz', ml: 591, caffeine: 208 }
+        ]
+      },
+      {
+        id: 'compose_caramel',
+        name: '카라멜마끼아또',
+        category: 'Espresso',
+        sizes: [
+            { label: 'Hot 20oz', ml: 591, caffeine: 208 },
+            { label: 'Ice 20oz', ml: 591, caffeine: 208 }
+        ]
+      },
+      {
+        id: 'compose_mocha',
+        name: '카페모카',
+        category: 'Espresso',
+        sizes: [
+            { label: 'Hot 20oz', ml: 591, caffeine: 208 },
+            { label: 'Ice 20oz', ml: 591, caffeine: 208 }
+        ]
+      },
+      {
+        id: 'compose_dolce',
+        name: '돌체라떼',
+        category: 'Espresso',
+        sizes: [
+            { label: 'Hot 20oz', ml: 591, caffeine: 208 },
+            { label: 'Ice 20oz', ml: 591, caffeine: 208 }
+        ]
+      },
+      {
+        id: 'compose_heukdang',
+        name: '흑당카페라떼',
+        category: 'Espresso',
+        sizes: [{ label: '20oz', ml: 591, caffeine: 104 }]
+      },
+      {
+        id: 'compose_dalgona',
+        name: '달고나라떼',
+        category: 'Espresso',
+        sizes: [{ label: '20oz', ml: 591, caffeine: 156 }]
+      },
+      {
+        id: 'compose_einspanner_latte',
+        name: '아인슈페너라떼',
+        category: 'Espresso',
+        sizes: [{ label: '20oz', ml: 591, caffeine: 208 }]
+      },
+      {
+        id: 'compose_einspanner',
+        name: '아인슈페너',
+        category: 'Espresso',
+        sizes: [{ label: '20oz', ml: 591, caffeine: 85 }]
+      },
+      {
+        id: 'compose_coldbrew',
+        name: '콜드브루',
+        category: 'ColdBrew',
+        sizes: [
+            { label: 'Hot 20oz', ml: 591, caffeine: 85 }, // Hot/Ice 카페인 다름 주의
+            { label: 'Ice 20oz', ml: 591, caffeine: 181 }
+        ]
+      },
+      {
+        id: 'compose_coldbrew_latte',
+        name: '콜드브루라떼',
+        category: 'ColdBrew',
+        sizes: [
+            { label: 'Hot 20oz', ml: 591, caffeine: 181 },
+            { label: 'Ice 20oz', ml: 591, caffeine: 181 }
+        ]
+      },
+      {
+        id: 'compose_decaf_cold',
+        name: '디카페인 콜드브루 (라떼 포함)',
+        category: 'Decaf',
+        sizes: [
+            { label: 'ColdBrew Hot/Ice', ml: 591, caffeine: 4.7 },
+            { label: 'Latte Hot/Ice', ml: 591, caffeine: 4.7 }
+        ]
+      },
+      {
+        id: 'compose_decaf_ame',
+        name: '디카페인 아메리카노',
+        category: 'Decaf',
+        sizes: [
+            { label: 'Hot', ml: 591, caffeine: 45 }, // 2shot 기준이나 원본 45ml 표기됨, 메뉴제공 기준 591ml
+            { label: 'Ice', ml: 591, caffeine: 9.2 }
+        ]
+      },
+      {
+        id: 'compose_espresso',
+        name: '에스프레소',
+        category: 'Espresso',
+        sizes: [{ label: '1 Shot', ml: 30, caffeine: 104 }]
+      }
+    ],
+  },
+
+  // =================================================================
+  // 5. 빽다방 (Paik's Coffee)
+  // =================================================================
+  {
+    id: 'paiks',
+    brand: '빽다방',
+    menus: [
+      {
+        id: 'paiks_esp',
+        name: '더블 에스프레소',
+        category: 'Espresso',
+        sizes: [
+            { label: 'Standard', ml: 60, caffeine: 293 },
+            { label: 'Decaf', ml: 60, caffeine: 1.9 }
+        ]
+      },
+      {
+        id: 'paiks_ame',
+        name: '아메리카노',
+        category: 'Espresso',
+        sizes: [
+            { label: 'Hot 16oz', ml: 473, caffeine: 293 },
+            { label: 'Ice 24oz', ml: 710, caffeine: 293 },
+            { label: 'Paik Size 32oz', ml: 946, caffeine: 586 },
+            { label: 'Decaf Hot', ml: 473, caffeine: 1.9 },
+            { label: 'Decaf Ice', ml: 710, caffeine: 19 },
+            { label: 'Decaf Paik Size', ml: 946, caffeine: 3.8 }
+        ]
+      },
+      {
+        id: 'paiks_redbull',
+        name: '레드불 꿀샷추',
+        category: 'Beverage',
+        sizes: [{ label: 'Ice 24oz', ml: 710, caffeine: 197 }]
+      },
+      {
+        id: 'paiks_wonjo',
+        name: '원조커피',
+        category: 'Espresso',
+        sizes: [
+            { label: 'Hot 16oz', ml: 473, caffeine: 406 },
+            { label: 'Ice 24oz', ml: 710, caffeine: 371 },
+            { label: 'Paik Size', ml: 946, caffeine: 564 },
+            { label: 'Zero Sugar Hot', ml: 473, caffeine: 489 },
+            { label: 'Zero Sugar Ice', ml: 710, caffeine: 452 },
+            { label: 'Zero Sugar Paik Size', ml: 946, caffeine: 686 }
+        ]
+      },
+      {
+        id: 'paiks_ashotchu',
+        name: '아이스티 샷추가 (아샷추/아샷망추)',
+        category: 'Tea',
+        sizes: [
+            { label: 'AhShotChu 24oz', ml: 710, caffeine: 100 },
+            { label: 'AhShotMangChu 24oz', ml: 710, caffeine: 106 },
+            { label: 'Decaf AhShotChu', ml: 710, caffeine: 27.9 },
+            { label: 'Decaf AhShotMangChu', ml: 710, caffeine: 26 },
+            { label: 'Paik Size AhShotChu', ml: 946, caffeine: 179 },
+            { label: 'Paik Size AhShotMangChu', ml: 946, caffeine: 177 }
+        ]
+      },
+      {
+        id: 'paiks_coconut',
+        name: '코코넛 커피 (라떼/스무디)',
+        category: 'Espresso',
+        sizes: [
+            { label: 'Latte Hot', ml: 473, caffeine: 283 },
+            { label: 'Latte Ice', ml: 710, caffeine: 236 },
+            { label: 'Smoothie', ml: 710, caffeine: 237 },
+            { label: 'Decaf Latte Hot', ml: 473, caffeine: 1.9 },
+            { label: 'Decaf Smoothie', ml: 710, caffeine: 374 }
+        ]
+      },
+      {
+        id: 'paiks_coconut_cold',
+        name: '코코넛 콜드브루 (라떼/스무디)',
+        category: 'ColdBrew',
+        sizes: [
+            { label: 'Latte Hot', ml: 473, caffeine: 272 },
+            { label: 'Latte Ice', ml: 710, caffeine: 207 },
+            { label: 'Smoothie', ml: 710, caffeine: 183 },
+            { label: 'Decaf Latte Hot', ml: 473, caffeine: 446 },
+            { label: 'Decaf Latte Ice', ml: 710, caffeine: 344 },
+            { label: 'Decaf Smoothie', ml: 710, caffeine: 404 }
+        ]
+      },
+      {
+        id: 'paiks_honey_ame',
+        name: '꿀 아메리카노',
+        category: 'Espresso',
+        sizes: [
+            { label: 'Hot/Ice', ml: 0, caffeine: 293 },
+            { label: 'Decaf Hot/Ice', ml: 0, caffeine: 1.9 }
+        ]
+      },
+      {
+        id: 'paiks_hazel_ame',
+        name: '헤이즐넛 아메리카노',
+        category: 'Espresso',
+        sizes: [
+            { label: 'Hot/Ice', ml: 0, caffeine: 293 },
+            { label: 'Decaf Hot/Ice', ml: 0, caffeine: 1.9 }
+        ]
+      },
+      {
+        id: 'paiks_hazel_latte',
+        name: '헤이즐넛 라떼',
+        category: 'Espresso',
+        sizes: [
+            { label: 'Hot/Ice', ml: 0, caffeine: 293 },
+            { label: 'Decaf Hot', ml: 0, caffeine: 1.9 },
+            { label: 'Decaf Ice', ml: 0, caffeine: 19 }
+        ]
+      },
+      {
+        id: 'paiks_dolce',
+        name: '달달연유라떼',
+        category: 'Espresso',
+        sizes: [
+            { label: 'Hot/Ice', ml: 0, caffeine: 293 },
+            { label: 'Decaf Hot/Ice', ml: 0, caffeine: 1.9 }
+        ]
+      },
+      {
+        id: 'paiks_latte',
+        name: '카페라떼',
+        category: 'Espresso',
+        sizes: [
+            { label: 'Hot/Ice', ml: 0, caffeine: 293 },
+            { label: 'Paik Size', ml: 946, caffeine: 586 },
+            { label: 'Decaf Hot/Ice', ml: 0, caffeine: 1.9 },
+            { label: 'Decaf Paik Size', ml: 946, caffeine: 3.8 }
+        ]
+      },
+      {
+        id: 'paiks_blackpearl',
+        name: '흑당버블 카페라떼',
+        category: 'Espresso',
+        sizes: [
+            { label: 'Ice', ml: 710, caffeine: 147 },
+            { label: 'Decaf', ml: 710, caffeine: 0.9 }
+        ]
+      },
+      {
+        id: 'paiks_vanilla',
+        name: '바닐라라떼',
+        category: 'Espresso',
+        sizes: [
+            { label: 'Hot/Ice', ml: 0, caffeine: 293 },
+            { label: 'Paik Size', ml: 946, caffeine: 538 },
+            { label: 'Decaf Hot/Ice', ml: 0, caffeine: 1.9 },
+            { label: 'Decaf Paik Size', ml: 946, caffeine: 564 }
+        ]
+      },
+      {
+        id: 'paiks_mocha',
+        name: '카페모카',
+        category: 'Espresso',
+        sizes: [
+            { label: 'Hot', ml: 473, caffeine: 299 },
+            { label: 'Ice', ml: 710, caffeine: 270 },
+            { label: 'Decaf Hot', ml: 473, caffeine: 136.7 },
+            { label: 'Decaf Ice', ml: 710, caffeine: 117.8 }
+        ]
+      },
+      {
+        id: 'paiks_caramel',
+        name: '카라멜마키아또',
+        category: 'Espresso',
+        sizes: [
+            { label: 'Hot/Ice', ml: 0, caffeine: 293 },
+            { label: 'Decaf Hot/Ice', ml: 0, caffeine: 1.9 }
+        ]
+      },
+      {
+        id: 'paiks_banana',
+        name: '바나나 카페라떼/쉐이크',
+        category: 'Espresso',
+        sizes: [
+            { label: 'Latte Hot/Ice', ml: 0, caffeine: 147 },
+            { label: 'Shake', ml: 710, caffeine: 147 },
+            { label: 'Decaf', ml: 0, caffeine: 0.9 }
+        ]
+      },
+      {
+        id: 'paiks_icecream_latte',
+        name: '아이스크림 라떼 (카페/바닐라/모카)',
+        category: 'Espresso',
+        sizes: [
+            { label: 'Cafe/Vanilla Ice', ml: 710, caffeine: 293 },
+            { label: 'Mocha Ice', ml: 710, caffeine: 309 },
+            { label: 'Decaf Cafe/Vanilla', ml: 710, caffeine: 1.9 },
+            { label: 'Decaf Mocha', ml: 710, caffeine: 113.9 }
+        ]
+      },
+      {
+        id: 'paiks_coldbrew_plain',
+        name: '콜드브루 (일반/디카페인)',
+        category: 'ColdBrew',
+        sizes: [
+            { label: 'Hot/Ice', ml: 0, caffeine: 184.3 },
+            { label: 'Decaf Ice', ml: 710, caffeine: 11.8 },
+            { label: 'Decaf Hot', ml: 473, caffeine: 184.3 }
+        ]
+      },
+      {
+        id: 'paiks_creamy_cold',
+        name: '크리미 콜드브루 (바닐라/카라멜)',
+        category: 'ColdBrew',
+        sizes: [
+            { label: 'Vanilla', ml: 0, caffeine: 129 },
+            { label: 'Caramel', ml: 0, caffeine: 170 },
+            { label: 'Decaf Vanilla', ml: 0, caffeine: 10 },
+            { label: 'Decaf Caramel', ml: 0, caffeine: 9 }
+        ]
+      },
+      {
+        id: 'paiks_coldbrew_latte',
+        name: '콜드브루 라떼/연유/흑당',
+        category: 'ColdBrew',
+        sizes: [
+            { label: 'Latte Hot/Ice', ml: 0, caffeine: 184.3 },
+            { label: 'Yeonyu Hot/Ice', ml: 0, caffeine: 184.3 },
+            { label: 'Heukdang Hot/Ice', ml: 0, caffeine: 184.3 },
+            { label: 'Decaf Variants', ml: 0, caffeine: 11.8 }
+        ]
+      }
+    ],
+  },
+
+  // =================================================================
+  // 6. 메가커피 (Mega Coffee)
+  // =================================================================
+  {
+    id: 'mega',
+    brand: '메가커피',
+    menus: [
+      {
+        id: 'mega_gelato_frappe',
+        name: '젤라또 프라페/라떼 (말차/딸기/초코)',
+        category: 'Frappuccino',
+        sizes: [
+            { label: 'Matcha Gelato Strawberry Frappe', ml: 591, caffeine: 52.4 },
+            { label: 'Strawberry Gelato Choco Latte', ml: 591, caffeine: 9.5 },
+            { label: 'Choco Gelato Matcha Latte', ml: 591, caffeine: 153.8 }
+        ]
+      },
+      {
+        id: 'mega_marshmallow',
+        name: '마시멜로 스노우 크림초코',
+        category: 'Beverage',
+        sizes: [
+            { label: 'Ice', ml: 591, caffeine: 25.9 },
+            { label: 'Hot', ml: 591, caffeine: 19.8 }
+        ]
+      },
+      {
+        id: 'mega_sweet_potato',
+        name: '군고구마 크림브륄레 슈페너',
+        category: 'Espresso',
+        sizes: [{ label: 'Standard', ml: 591, caffeine: 211 }]
+      },
+      {
+        id: 'mega_cherry_coke',
+        name: '제로 체리콜라',
+        category: 'Beverage',
+        sizes: [{ label: 'Standard', ml: 710, caffeine: 7.6 }]
+      },
+      {
+        id: 'mega_hutgae',
+        name: '헛개리카노',
+        category: 'Espresso',
+        sizes: [
+            { label: 'Hot', ml: 591, caffeine: 181.6 },
+            { label: 'Ice', ml: 710, caffeine: 181.2 },
+            { label: 'Wang Mega', ml: 946, caffeine: 234.6 },
+            { label: 'Decaf Hot', ml: 591, caffeine: 9.1 },
+            { label: 'Decaf Ice', ml: 710, caffeine: 5.3 },
+            { label: 'Decaf Wang', ml: 946, caffeine: 13.1 }
+        ]
+      },
+      {
+        id: 'mega_latte',
+        name: '카페라떼',
+        category: 'Espresso',
+        sizes: [
+            { label: '20oz', ml: 591, caffeine: 189.9 },
+            { label: 'Wang Mega', ml: 946, caffeine: 347.1 },
+            { label: 'Decaf', ml: 591, caffeine: 17 },
+            { label: 'Decaf Wang', ml: 946, caffeine: 11.2 }
+        ]
+      },
+      {
+        id: 'mega_vanilla_almond',
+        name: '라이트 바닐라 아몬드라떼',
+        category: 'Espresso',
+        sizes: [
+            { label: 'Standard', ml: 591, caffeine: 206.2 },
+            { label: 'Decaf', ml: 591, caffeine: 9.5 }
+        ]
+      },
+      {
+        id: 'mega_halmega',
+        name: '할메가커피',
+        category: 'Espresso',
+        sizes: [
+            { label: 'Misu Coffee', ml: 591, caffeine: 180.1 },
+            { label: 'Halmega', ml: 591, caffeine: 99.6 },
+            { label: 'Wang Halmega', ml: 946, caffeine: 196.4 }
+        ]
+      },
+      {
+        id: 'mega_wang_choco',
+        name: '왕메가초코',
+        category: 'Beverage',
+        sizes: [{ label: 'Wang', ml: 946, caffeine: 35.6 }]
+      },
+      {
+        id: 'mega_icetea',
+        name: '아이스티 (왕메가/제로)',
+        category: 'Tea',
+        sizes: [
+            { label: 'Wang Mega', ml: 946, caffeine: 41.2 },
+            { label: 'Zero Peach', ml: 710, caffeine: 14.5 },
+            { label: 'Peach Ice', ml: 710, caffeine: 24 }
+        ]
+      },
+      {
+        id: 'mega_coconut',
+        name: '코코넛 커피 스무디',
+        category: 'Espresso',
+        sizes: [{ label: 'Standard', ml: 591, caffeine: 173.8 }]
+      },
+      {
+        id: 'mega_decaf_ame',
+        name: '디카페인 아메리카노 (꿀/헤이즐넛/바닐라)',
+        category: 'Decaf',
+        sizes: [
+            { label: 'Americano 591ml', ml: 591, caffeine: 11.4 },
+            { label: 'Americano 710ml', ml: 710, caffeine: 10.8 },
+            { label: 'Megaricano', ml: 946, caffeine: 10.9 },
+            { label: 'Honey 591ml', ml: 591, caffeine: 11.3 },
+            { label: 'Hazelnut 591ml', ml: 591, caffeine: 6.9 },
+            { label: 'Vanilla 591ml', ml: 591, caffeine: 9.1 }
+        ]
+      },
+      {
+        id: 'mega_decaf_latte_var',
+        name: '디카페인 라떼류 (카푸/바닐라/헤이즐넛/카라멜/연유/모카)',
+        category: 'Decaf',
+        sizes: [
+            { label: 'Cappuccino', ml: 591, caffeine: 11.3 },
+            { label: 'Vanilla Latte', ml: 591, caffeine: 8.9 },
+            { label: 'Hazelnut Latte', ml: 591, caffeine: 9.4 },
+            { label: 'Caramel Macchiato', ml: 591, caffeine: 6.5 },
+            { label: 'Yeonyu Latte', ml: 591, caffeine: 9.8 },
+            { label: 'Mocha', ml: 591, caffeine: 26.8 }
+        ]
+      },
+      {
+        id: 'mega_cold_decaf',
+        name: '콜드브루 디카페인 (라떼)',
+        category: 'Decaf',
+        sizes: [
+            { label: 'Standard 591ml', ml: 591, caffeine: 13.1 },
+            { label: 'Latte', ml: 591, caffeine: 9.9 }
+        ]
+      },
+      {
+        id: 'mega_ame',
+        name: '아메리카노',
+        category: 'Espresso',
+        sizes: [
+            { label: 'Hot/Ice 20oz', ml: 591, caffeine: 204.2 },
+            { label: 'Ice 24oz', ml: 710, caffeine: 199.7 },
+            { label: 'Megaricano', ml: 946, caffeine: 290.8 },
+            { label: 'Honey', ml: 591, caffeine: 199.4 }
+        ]
+      },
+      {
+        id: 'mega_vanilla_latte',
+        name: '바닐라라떼',
+        category: 'Espresso',
+        sizes: [{ label: 'Standard', ml: 591, caffeine: 189.9 }]
+      },
+      {
+        id: 'mega_yeonyu',
+        name: '연유라떼',
+        category: 'Espresso',
+        sizes: [{ label: 'Standard', ml: 591, caffeine: 165.9 }]
+      },
+      {
+        id: 'mega_caramel',
+        name: '카라멜마끼아또',
+        category: 'Espresso',
+        sizes: [{ label: 'Standard', ml: 591, caffeine: 203.4 }]
+      },
+      {
+        id: 'mega_mocha',
+        name: '카페모카',
+        category: 'Espresso',
+        sizes: [{ label: 'Standard', ml: 591, caffeine: 233.2 }]
+      },
+      {
+        id: 'mega_cappuccino',
+        name: '카푸치노',
+        category: 'Espresso',
+        sizes: [{ label: 'Standard', ml: 591, caffeine: 201.4 }]
+      },
+      {
+        id: 'mega_coldbrew_plain',
+        name: '콜드브루 오리지널/라떼',
+        category: 'ColdBrew',
+        sizes: [
+            { label: 'Original', ml: 591, caffeine: 217 },
+            { label: 'Latte', ml: 591, caffeine: 216.7 }
+        ]
+      },
+      {
+        id: 'mega_hazel_latte',
+        name: '헤이즐넛 라떼/아메리카노',
+        category: 'Espresso',
+        sizes: [
+            { label: 'Latte', ml: 591, caffeine: 204.6 },
+            { label: 'Americano', ml: 591, caffeine: 209.8 }
+        ]
+      },
+      {
+        id: 'mega_cube',
+        name: '큐브라떼',
+        category: 'Espresso',
+        sizes: [{ label: 'Standard', ml: 591, caffeine: 313.4 }]
+      },
+      {
+        id: 'mega_frappe',
+        name: '프라페 (녹차/초코/민트/커피/피넛버터)',
+        category: 'Frappuccino',
+        sizes: [
+            { label: 'Green Tea', ml: 591, caffeine: 110.1 },
+            { label: 'Real Choco', ml: 591, caffeine: 32.1 },
+            { label: 'Mint', ml: 591, caffeine: 5.6 },
+            { label: 'Coffee', ml: 591, caffeine: 162.6 },
+            { label: 'Peanut Butter Choco', ml: 591, caffeine: 31.3 },
+            { label: 'Cookie', ml: 591, caffeine: 6.8 },
+            { label: 'Strawberry Cookie', ml: 591, caffeine: 2.6 }
+        ]
+      },
+      {
+        id: 'mega_pongcrush',
+        name: '초코허니퐁크러쉬',
+        category: 'Beverage',
+        sizes: [{ label: 'Standard', ml: 591, caffeine: 10 }]
+      },
+      {
+        id: 'mega_tea_etc',
+        name: '기타 티 (녹차/얼그레이/자몽허니)',
+        category: 'Tea',
+        sizes: [
+            { label: 'Green Tea 591ml', ml: 591, caffeine: 65.3 },
+            { label: 'Earl Grey 591ml', ml: 591, caffeine: 73.4 },
+            { label: 'Honey Grapefruit Black', ml: 591, caffeine: 61.5 }
+        ]
+      },
+       {
+        id: 'mega_toffee',
+        name: '토피넛라떼',
+        category: 'Espresso',
+        sizes: [{ label: 'Standard', ml: 591, caffeine: 46.4 }]
+      },
+       {
+        id: 'mega_milktea',
+        name: '로얄밀크티라떼/흑당',
+        category: 'Tea',
+        sizes: [
+            { label: 'Royal', ml: 591, caffeine: 106.2 },
+            { label: 'Heukdang Bubble', ml: 591, caffeine: 14.3 },
+            { label: 'Heukdang Milk Tea', ml: 591, caffeine: 30.6 }
+        ]
+      },
+       {
+        id: 'mega_choco',
+        name: '핫초코/아이스초코',
+        category: 'Beverage',
+        sizes: [
+            { label: 'Hot', ml: 591, caffeine: 21.9 },
+            { label: 'Ice', ml: 591, caffeine: 21.3 }
+        ]
+      },
+       {
+        id: 'mega_greentea',
+        name: '녹차라떼',
+        category: 'Tea',
+        sizes: [
+            { label: 'Hot', ml: 591, caffeine: 57 },
+            { label: 'Ice', ml: 591, caffeine: 72.5 }
+        ]
+      },
+       {
+        id: 'mega_espresso',
+        name: '에스프레소',
+        category: 'Espresso',
+        sizes: [
+            { label: 'Solo', ml: 59, caffeine: 104.8 },
+            { label: 'Doppio', ml: 147, caffeine: 184.7 },
+            { label: 'Decaf', ml: 59, caffeine: 4.9 }
+        ]
+      }
+    ],
+  },
+  {
+    id: 'manual',
+    brand: '직접 입력',
+    menus: [
+      {
+        id: 'manual_shot',
+        name: '에스프레소 1샷',
+        category: 'Espresso',
+        sizes: [{ label: '1잔', ml: 30, caffeine: 75 }]
+      },
+      {
+        id: 'manual_drip',
+        name: '드립 커피',
+        category: 'Espresso',
+        sizes: [{ label: '1잔', ml: 200, caffeine: 100 }]
+      }
+    ]
+  } 
+];
+
+==================================================FILE:.\src\lib\constants.ts
+==================================================
+
+
+
+==================================================FILE:.\src\lib\utiles.ts
+==================================================
+
+import dayjs from "dayjs";
+import type { CaffeineLog, UserProfile } from '../hooks/useCaffeineStore';
+import { type SymptomLog } from '../hooks/useCaffeineStore';
+
+
+
+/**
+ * 1. 실시간 잔존량 계산 (지수적 감쇠 공식)
+ * C_now = C_initial * (0.5)^(t / halfLife)
+ */
+export const calculateCurrentCaffeine = (mg: number, intakeTime: string, halfLife: number) => {
+  const now = dayjs();
+  const diffHours = now.diff(dayjs(intakeTime), "hour", true);
+  
+  if (diffHours < 0) return mg;
+
+  // 45~60분 사이 정점 (단순화를 위해 섭취 후 45분까지는 그대로 유지되다 줄어들도록 보정 가능, 현재는 즉시 감쇠 시작)
+  const remaining = mg * Math.pow(0.5, diffHours / halfLife);
+  return parseFloat(remaining.toFixed(2));
+};
+
+
+export const getTotalRemainingCaffeine = (logs: CaffeineLog[], halfLife: number) => {
+  return logs.reduce((total, log) => 
+    total + calculateCurrentCaffeine(log.caffeineAmount, log.intakeTime, halfLife), 0);
+};
+
+/* 1. 숙면 가능 시간 예측 (잔존량이 50mg 이하가 되는 시점 계산)*/
+export const predictSleepReadyTime = (totalCaffeine: number, halfLife: number) => {
+  if (totalCaffeine <= 50) return "지금 바로 가능";
+
+  // 공식: 현재량 * (0.5)^(t/halfLife) = 50 
+  // => t = halfLife * log2(현재량 / 50)
+  const hoursToWait = halfLife * (Math.log(totalCaffeine / 50) / Math.log(2));
+  
+  return dayjs().add(hoursToWait, 'hour').format('A h시 m분');
+};
+
+/*2. 마지막 섭취로부터 경과 시간 계산 (금단 현상 분석용)*/
+export const getHoursSinceLastDrink = (logs: CaffeineLog[]) => {
+  if (logs.length === 0) return 0;
+  const lastLog = [...logs].sort((a, b) => dayjs(b.intakeTime).valueOf() - dayjs(a.intakeTime).valueOf())[0];
+  return dayjs().diff(dayjs(lastLog.intakeTime), 'hour', true);
+};
+
+
+/**
+ * 2. 스마트 맞춤형 권장량 계산 (체중 및 감량 챌린지 기반)
+ */
+export const getPersonalizedGoal = (user: UserProfile) => {
+  // 성인 기본 최대 권장량은 체중 1kg당 400mg을 넘지 않게 설정 (통상 400mg 상한)
+  let goal = Math.min(user.weight * 6, 400); 
+
+  // [이별 트랙] 4주 점진적 감량 로직 (75-50-25-12.5 법칙)
+  if (user.isTapering && user.baseIntake > 0) {
+    const week = user.taperingWeek;
+    if (week === 1) goal = user.baseIntake * 0.75;
+    else if (week === 2) goal = user.baseIntake * 0.50;
+    else if (week === 3) goal = user.baseIntake * 0.25;
+    else if (week >= 4) goal = user.baseIntake * 0.125;
+  }
+  return Math.round(goal);
+};
+
+export const getDynamicHalfLife = (user: UserProfile) => {
+  // 기본 5시간, 생리 중이면 대사가 느려지므로 7.5시간으로 연장
+  if ( user.gender === 'F' && user.isMenstruating ){
+    return 7.5;
+  }
+  return 5;
+};
+
+
+/**
+ * 3. '3일의 법칙' 감지기 (연속 3일 섭취 여부 파악)
+ */
+export const checkThreeDayRule = (logs: CaffeineLog[]) => {
+  const today = dayjs().startOf('day');
+  const daysWithCaffeine = new Set(
+    logs.map(log => dayjs(log.intakeTime).startOf('day').format('YYYY-MM-DD'))
+  );
+
+  const drankToday = daysWithCaffeine.has(today.format('YYYY-MM-DD'));
+  const drankYesterday = daysWithCaffeine.has(today.subtract(1, 'day').format('YYYY-MM-DD'));
+  const drankDayBefore = daysWithCaffeine.has(today.subtract(2, 'day').format('YYYY-MM-DD'));
+
+  return {
+    isDanger: drankToday && drankYesterday && drankDayBefore,
+    message: drankToday && drankYesterday && drankDayBefore 
+      ? "3일 연속 섭취했어요! 내일은 뇌를 쉬게 해주는 건 어떨까요?" 
+      : "잘 조절하고 있어요!"
+  };
+};
+
+/**
+ * 4. 두통 소방차 & 리바운드 예측 (10~24시간 경과 확인)
+ */
+export const getWithdrawalWarning = (logs: CaffeineLog[]) => {
+  if (logs.length === 0) return null;
+  
+  // 가장 마지막에 마신 커피 시간
+  const lastLog = [...logs].sort((a, b) => dayjs(b.intakeTime).valueOf() - dayjs(a.intakeTime).valueOf())[0];
+  const hoursSinceLastDrink = dayjs().diff(dayjs(lastLog.intakeTime), "hour", true);
+
+  if (hoursSinceLastDrink >= 12 && hoursSinceLastDrink <= 24) {
+    return {
+      isWarning: true,
+      message: "카페인 배출 중이에요! 콧물이나 두통이 올 수 있으니 물을 충분히 드세요 💧"
+    };
+  }
+  return { isWarning: false, message: "" };
+};
+
+/**
+ * 5. 수면 및 캐릭터 상태
+ */
+export const getSleepStatus = (totalCaffeine: number) => {
+  if (totalCaffeine < 50) return "GOOD";    // 꿀잠
+  if (totalCaffeine < 100) return "FAIR";   // 주의
+  return "BAD";                             // 수면 방해
+};
+
+//카페인 함량에 따른 상태
+export const getCharacterStatus = (totalCaffeine: number, goal: number) => {
+  const hour = dayjs().hour();
+  const percentage = (totalCaffeine / goal) * 100;
+
+  // 밤 10시(22시) 이후인데 잔류량이 50mg(수면 방해 기준) 이상인 경우
+  // 무조건 WARNING 이상으로 격상
+  if ((hour >= 22 || hour < 4) && totalCaffeine >= 50) {
+    return totalCaffeine >= 100 ? "DANGER" : "WARNING";
+  }
+
+  if (percentage === 0) return "IDLE";
+  if (percentage <= 50) return "GOOD";
+  if (percentage <= 80) return "WARNING";
+  return "DANGER";
+};
+
+/**
+ * 수면 세이프티 가이드 (액션 플랜)
+ */
+export const getSleepActionTip = (totalCaffeine: number) => {
+  if (totalCaffeine <= 50) return "지금 바로 꿀잠 잘 수 있는 클린한 상태예요! ✨";
+  if (totalCaffeine <= 100) return "물을 2잔 마시면 배출이 더 빨라져요! 💧";
+  return "가벼운 스트레칭으로 신진대사를 높여 배출을 도와보세요! 🏃‍♀️";
+};
+
+
+/**
+ * 카페인 각성 단계 바 로직
+ */
+export const getArousalStage = (totalCaffeine: number) => {
+  if (totalCaffeine >= 200) return { label: "강한 각성 ⚡️", color: "#E05252", tip: "심박수가 빠를 수 있어요. 물을 드세요!" };
+  if (totalCaffeine >= 100) return { label: "집중 모드 🔥", color: "#D97706", tip: "업무와 공부에 최적인 상태입니다." };
+  if (totalCaffeine >= 50) return { label: "평온한 상태 ☕️", color: "#E57B3E", tip: "은은한 에너지가 남아있어요." };
+  return { label: "카페인 프리 🥔", color: "#A3978F", tip: "뇌가 휴식하고 있는 깨끗한 상태!" };
+};
+
+/**
+ * 아데노신 수용체 회복률 계산 (가상 시나리오 기반)
+ * 마지막으로 많이 마신 날로부터 시간이 지날수록 회복됨
+ */
+export const getReceptorRecovery = (logs: CaffeineLog[]) => {
+  if (logs.length === 0) return 100;
+  // 최근 3일간의 평균 섭취량이 적을수록 회복률이 높다고 가정
+  const recentIntake = logs
+    .filter(l => dayjs(l.intakeTime).isAfter(dayjs().subtract(3, 'day')))
+    .reduce((sum, l) => sum + l.caffeineAmount, 0) / 3;
+  
+  const recovery = Math.max(0, 100 - (recentIntake / 400) * 100);
+  return Math.round(recovery);
+};
+
+/**
+ * 특정 날짜에 카페인을 섭취했는지 확인
+ */
+export const checkDrankOnDate = (logs: CaffeineLog[], date: dayjs.Dayjs) => {
+  return logs.some(log => dayjs(log.intakeTime).isSame(date, 'day'));
+};
+
+/**
+ * 연속 무카페인 일수(Clean Streak) 계산
+ */
+export const getCleanStreak = (logs: CaffeineLog[]) => {
+  let streak = 0;
+  let current = dayjs().startOf('day');
+
+  // 오늘부터 과거로 거슬러 올라가며 확인
+  while (true) {
+    const drank = logs.some(log => dayjs(log.intakeTime).isSame(current, 'day'));
+    if (drank) break; // 마신 날을 만나면 멈춤
+    
+    streak++;
+    current = current.subtract(1, 'day');
+    
+    // 무한 루프 방지 (최대 100일까지만 계산)
+    if (streak > 100) break;
+  }
+  return streak;
+};
+
+
+
+export const getSmartRecommendation = (user: UserProfile, totalCaffeine: number, goal: number) => {
+  const hour = dayjs().hour();
+  
+  // 1순위: 목표 초과 혹은 임박 (80% 이상)
+  if (totalCaffeine >= goal * 0.8) {
+    return {
+      title: "물 한 잔 어때요? 💧",
+      desc: "이미 충분한 카페인을 섭취했어요. 지금은 수분 보충이 필요한 때!",
+      category: "Water"
+    };
+  }
+
+  // 2순위: 밤 시간대 (오후 6시 이후)
+  if (hour >= 18 || hour < 4) {
+    return {
+      title: "디카페인이 안전해요 🌙",
+      desc: "지금 커피를 마시면 수면 시간이 너무 늦어질 수 있어요.",
+      category: "Decaf"
+    };
+  }
+
+  // 3순위: 생리 모드 활성화 시
+  if (user.gender === 'F' && user.isMenstruating) {
+    return {
+      title: "따뜻한 차를 추천해요 🍵",
+      desc: "대사가 느려진 시기예요. 카페인보다는 몸을 따뜻하게 하는 티가 좋아요.",
+      category: "Tea"
+    };
+  }
+
+  // 4순위: 오전 집중 시간 (오전 7시 ~ 11시)
+  if (hour >= 7 && hour <= 11) {
+    return {
+      title: "모닝 아메리카노 ☀️",
+      desc: "하루를 활기차게 시작하기 딱 좋은 시간입니다!",
+      category: "Espresso"
+    };
+  }
+
+  return {
+    title: "가벼운 라떼 한 잔 ☕️",
+    desc: "오후의 활력을 위해 부드러운 음료는 어떨까요?",
+    category: "Espresso"
+  };
+};
+
+/**
+ * 2. 증상 상관관계 분석
+ * 특정 시간대나 섭취량 이후에 증상이 발생하는지 분석합니다.
+ */
+{/*여기 로직 좀 더 보강하기*/}
+export const analyzeSymptomCorrelation = (logs: CaffeineLog[], symptoms: SymptomLog[]) => {
+  if (symptoms.length === 0) return "아직 증상 기록이 없네요! 컨디션이 안 좋을 때 기록해 주시면 카페인과의 상관관계를 분석해 드릴게요.";
+  if (logs.length === 0) return "카페인 기록이 없어서 분석이 어려워요. 마신 음료를 먼저 기록해 주세요!";
+
+  // 간단한 분석 예시: 증상이 있는 날의 평균 카페인 섭취량 계산
+  const symptomDates = new Set(symptoms.map(s => dayjs(s.recordTime).format('YYYY-MM-DD')));
+  const intakeOnSymptomDays = logs.filter(l => symptomDates.has(dayjs(l.intakeTime).format('YYYY-MM-DD')));
+  
+  if (intakeOnSymptomDays.length > 0) {
+    return "데이터 분석 결과, 증상이 나타난 날에는 평소보다 더 많은 양의 카페인을 섭취하는 경향이 확인되었습니다. 섭취량을 조금만 줄여보는 건 어떨까요?";
+  }
+  
+  return "현재 섭취량과 증상 간의 뚜렷한 인과관계는 발견되지 않았습니다. 꾸준한 기록으로 더 정밀한 분석을 받아보세요!";
+};
+
+==================================================FILE:.\src\pages\AddDrink\AddDrink.tsx
+==================================================
+
+import { useState, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useSetAtom, useAtomValue, useAtom } from 'jotai';
+import { caffeineLogsAtom, userProfileAtom, favoriteDrinksAtom } from '../../hooks/useCaffeineStore';
+import { COFFEE_BRANDS, type BrandData, type CoffeeMenu, type SizeOption } from '../../lib/caffeineData';
+import { Search, Star, X, ArrowLeft, AlertTriangle  } from 'lucide-react';
+import { useCaffeine } from '../../hooks/useCaffeine'; 
+import dayjs from 'dayjs';
+
+
+export const AddDrink = () => {
+  const navigate = useNavigate();
+  const setLogs = useSetAtom(caffeineLogsAtom);
+  const user = useAtomValue(userProfileAtom); // 'user'를 아래 UI에서 팁 노출용으로 사용합니다.
+  const [favorites, setFavorites] = useAtom(favoriteDrinksAtom);
+
+  // 현재 잔존량(totalCaffeine)과 목표량(goal)을 가져오기.
+  const { totalCaffeine, goal } = useCaffeine();
+
+  const [searchTerm, setSearchTerm] = useState('');
+  const [isManual, setIsManual] = useState(false);
+  const [manualCaffeine, setManualCaffeine] = useState<number>(0);
+  const [manualName, setManualName] = useState('');
+  const [isFasting, setIsFasting] = useState(false); 
+
+  
+  const [selectedMenuInfo, setSelectedMenuInfo] = useState<{brand: BrandData, menu: CoffeeMenu} | null>(null);
+  const [selectedSize, setSelectedSize] = useState<SizeOption | null>(null);
+
+  // --- 계산 로직 (currentCaffeine을 handleAddCoffee에서 사용함) ---
+  const currentCaffeine = isManual ? manualCaffeine : (selectedSize?.caffeine || 0);
+  const isHighCaffeine = !isManual && selectedSize ? selectedSize.caffeine > 150 : false;
+  
+
+  //섭취 시간을 관리하는 상태 (기본값: 현재 시간)
+  const [intakeTime, setIntakeTime] = useState(dayjs().format('YYYY-MM-DDTHH:mm'));
+
+
+
+  // 💡 고카페인 전용 경고 문구 (나이트로 커피 등 대응)
+  const highCaffeineMessage = selectedMenuInfo?.menu.name.includes("나이트로") 
+    ? "⚠️ 나이트로 경고: 일반 커피보다 체내 흡수가 빠르고 카페인 함량이 매우 높습니다. 밤늦게까지 각성 효과가 지속될 수 있어요!"
+    : "⚠️ 고카페인 주의: 이 음료는 한 잔만으로도 일일 권장량의 절반을 넘습니다. 대사가 끝날 때까지 10시간 이상 소요됩니다.";
+
+
+  // 음료 이름 결정
+  const drinkName = isManual 
+    ? manualName 
+    : selectedMenuInfo ? `${selectedMenuInfo.brand.brand} ${selectedMenuInfo.menu.name} (${selectedSize?.label || ''})` : '';
+
+  const allMenus = useMemo(() => {
+    const list: { brand: BrandData; menu: CoffeeMenu; isFav: boolean; key: string }[] = [];
+    COFFEE_BRANDS.forEach((brand: BrandData) => {
+      brand.menus.forEach((menu: CoffeeMenu) => {
+        const key = `${brand.id}_${menu.id}`;
+        list.push({ brand, menu, isFav: favorites.includes(key), key });
+      });
+    });
+    return list;
+  }, [favorites]);
+
+  const filteredMenus = useMemo(() => {
+    const term = searchTerm.toLowerCase();
+    if (!term) return allMenus.filter(m => m.isFav); 
+    return allMenus.filter(m => 
+      m.brand.brand.toLowerCase().includes(term) || 
+      m.menu.name.toLowerCase().includes(term)
+    );
+  }, [searchTerm, allMenus]);
+
+  const toggleFavorite = (e: React.MouseEvent, key: string) => {
+    e.stopPropagation();
+    setFavorites((prev: string[]) => 
+      prev.includes(key) ? prev.filter((f: string) => f !== key) : [...prev, key]
+    );
+  };
+
+  const isFormValid = isManual 
+    ? (manualName.trim() !== '' && manualCaffeine > 0) 
+    : (selectedSize !== null);
+
+
+  const handleAddCoffee = () => {
+
+
+    const newLog = {
+      id: crypto.randomUUID(),
+      caffeineAmount: currentCaffeine,
+      intakeTime: dayjs(intakeTime).toISOString(), 
+      beverageName: drinkName,
+      isFasting,
+      price: 0,
+    };
+
+    setLogs((prev) => [...prev, newLog]);
+    alert(`${drinkName} 기록 완료! ☕️`);
+    navigate('/');
+  };
+
+  
+
+  return (
+    <div className="p-6 max-w-md mx-auto min-h-screen pb-32">
+      <header className="flex items-center gap-4 mb-8">
+        <button 
+          onClick={() => selectedMenuInfo || isManual ? (setSelectedMenuInfo(null), setIsManual(false), setSelectedSize(null)) : navigate(-1)} 
+          className="p-2 dark:text-[#ECE0D1]"
+        >
+          <ArrowLeft size={24} />
+        </button>
+        <h2 className="text-2xl font-black text-gray-800 dark:text-[#ECE0D1]">음료 기록</h2>
+      </header>
+
+      {!selectedMenuInfo && !isManual ? (
+        <>
+          {/* 💡 감량 트랙 진행 중일 때 팁 노출 (user 활용) */}
+          {user.isTapering && (
+            <div className="mb-6 p-4 bg-[#EFEBE4] dark:bg-[#3A312B] rounded-2xl text-xs font-bold text-[#5C3D2E] dark:text-[#ECE0D1] border border-[#E57B3E]/20">
+              👋 감량 트랙 진행 중이시네요! 오늘은 디카페인 메뉴를 찾아보는 건 어떨까요?
+            </div>
+          )}
+
+          <div className="relative mb-6">
+            <Search className="absolute left-4 top-3.5 text-gray-400" size={20} />
+            <input 
+              className="w-full p-4 pl-12 bg-white dark:bg-[#3A312B] rounded-[20px] shadow-sm border-none outline-none focus:ring-2 focus:ring-[#E57B3E] dark:text-[#ECE0D1]"
+              placeholder="브랜드나 메뉴를 검색하세요"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+            {searchTerm && <X className="absolute right-4 top-3.5 text-gray-400 cursor-pointer" size={20} onClick={() => setSearchTerm('')} />}
+          </div>
+
+          <button onClick={() => setIsManual(true)} className="mb-6 text-sm text-[#E57B3E] font-bold underline">찾는 메뉴가 없나요? 직접 입력하기</button>
+
+          <div className="space-y-3">
+            <p className="text-xs font-black text-gray-400 uppercase tracking-widest ml-2 mb-2">
+              {searchTerm ? 'Search Results' : 'Your Favorites ⭐'}
+            </p>
+            {filteredMenus.length > 0 ? (
+              filteredMenus.map(({ brand, menu, isFav, key }) => (
+                <div 
+                  key={key} 
+                  onClick={() => setSelectedMenuInfo({ brand, menu })}
+                  className="flex items-center justify-between hover:scale-105 p-5 bg-white dark:bg-[#3A312B] rounded-[25px] shadow-sm border border-gray-50 dark:border-white/5 active:scale-[0.98] transition-all cursor-pointer"
+                >
+                  <div className="flex flex-col">
+                    <span className="text-[10px] font-black text-[#E57B3E] opacity-70 uppercase">{brand.brand}</span>
+                    <span className="font-bold text-gray-800 dark:text-[#ECE0D1]">{menu.name}</span>
+                  </div>
+                  <button onClick={(e) => toggleFavorite(e, key)} className="p-2">
+                    <Star size={20} fill={isFav ? "#E57B3E" : "none"} color={isFav ? "#E57B3E" : "#94A3B8"} />
+                  </button>
+                </div>
+              ))
+            ) : (
+              <div className="text-center py-20 text-gray-400 font-bold">검색 결과가 없어요 ☕️</div>
+            )}
+          </div>
+        </>
+      ) : isManual ? (
+        <div className="space-y-4 animate-fade-in">
+           <input className="w-full p-5 bg-white dark:bg-[#3A312B] rounded-2xl dark:text-[#ECE0D1] outline-none shadow-sm font-bold" placeholder="음료 이름" value={manualName} onChange={(e) => setManualName(e.target.value)} />
+           <div className="relative">
+             <input type="number" className="w-full p-5 bg-white dark:bg-[#3A312B] rounded-2xl dark:text-[#ECE0D1] outline-none shadow-sm font-bold" placeholder="카페인 함량" onChange={(e) => setManualCaffeine(Number(e.target.value))} />
+             <span className="absolute right-5 top-5 font-bold text-gray-400">mg</span>
+           </div>
+        </div>
+      ) : (
+        <div className="animate-fade-in">
+          <div className="p-6 bg-white dark:bg-[#3A312B] rounded-[30px] mb-8 text-center border border-gray-50 dark:border-white/5 shadow-sm">
+             <p className="text-sm font-black text-[#E57B3E] uppercase mb-1">{selectedMenuInfo?.brand.brand}</p>
+             <h3 className="text-xl font-black dark:text-[#ECE0D1]">{selectedMenuInfo?.menu.name}</h3>
+          </div>
+          
+          <div className="grid grid-cols-1 gap-3 mb-8">
+            {/*사이즈 버튼 내부에 스마트 배지 로직 추가*/}
+            {selectedMenuInfo?.menu.sizes.map((size, idx) => {
+
+              // 현재 몸에 남은 양 + 마시려는 양이 목표치를 넘는지 계산
+              const willExceed = totalCaffeine + size.caffeine > goal;
+
+              return (
+                <button
+                  key={idx}
+                  onClick={() => setSelectedSize(size)}
+                  className={`p-5 rounded-[25px] flex justify-between items-center border transition-all relative ${
+                    selectedSize === size ? 'bg-[#E57B3E] border-[#E57B3E] text-white shadow-lg' : 'bg-white dark:bg-[#3A312B] border-gray-100 dark:border-white/5 dark:text-[#ECE0D1]'
+                  }`}
+                >
+                  <span className="font-bold">{size.label}</span>
+                  <span className={`font-black ${selectedSize === size ? 'text-white' : 'text-[#E57B3E]'}`}>{size.caffeine}mg</span>
+  
+
+                  {/* ⚠️ 스마트 배지: 버튼 귀퉁이에 표시 */}
+                  <div className="absolute -top-2 -right-1 flex gap-1 z-10">
+                    {willExceed && (
+                      <span className="bg-red-500 text-white text-[8px] px-1.5 py-0.5 rounded-full font-black animate-pulse shadow-sm">OVER</span>
+                    )}
+                    {user.isMenstruating && (
+                      <span className="bg-rose-400 text-white text-[8px] px-1.5 py-0.5 rounded-full font-black shadow-sm">대사저하🩸</span>
+                    )}
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* ⚠️ 공통 푸터 로직 (사이즈 선택 완료 시 또는 직접 입력 시 노출) */}
+      {(selectedSize || isManual) && (
+        <div className="fixed bottom-10 left-0 w-full px-6 pb-32 max-w-md mx-auto z-50">
+           
+          {/* 고카페인 경고창 (isHighCaffeine, highCaffeineMessage 사용) */} 
+           {isHighCaffeine && (
+             <div className="p-4 bg-[#4A2D2D] border border-red-500/30 rounded-[20px] shadow-lg animate-bounce-subtle">
+                <div className="flex gap-3">
+                  <AlertTriangle className="text-red-500 flex-shrink-0" size={18} />
+                  <p className="text-[11px] font-bold text-[#FFD1D1] leading-relaxed">
+                    {highCaffeineMessage}
+                  </p>
+                </div>
+             </div>
+           )}
+
+           {/* 시간 선택 & 공복 체크 UI 섹션 */}
+            <div className="bg-white dark:bg-[#3A312B] p-5 rounded-[25px] shadow-xl border border-gray-100 dark:border-white/5 space-y-4">
+              <div>
+                <label className="text-[10px] font-black opacity-40 uppercase tracking-widest block mb-2 ml-1">Consumption Time</label>
+                <input type="datetime-local" value={intakeTime} onChange={(e) => setIntakeTime(e.target.value)} className="w-full bg-[#F4F1EA] dark:bg-[#29221e] p-3 rounded-xl text-sm font-bold dark:text-[#F5E8D3] outline-none" />
+              </div>
+              
+              <label className="flex items-center gap-3 cursor-pointer group">
+                <input type="checkbox" checked={isFasting} onChange={(e) => setIsFasting(e.target.checked)} className="w-5 h-5 accent-[#E57B3E] rounded" />
+                <span className="text-sm font-bold dark:text-[#ECE0D1] group-hover:text-[#E57B3E] transition-colors">공복에 마셔요 (위 보호 주의! ⚠️)</span>
+              </label>
+           </div>
+           <button 
+             disabled={!isFormValid}
+             onClick={handleAddCoffee}
+             className="w-full py-5 bg-[#E57B3E] disabled:bg-gray-300 dark:disabled:bg-gray-700 text-white rounded-[30px] font-black text-xl shadow-xl active:scale-95 transition-all"
+           >
+             기록 완료 ☕️
+           </button>
+        </div>
+      )}
+    </div>
+  );
+};
+
+==================================================FILE:.\src\pages\Dashboard\Dashboard.tsx
+==================================================
+
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useCaffeine } from '../../hooks/useCaffeine';
+import { useAtomValue} from 'jotai'; 
+import { dailyGoalAtom , caffeineLogsAtom, userProfileAtom } from '../../hooks/useCaffeineStore';
+import dayjs from 'dayjs';
+import relaxbeen from '../../assets/characters/relaxbeen.png';
+import funnybeen from '../../assets/characters/funnybeen.png';
+import composedbeen from '../../assets/characters/composedbeen.png';
+import busybeen from '../../assets/characters/busybeen.png';
+import { SymptomModal } from '../../components/SymptomModal';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Plus, Activity, Coffee } from 'lucide-react';
+import { getSleepActionTip, getArousalStage, getSmartRecommendation  } from '../../lib/utiles';
+
+const Dashboard = () => { 
+  const navigate = useNavigate();
+  const { totalCaffeine, characterStatus, isTapering, isMenstruating, goal, sleepReadyTime, withdrawalInfo } = useCaffeine();
+  const [isSymptomModalOpen, setIsSymptomModalOpen] = useState(false);
+  const dailyGoal = useAtomValue(dailyGoalAtom);
+  const logs = useAtomValue(caffeineLogsAtom); // 전체 기록 가져오기
+
+  // 1. App.tsx에서 가져오는 대신, 전역 Atom에서 직접 다크모드 여부를 가져오기.
+  const user = useAtomValue(userProfileAtom);
+  const isDark = user.isDarkMode;
+  const [showRemaining, setShowRemaining] = useState(true); // 잔존량 vs 총량 상태
+
+
+  // 1. 테마 컬러 정의 (dark: 클래스 방식으로 App.tsx에서 배경을 처리하므로, 여기선 내부 요소 색상만)
+  const theme = isDark ? {
+    text: '#F5E8D3',      
+    gaugeBg: '#3A312B',   
+    accent: '#E57B3E',    
+    card: '#3A312B',      
+    border: 'rgba(255,255,255,0.05)'
+  } : {
+    text: '#5C3D2E', 
+    gaugeBg: '#EFEBE4', 
+    accent: '#E57B3E', 
+    card: '#FFFFFF', 
+    border: '#F3F4F6'
+  };
+
+
+  // 오늘 마신 순수 총량 계산하기 (반감기 무시)
+  const totalIntakeToday = logs
+    .filter(l => dayjs(l.intakeTime).isAfter(dayjs().startOf('day')))
+    .reduce((sum, l) => sum + l.caffeineAmount, 0);
+
+
+    // 클릭할 때마다 보여줄 값과 제목을 결정하는 로직
+  const displayAmount = showRemaining ? totalCaffeine : totalIntakeToday;
+  const displayLabel = showRemaining ? "현재 잔존량" : "오늘 총 섭취량";
+  
+
+ // 게이지 퍼센트도 이제 displayAmount(선택된 값)를 따라가게 수정!
+  const percentage = Math.min((displayAmount / dailyGoal) * 100, 100);
+  const radius = 90; 
+  const circumference = 2 * Math.PI * radius;
+  const strokeDashoffset = circumference - (percentage / 100) * circumference;
+
+  const characterImages: Record<string, string> = {
+    DANGER: busybeen,
+    WARNING: composedbeen,
+    GOOD: relaxbeen,
+    IDLE: funnybeen,
+  };
+  
+  // 수면 팁 가져오기
+  const sleepTip = getSleepActionTip(totalCaffeine);
+  const hour = dayjs().hour();
+
+  const arousal = getArousalStage(totalCaffeine);
+
+
+  // 캐릭터 상태별 맞춤형 메시지 지도
+  const characterMessages: Record<string, { remaining: string; total: string }> = {
+    DANGER: {
+      remaining: hour >= 21 ? "🫨 지금 잠들기엔 뇌가 너무 깨어있어요!" : "🤯 나....야근해야 할듯...힘들다...",
+      total: "😵 오늘은 정말 많이 마셨어! 물이 필요해! 도와줘!",
+    },
+    WARNING: {
+      remaining: hour >= 21 ? "🫨 지금 잠들기엔 뇌가 너무 깨어있어요!" : "🧐 조금 후면 집중력이 떨어질 거야.",
+      total: "🥤 권장량에 가까워졌어. 다음 잔은 신중하게!",
+    },
+    GOOD: {
+      remaining: "🌿 아직 여유로워! 지금 상태 딱 좋아.",
+      total: "☕️ 오늘 커피 라이프, 아주 안전하게 즐기고 있구나!",
+    },
+    IDLE: {
+      remaining: "🥔 카페인 제로! 뇌가 아주 깨끗해.",
+      total: "☀️ 오늘 첫 커피는 어디서 마실까?",
+    },
+  };  
+  
+  const currentMessage = showRemaining 
+    ? characterMessages[characterStatus]?.remaining 
+    : characterMessages[characterStatus]?.total;
+
+  //배경에 쓰일 색깔
+  const auraColors: Record<string, string[]> = {
+    DANGER: isDark 
+      ? ['#7A3E3E', '#5C2C2C', '#8F4A4A']  
+      : ['#FF4D4D', '#F43F5E', '#FFB020'], 
+    WARNING: isDark 
+      ? ['#855A30', '#66421F', '#9C6D3D']
+      : ['#FF9800', '#F97316', '#FFD700'], 
+    GOOD: isDark 
+      ? ['#4A6B4E', '#354F38', '#5E8262'] 
+      : ['#34D399', '#10B981', '#FDE047'], 
+    IDLE: isDark 
+      ? ['#4A3F35', '#3D332A', '#5C4E43']  
+      : ['#FDE68A', '#FFEDD5', '#E2E8F0'], 
+  };
+
+  // 현재 상태에 맞는 옷(색상 3개)을 꺼내오는 코드
+  const colors = auraColors[characterStatus] || auraColors.IDLE;
+
+  const AURORA_LAYERS = [
+    { w: '60%', h: '60%', x: ['-20%', '10%', '-20%'], y: ['-10%', '20%', '-10%'], scale: [1, 1.4, 1], dur: 8, pos: '-top-[10%] -left-[10%]' },
+    { w: '65%', h: '65%', x: ['20%', '-10%', '20%'], y: ['-20%', '10%', '-20%'], scale: [1.2, 1, 1.2], dur: 10, pos: '-top-[10%] -right-[10%]' },
+    { w: '60%', h: '60%', x: ['-10%', '20%', '-10%'], y: ['20%', '-10%', '20%'], scale: [1, 1.3, 1], dur: 11, pos: '-bottom-[10%] -left-[10%]' },
+    { w: '70%', h: '70%', x: ['10%', '-20%', '10%'], y: ['10%', '-20%', '10%'], scale: [1.3, 1, 1.3], dur: 13, pos: '-bottom-[10%] -right-[10%]' },
+  ];
+  
+  // 고정식 별빛 (큰별, 작은별 7개씩)
+  const NIGHT_STARS = [
+    { top: '15%', left: '20%', size: 3, dur: 3 },
+    { top: '25%', left: '75%', size: 2, dur: 4 },
+    { top: '40%', left: '10%', size: 4, dur: 2.5 },
+    { top: '55%', left: '85%', size: 2, dur: 5 },
+    { top: '75%', left: '30%', size: 3, dur: 3.5 },
+    { top: '85%', left: '80%', size: 2, dur: 4.5 },
+    { top: '10%', left: '50%', size: 4, dur: 3.2 },
+
+    { top: '20%', left: '40%', size: 1.5, dur: 2.8 },
+    { top: '65%', left: '15%', size: 2.5, dur: 4.2 },
+    { top: '80%', left: '60%', size: 1.5, dur: 3.8 },
+    { top: '35%', left: '90%', size: 3, dur: 5.5 },
+    { top: '50%', left: '45%', size: 1.5, dur: 3.1 },
+    { top: '5%',  left: '85%', size: 1.5, dur: 2.2 },
+    { top: '90%', left: '20%', size: 2.5, dur: 4.8 },
+    { top: '45%', left: '65%', size: 3.5, dur: 3.7 }
+  ];
+
+ const rec = getSmartRecommendation(user, totalCaffeine, goal);
+
+ return (
+    <div className="flex flex-col min-h-screen font-sans w-full px-6 pt-12 pb-36 relative overflow-hidden">
+
+      {/* 역동적으로 움직이는 오로라 층 */}
+      <div className="absolute inset-0 pointer-events-none overflow-hidden z-0">
+        <div className="w-full h-full relative" style={{ filter: 'blur(90px)' }}> 
+          {AURORA_LAYERS.map((layer, i) => (
+            <motion.div
+              key={`aura-${i}`}
+              className={`absolute rounded-full ${layer.pos}`}
+              style={{
+                backgroundColor: colors[i % colors.length],
+                // 가독성을 위해 라이트 모드일 때 투명도를 확 낮추기
+                opacity: isDark ? 0.35 : 0.2, 
+                width: layer.w,
+                height: layer.h,
+              }}
+              animate={{ x: layer.x, y: layer.y, scale: layer.scale }}
+              transition={{ duration: layer.dur, repeat: Infinity, ease: "easeInOut" }}
+            />
+          ))}
+        </div>
+      </div>
+
+      {/* 가독성을 살리는 중앙 보호막 (비네팅 마스크) */}
+      <div 
+        className="absolute inset-0 pointer-events-none z-0"
+        style={{
+          // 가장자리는 투명하게 둬서 빛을 보여주고, 가운데는 배경색으로 덮어서 글씨를 뚜렷하게!
+          background: isDark 
+            ? 'radial-gradient(circle at center, rgba(72,60,50,0.7) 0%, transparent 70%)' 
+            : 'radial-gradient(circle at center, rgba(253,250,246,0.8) 0%, transparent 70%)'
+        }}
+      />
+
+      {/* 다크 모드 전용 반짝이는 별빛 */}
+      {isDark && (
+        <div className="absolute inset-0 pointer-events-none z-0">
+          {NIGHT_STARS.map((star, i) => (
+            <motion.div
+              key={`star-${i}`}
+              className="absolute bg-white rounded-full shadow-[0_0_6px_white]"
+              style={{ top: star.top, left: star.left, width: star.size, height: star.size }}
+              animate={{ opacity: [0.1, 0.8, 0.1], scale: [0.8, 1.2, 0.8] }}
+              transition={{ duration: star.dur, repeat: Infinity, ease: "easeInOut" }}
+            />
+          ))}
+        </div>
+      )}
+
+      {/* 상단 헤더: 로고 + 테마토글 + 설정 */}
+      <header className="flex justify-between items-center mb-10 z-20">
+        <div className="w-full max-w-sm mx-auto flex justify-between items-center px-2 relative">
+          <h1 className="text-2xl font-black tracking-tighter" style={{ color: theme.text }}>cof/fee</h1>
+           {/* --- 배경 하늘 요소 (해, 달, 별) --- */}
+            <AnimatePresence mode="wait">
+              {isDark ? (
+                <motion.div 
+                  key="night-sky"
+                  initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.8 }}
+                  className="absolute top-20 right-10 pointer-events-none"
+                >
+                  <span className="text-5xl drop-shadow-[0_0_15px_rgba(255,215,0,0.3)]">🌙</span>
+                  <motion.div animate={{ opacity: [0.3, 0.8, 0.3] }} transition={{ repeat: Infinity, duration: 3 }} className="absolute -top-4 -left-8 text-lg">✨</motion.div>
+                </motion.div>
+              ) : (
+                <motion.div 
+                  key="day-sky"
+                  initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.8 }}
+                  className="absolute top-20 right-10 pointer-events-none text-5xl drop-shadow-[0_0_20px_rgba(255,165,0,0.3)]"
+                >
+                  ☀️
+                </motion.div>
+            )}
+            </AnimatePresence>
+        </div>
+      </header>
+
+      {/* 트랙 표시 */}
+      <div className="flex justify-center mb-8 z-20">
+        <span className="px-4 py-1 rounded-full text-[10px] font-black uppercase tracking-widest shadow-sm transition-colors"
+          style={{ 
+            backgroundColor: isDark ? 'rgba(255,255,255,0.1)' : (isTapering ? '#5C3D2E' : '#DCFCE7'), 
+            color: isDark ? theme.text : (isTapering ? 'white' : '#15803D') 
+          }}>
+          {isTapering ? 'Tapering Track' : 'Safe Track'}
+        </span>
+      </div>
+
+      {/* 메인 비주얼 스테이지 (캐릭터가 게이지를 안고 있는 형태) */}
+      <div className="flex-1 flex flex-col items-center justify-center relative">
+        <div className="relative cursor-pointer" onClick={() => setShowRemaining(!showRemaining)}>
+          
+          {/* 게이지 아우라 (생리 모드 시 활성화) */}
+          <div className={`absolute inset-0 rounded-full transition-all duration-1000 ${isMenstruating ? 'shadow-[0_0_40px_rgba(248,113,113,0.2)] dark:shadow-[0_0_50px_rgba(251,113,133,0.4)]' : ''}`} />
+          
+          <svg className="w-80 h-80 transform -rotate-90">
+            <circle cx="160" cy="160" r={radius} fill={isDark ? theme.card : 'white'} fillOpacity="0.5" stroke={theme.gaugeBg} strokeWidth="18" />
+            <circle
+              cx="160" cy="160" r={radius} fill="transparent"
+              stroke={isMenstruating ? '#F87171' : (percentage > 80 ? '#E05252' : theme.accent)}
+              strokeWidth="18" strokeLinecap="round"
+              strokeDasharray={circumference} strokeDashoffset={strokeDashoffset}
+              className="transition-all duration-1000 ease-out"
+            />
+            {/* 상단 궤도 점 (스케치 반영) */}
+            {isMenstruating && (
+              <circle cx="160" cy={160-radius} r="5" fill="#EF4444" className="animate-pulse" />
+            )}
+          </svg>
+
+          {/* 중앙 수치 */}
+          <div className="absolute inset-0 flex flex-col items-center justify-center">
+            <span className="text-[10px] font-black mb-1 uppercase tracking-widest opacity-60" style={{ color: theme.accent }}>{displayLabel}</span>
+            <div className="flex items-baseline">
+              <span className="text-4xl font-black tracking-tighter" style={{ color: theme.text }}>{Math.floor(displayAmount)}</span>
+              <span className="text-xl font-bold opacity-30 ml-1">mg</span>
+            </div>
+            <span className="text-xs font-bold mt-2 opacity-40">/ {Math.round(goal)}mg</span>
+          </div>
+
+          {/* 캐릭터 배치: 게이지 왼쪽 하단을 안고 있는 느낌 */}
+          <div className="absolute -bottom-6 -left-6 w-36 h-36 z-20">
+            <img 
+              src={characterImages[characterStatus]} 
+              alt="character" 
+              className={`w-full h-full object-contain animate-bounce ${isDark ? 'brightness-110 sepia-[0.1]' : ''}`}
+              style={{ animationDuration: '4s' }}
+            />
+          </div>
+        </div>
+
+        {/* 카페인 각성 단계 바 추가 */}
+        <div className="w-full max-w-[280px] mt-4 mb-2 z-20 mx-auto">
+          <div className="flex justify-between items-end mb-2">
+            <span className="text-[10px] font-black uppercase opacity-40 dark:text-white">Current State</span>
+            <span className="text-xs font-bold" style={{ color: arousal.color }}>{arousal.label}</span>
+          </div>
+          <div className="h-1.5 w-full bg-gray-200 dark:bg-[#4A423B] rounded-full overflow-hidden">
+            <motion.div 
+              initial={{ width: 0 }}
+              animate={{ width: `${Math.min((totalCaffeine / 200) * 100, 100)}%` }}
+              style={{ backgroundColor: arousal.color }}
+              className="h-full rounded-full"
+            />
+          </div>
+          <p className="text-[10px] mt-2 font-medium opacity-60 text-center dark:text-white/60">{arousal.tip}</p>
+        </div>
+
+        {/* 말풍선 메시지: 테마 적용 (밤 시간 경고 강조)*/}
+        <div className="mt-12 w-full max-w-[280px]">
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={currentMessage}
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className={`p-5 rounded-[28px] shadow-sm border relative transition-colors duration-500 ${
+                (hour >= 21 && totalCaffeine >= 50) 
+                  ? 'bg-[#4A2D2D] border-[#E05252]/40' // 밤 시간 경고: 묵직한 레드 브라운
+                  : 'bg-white dark:bg-[#3A312B] border-gray-100 dark:border-white/5' // 일반 상태
+              }`}
+            >
+              {/* 💡 말풍선 꼬리: 몸체와 색깔을 완벽하게 맞춤 */}
+              <div 
+                className={`absolute -top-2 left-10 w-4 h-4 rotate-45 border-l border-t transition-colors duration-500 ${
+                  (hour >= 21 && totalCaffeine >= 50)
+                    ? 'bg-[#4A2D2D] border-[#E05252]/40' 
+                    : 'bg-white dark:bg-[#3A312B] border-gray-100 dark:border-white/5'
+                }`}
+              />
+              
+              <p className={`text-sm font-bold text-center leading-relaxed ${
+                (hour >= 21 && totalCaffeine >= 50) ? 'text-[#FFD1D1]' : 'dark:text-[#ECE0D1]'
+              }`}>
+                {isMenstruating && <span className="text-red-400 mr-1">🩸</span>}
+                {currentMessage}
+              </p>
+            </motion.div>
+          </AnimatePresence>
+        </div>
+      </div>        
+      {/* 메시지 및 추가 정보 카드 영역 */}
+      <div className="mt-12 w-full max-w-[320px] space-y-4 z-20">
+        
+        {/* 수면 예측 카드 (액션 플랜 포함) */}
+        <div className="bg-white dark:bg-[#3A312B] p-6 rounded-[30px] shadow-sm border border-gray-100 dark:border-white/5">
+                <div className="flex justify-between items-center mb-3">
+                  <span className="text-[10px] font-black opacity-30 uppercase tracking-widest">Sleep Safety Guide</span>
+                  <span className="text-lg">🌙</span>
+                </div>
+                <p className="text-sm font-black mb-1">
+                  {sleepReadyTime} 이후 숙면 가능
+                </p>
+                <p className="text-[11px] font-bold text-[#E57B3E] leading-relaxed">
+                  💡 {sleepTip}
+                </p>
+        </div>  
+           
+        {/* 금단 증상 경고 (조건부 렌더링) */}
+        {withdrawalInfo?.isWarning && (
+          <div className="bg-red-50 dark:bg-red-900/20 p-5 rounded-[28px] border border-red-100 dark:border-red-900/30">
+            <p className="text-xs font-bold text-red-500">{withdrawalInfo.message}</p>
+          </div>
+        )}
+
+        {/* 몸 상태 기록 버튼 */}
+        <button 
+          onClick={() => setIsSymptomModalOpen(true)}
+          className="w-full bg-[#F4F1EA] dark:bg-[#483C32] p-5 rounded-[28px] flex justify-between items-center group active:scale-95 hover:scale-105 transition-all"
+        >
+           <div className="flex items-center gap-3">
+              <Activity size={18} className="text-[#E57B3E]" />
+              <span className="text-sm font-bold dark:text-[#ECE0D1]">지금 컨디션 기록하기</span>
+           </div>
+           <span className="text-xs opacity-30 dark:text-white">GO</span>
+        </button>
+      </div>
+      {/* 💡 실시간 추천 카드 섹션 */}
+      <div className="mt-8 w-full max-w-[320px] z-20">
+        <p className="text-[10px] font-black opacity-30 uppercase tracking-widest ml-4 mb-2 dark:text-white">Smart Recommendation</p>
+        <div 
+          onClick={() => navigate('/add')} // 추천 카드 누르면 바로 추가 페이지로!
+          className="bg-[#E57B3E] dark:bg-[#D97706] p-6 rounded-[35px] shadow-lg text-white cursor-pointer active:scale-95 transition-all group"
+        >
+          <div className="flex justify-between items-start mb-2">
+            <h5 className="font-black text-lg group-hover:underline">{rec.title}</h5>
+            <Coffee size={20} className="opacity-50" />
+          </div>
+          <p className="text-xs font-medium opacity-90 leading-relaxed">
+            {rec.desc}
+          </p>
+        </div>
+      </div>
+
+      {/* 하단 추가 버튼: 아이콘 추가 */}
+      <div className="mt-8 z-20 w-full max-w-md mx-auto">
+        <button 
+          onClick={() => navigate('/add')}
+          className="w-full py-5 rounded-[30px] font-black text-xl shadow-xl transition-all active:scale-[0.97] hover:scale-105 flex items-center justify-center gap-2"
+          style={{ backgroundColor: theme.accent, color: 'white' }}
+        >
+          <Plus size={24} strokeWidth={3} />
+          음료 추가
+        </button>
+      </div>
+
+      {/* 증상 모달 */}
+      {isSymptomModalOpen && <SymptomModal onClose={() => setIsSymptomModalOpen(false)} />}
+    </div>
+  );
+}
+
+export default Dashboard;
+
+==================================================FILE:.\src\pages\Goals\Goals.tsx
+==================================================
+
+import { useAtom, useAtomValue } from 'jotai';
+import { userProfileAtom, caffeineLogsAtom } from '../../hooks/useCaffeineStore';
+import { motion } from 'framer-motion';
+import { getReceptorRecovery, getCleanStreak, checkDrankOnDate, } from '../../lib/utiles';
+import { ChevronLeft, ChevronRight, Trophy, Heart, Calendar  } from 'lucide-react';
+import dayjs from 'dayjs';
+import { useState } from 'react';
+
+export const Goals = () => {
+  const [user, setUser] = useAtom(userProfileAtom);
+  const logs = useAtomValue(caffeineLogsAtom); 
+
+  // 1. 졸업 여부 확인 (주차가 4보다 크면 졸업으로 간주)
+  const isGraduated = user.taperingWeek > 4;
+
+
+  const updateWeek = (week: number) => {
+    setUser({ ...user, taperingWeek: Math.max(1, Math.min(week, 5)) });
+  };
+
+
+  // 캘린더 날짜 관리를 위한 상태
+  const [currentMonth, setCurrentMonth] = useState(dayjs());
+
+  const recovery = getReceptorRecovery(logs);
+  const streak = getCleanStreak(logs);
+  // 아낀 돈 계산 (사용자의 평소 섭취량 기반으로 안 마신 양만큼 계산)
+  // const savedMoney = user.isTapering ? (user.baseIntake > 0 ? 4500 * user.taperingWeek : 0) : 0;
+  const savedMoney = streak * 4500;
+
+  // 챌린지 며칠째인지 계산 (D+Day)
+  const startDate = dayjs(user.challengeStartedAt);
+  const daysSinceStart = dayjs().diff(startDate, 'day') + 1;
+
+
+  // --- 캘린더 생성 로직 ---
+  const startDay = currentMonth.startOf('month').day(); // 1일의 요일
+  // const daysInMonth = currentMonth.daysInMonth();
+  const calendarDays = Array.from({ length: 42 }, (_, i) => {
+    const day = currentMonth.startOf('month').add(i - startDay, 'day');
+    return day;
+  });
+
+  // 2. 각 주차별 실제 목표 수치 계산 (baseIntake 기준)
+  const getTargetMg = (ratio: number) => Math.round(user.baseIntake * ratio);
+
+  const TAPER_PHASES = [
+    { week: 1, label: '적응기', ratio: 0.75, desc: '기존의 75%만 섭취하기', color: '#E57B3E' },
+    { week: 2, label: '변화기', ratio: 0.50, desc: '기존의 50%만 섭취하기', color: '#D97706' },
+    { week: 3, label: '회복기', ratio: 0.25, desc: '기존의 25%만 섭취하기', color: '#B45309' },
+    { week: 4, label: '완성기', ratio: 0.125, desc: '최소량(12.5%) 유지하기', color: '#10B981' },
+  ];
+
+  return (
+  
+      <div className="p-6 pb-28 max-w-2xl mx-auto min-h-screen transition-colors">
+        <header className="mb-10 px-2">
+          <div>
+            <h2 className="text-3xl font-black text-[#5C3D2E] dark:text-[#F5E8D3]">나의 여정</h2>
+            <p className="text-gray-500 dark:text-white/40 font-medium mt-1">카페인과 거리를 두는 중</p>
+          </div>
+          {/* 시작일 표시 섹션 */}
+          <div className="text-right pb-1">
+            <p className="text-[10px] font-black opacity-30 uppercase dark:text-white">Started At</p>
+            <p className="text-xs font-bold text-[#E57B3E]">{user.challengeStartedAt || '기록 없음'}</p>
+          </div>
+        </header>
+
+
+      {/* 1. 무카페인 스트릭(연속 기록) 카드 */}
+      <div className="bg-[#E57B3E] dark:bg-[#D97706] p-6 rounded-[35px] shadow-lg mb-6 text-white flex justify-between items-center relative overflow-hidden">
+        <div className="z-10">
+          <div className="flex items-center gap-2 mb-1">
+            <span className="px-2 py-0.5 bg-white/20 rounded-md text-[10px] font-black">D+{daysSinceStart}</span>
+          <p className="text-[11px] font-black opacity-80 uppercase tracking-widest mb-1">Clean Streak</p>
+          </div>
+          <h3 className="text-4xl font-black">{streak}일째</h3>
+          <p className="text-xs font-bold opacity-90 mt-1">
+            {streak > 0 ? "정말 대단해요! 뇌가 맑아지고 있어요 🧠" : "내일부터 다시 1일 시작해볼까요?"}
+          </p>
+        </div>
+        <Trophy size={60} className="opacity-20 absolute -right-2 -bottom-2 rotate-12" />
+      </div>    
+
+           {/* 3. 챌린지 로드맵 혹은 졸업 카드 */}
+      {isGraduated ? (
+        // 🎓 졸업 카드 (4주 성공 시)
+        <motion.div 
+          initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }}
+          className="bg-gradient-to-br from-[#E57B3E] to-[#D97706] p-8 rounded-[40px] shadow-lg mb-8 text-white text-center relative overflow-hidden"
+        >
+          <Trophy size={100} className="mx-auto mb-4 opacity-50 absolute -top-4 -right-4 rotate-12" />
+          <h3 className="text-2xl font-black mb-2">카페인 여정 졸업! 🎉</h3>
+          <p className="text-sm opacity-90 leading-relaxed mb-6">
+            4주간의 힘든 과정을 모두 마쳤습니다. <br/>
+            이제 뇌세포는 아주 깨끗하고 민감해졌어요!
+          </p>
+          <button 
+            onClick={() => setUser({...user, isTapering: false, taperingWeek: 0})}
+            className="bg-white text-[#D97706] px-6 py-3 rounded-full font-black text-sm shadow-md active:scale-95 transition-transform"
+          >
+            새로운 여정 시작하기
+          </button>
+        </motion.div>
+      ) : (
+        // 🚩 진행 중인 로드맵
+        <div className="bg-white dark:bg-[#3A312B] p-7 rounded-[40px] shadow-sm border border-gray-100 dark:border-white/5 mb-8">
+          <div className="flex justify-between items-center mb-8 px-1">
+            <h4 className="font-black dark:text-[#ECE0D1]">4주 감량 로드맵</h4>
+            <div className="flex flex-col items-end">
+               <span className="text-[10px] font-black text-[#E57B3E] uppercase tracking-tighter">My Base</span>
+               <span className="text-xs font-bold dark:text-[#A3978F]">{user.baseIntake}mg</span>
+            </div>
+          </div>
+          
+          <div className="space-y-6 relative mb-8">
+            <div className="absolute left-[15px] top-2 bottom-2 w-0.5 bg-gray-100 dark:bg-white/5 z-0" />
+            {TAPER_PHASES.map((phase) => {
+              const isCurrent = user.taperingWeek === phase.week;
+              const isDone = user.taperingWeek > phase.week;
+              const targetMg = getTargetMg(phase.ratio); // 💡 실제 수치 계산
+
+              return (
+                <div key={phase.week} className={`flex items-start gap-4 relative z-10 transition-all ${isCurrent ? 'opacity-100' : 'opacity-40'}`}>
+                  <div className={`w-8 h-8 rounded-full flex items-center justify-center font-black text-xs ${
+                    isDone ? 'bg-green-500 text-white' : isCurrent ? 'bg-[#E57B3E] text-white' : 'bg-gray-200 dark:bg-[#4A423B]'
+                  }`}>
+                    {isDone ? '✓' : phase.week}
+                  </div>
+                  <div className="flex-1 pt-0.5">
+                    <div className="flex justify-between items-center">
+                      <p className={`text-sm font-black ${isCurrent ? 'dark:text-[#F5E8D3]' : 'dark:text-[#A3978F]'}`}>
+                        {phase.label} (목표: <span className="text-[#E57B3E]">{targetMg}mg</span>)
+                      </p>
+                      {isCurrent && (
+                        <button onClick={() => updateWeek(user.taperingWeek + 1)} className="text-[10px] font-bold text-[#E57B3E] bg-[#E57B3E]/10 px-2 py-1 rounded-lg">다음 단계</button>
+                      )}
+                    </div>
+                    <p className="text-[11px] font-medium opacity-60 dark:text-[#A3978F]">{phase.desc}</p>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+            {/*이번주 다음주 이동 버튼*/}
+            <div className="flex justify-center gap-4">
+              <button onClick={() => updateWeek(user.taperingWeek - 1)} className="px-6 py-2 border-gray-100 dark:border-white/5 rounded-full font-bold">이전 주</button>
+              <button onClick={() => updateWeek(user.taperingWeek + 1)} className="px-6 py-2 text-[#5C3D2E] dark:text-[#F5E8D3] rounded-full font-bold">다음 주</button>
+            </div>
+        </div>
+      )}
+
+
+        {/* 뇌 민감도 회복 카드 */}
+        <div className="grid grid-cols-1 gap-4 mb-8">
+          <div className="bg-white dark:bg-[#3A312B] p-6 rounded-[30px] shadow-sm border border-gray-100 dark:border-white/5">
+            <div className="flex justify-between items-center mb-4">
+              <div className="flex items-center gap-2">
+                <Heart size={16} className="text-red-400 fill-red-400" />
+                <h4 className="text-sm font-black dark:text-[#ECE0D1]">뇌 수용체 민감도 회복</h4>
+              </div>
+              <span className="text-[#D97706] font-black text-xl">{recovery}%</span>
+            </div>
+            <div className="h-3 w-full bg-gray-100 dark:bg-black/20 rounded-full overflow-hidden">
+              <motion.div 
+                initial={{ width: 0 }}
+                animate={{ width: `${recovery}%` }}
+                className="h-full bg-gradient-to-r from-[#E57B3E] to-[#D97706] rounded-full"
+              />
+            </div>
+            
+            {/*두 문구가 번갈아서 나오도록 조정*/}
+            <p className="text-[11px] mt-4 opacity-50 dark:text-[#A3978F] leading-relaxed">
+              {recovery > 80 
+                ? "✨ 안전권입니다! 두통 없이 깨끗한 상태를 유지 중이에요." 
+                : "🧠 카페인을 쉬면 뇌세포가 예민해져 적은 양으로도 각성 효과를 봅니다."}
+            </p>
+          </div>
+        </div>
+
+          {/* 이별 캘린더 */}
+          <div className="bg-white dark:bg-[#3A312B] p-6 rounded-[35px] shadow-sm border border-gray-100 dark:border-white/5 mb-8">
+            <div className="flex justify-between items-center mb-8 px-2">
+              <div className="flex items-center gap-2 text-[#5C3D2E] dark:text-[#F5E8D3]">
+                <Calendar size={18} />
+                <h4 className="font-black">이별 캘린더</h4>
+              </div>
+              <div className="flex items-center gap-4 bg-[#F4F1EA] dark:bg-[#4A423B] py-1 px-3 rounded-full">
+                <button onClick={() => setCurrentMonth(prev => prev.subtract(1, 'month'))} className="dark:text-white"><ChevronLeft size={16}/></button>
+                <span className="text-[11px] font-black dark:text-[#ECE0D1] min-w-[70px] text-center">{currentMonth.format('YYYY.MM')}</span>
+                <button onClick={() => setCurrentMonth(prev => prev.add(1, 'month'))} className="dark:text-white"><ChevronRight size={16}/></button>
+              </div>
+            </div>
+            <div className="grid grid-cols-7 gap-y-4 text-center">
+              {['일','월','화','수','목','금','토'].map(d => (
+                <span key={d} className="text-[10px] font-black opacity-30 dark:text-white uppercase">{d}</span>
+              ))}
+             {calendarDays.map((date, i) => {
+              const isCurrentMonth = date.isSame(currentMonth, 'month');
+              const hasCaffeine = checkDrankOnDate(logs, date);
+              const isToday = date.isSame(dayjs(), 'day');
+
+              // 1. 챌린지 시작일 가져오기 (dayjs 객체로 변환)
+              const challengeStartDate = user.challengeStartedAt ? dayjs(user.challengeStartedAt).startOf('day') : null;
+
+              // 2. 이 날짜가 챌린지 기간에 포함되는지 확인 (시작일 이후 ~ 오늘까지)
+              // 조건: 시작일이 존재함 && (시작일과 같거나 이후임) && (오늘과 같거나 이전임)
+              const isChallengeDay = challengeStartDate && 
+                (date.isSame(challengeStartDate, 'day') || date.isAfter(challengeStartDate, 'day')) &&
+                (date.isSame(dayjs(), 'day') || date.isBefore(dayjs(), 'day'));
+
+
+              return (
+                <div key={i} className="flex flex-col items-center justify-center relative py-1">
+                  {/* 날짜 숫자 표시 */}
+                  <span className={`text-xs font-bold transition-colors ${
+                    isToday ? 'text-[#E57B3E]' : isCurrentMonth ? 'dark:text-[#ECE0D1]' : 'opacity-10 dark:text-white'
+                  }`}>
+                    {date.date()}
+                  </span>
+
+                  {/* 3. 도장 로직 최적화 */}
+                  <div className="h-1.5 w-1.5 mt-1.5 flex items-center justify-center">
+                    {hasCaffeine ? (
+                      // 카페인을 마셨다면 무조건 주황색 점
+                      <div className="w-1.5 h-1.5 bg-[#E57B3E] rounded-full shadow-[0_0_4px_#E57B3E]" title="카페인 섭취" />
+                    ) : (
+                      // 안 마셨는데, 챌린지 기간(시작일~오늘)에 해당한다면 초록색 점 (클린 데이)
+                      isChallengeDay && isCurrentMonth && (
+                        <div className="w-1.5 h-1.5 bg-green-500/60 rounded-full" title="클린 데이" />
+                      )
+                    )}
+                  </div>
+
+          {/* 오늘 날짜 하단 인디케이터 */}
+          {isToday && <div className="absolute -bottom-1 w-4 h-0.5 bg-[#E57B3E] rounded-full opacity-50" />}
+            </div>
+          );
+          })}
+          </div>
+          <div className="mt-6 mb-6 flex justify-center gap-6 border-t border-gray-100 dark:border-white/5 pt-4">
+              <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 bg-[#E57B3E] rounded-full" />
+                  <span className="text-[10px] font-bold opacity-50 dark:text-white">카페인 섭취</span>
+              </div>
+              <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 bg-green-500/40 rounded-full" />
+                  <span className="text-[10px] font-bold opacity-50 dark:text-white">클린 데이</span>
+              </div>
+            </div>
+
+
+      {/* 4. 최종 보상 리포트 */}
+      <div className="grid grid-cols-2 gap-4">
+        <div className="bg-white dark:bg-[#3A312B] p-6 rounded-[30px] shadow-sm border border-gray-100 dark:border-white/5">
+            <p className="text-[10px] font-black opacity-40 uppercase mb-1 dark:text-white">절약된 커피값</p>
+            <h4 className="text-xl font-black text-green-600 dark:text-green-400">₩{savedMoney.toLocaleString()}</h4>
+            <p className="text-[9px] font-bold opacity-40 mt-1">지갑도 건강해지는 중</p>
+        </div>
+        <div className="bg-white dark:bg-[#3A312B] p-6 rounded-[30px] shadow-sm border border-gray-100 dark:border-white/5">
+            <p className="text-[10px] font-black opacity-40 uppercase mb-1 dark:text-white">금단 증상 지수</p>
+            <h4 className="text-xl font-black text-blue-500 dark:text-blue-300">{Math.max(0, 100 - recovery)}%</h4>
+            <p className="text-[9px] font-bold opacity-40 mt-1">낮을수록 안전해요</p>
+        </div>
+      </div>
+    </div>
+  </div>
+  );
+};
+
+==================================================FILE:.\src\pages\History\History.tsx
+==================================================
+
+import { useAtom, useAtomValue } from 'jotai'; // useState는 사용하지 않으면 지워도 됩니다
+import { caffeineLogsAtom, userProfileAtom  } from '../../hooks/useCaffeineStore';
+import { calculateCurrentCaffeine, getDynamicHalfLife } from '../../lib/utiles';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Plus } from 'lucide-react'; 
+import { useNavigate } from 'react-router-dom'; 
+import dayjs from 'dayjs';
+import 'dayjs/locale/ko';
+
+dayjs.locale('ko');
+
+export const History = () => {
+  const navigate = useNavigate();
+  const [logs, setLogs] = useAtom(caffeineLogsAtom);
+  const user = useAtomValue(userProfileAtom);
+ 
+   // 사용자의 현재 반감기 계산 (생리 모드 등 반영)
+  const currentHalfLife = getDynamicHalfLife(user);
+
+  // 삭제 함수 (로그 ID를 받아 필터링)
+  const deleteLog = (id: string) => {
+    if (confirm("이 기록을 삭제할까요?")) {
+      setLogs(logs.filter((log) => log.id !== id));
+    }
+  };
+
+  const groupedLogs = logs.reduce((acc, log) => {
+    const date = dayjs(log.intakeTime).format('MM월 DD일 (ddd)');
+    if (!acc[date]) acc[date] = [];
+    acc[date].push(log);
+    return acc;
+  }, {} as Record<string, typeof logs>);
+
+  return (
+    <div className="p-6 pb-28 max-w-2xl mx-auto bg-[#FDFAF6] dark:bg-transparent min-h-screen transition-colors">
+      <header className="mb-10">
+        <h2 className="text-3xl font-black text-[#5C3D2E] dark:text-[#F5E8D3]">기록</h2>
+        <p className="text-gray-500 dark:text-white/40 font-medium mt-1">내가 마신 커피가 몸속에 얼마나 남아있을까?</p>
+      </header>
+
+      {Object.keys(groupedLogs).length === 0 ? (
+        <div className="text-center py-20 text-gray-400 font-bold">아직 기록된 음료가 없어요 ☕️</div>
+      ) : (
+        Object.entries(groupedLogs).reverse().map(([date, dateLogs]) => (
+          <div key={date} className="mb-8">
+            <h3 className="text-sm font-black text-[#5C3D2E] dark:text-[#F5E8D3] mb-4 bg-[#EFEBE4] dark:bg-[#3D2B1F] py-1 px-3 rounded-full inline-block">
+              {date}
+            </h3>
+
+          <div className="space-y-4">
+            <AnimatePresence mode="popLayout">
+              {/* 1. 정렬 후 map 시작 */}
+              {dateLogs
+                .sort((a, b) => dayjs(b.intakeTime).valueOf() - dayjs(a.intakeTime).valueOf())
+                .map((log) => {
+                  const currentAmount = calculateCurrentCaffeine(log.caffeineAmount, log.intakeTime, currentHalfLife);
+                  
+                  // 2. return 문으로 JSX 반환
+                  return (
+                    
+                    <motion.div 
+                        key={log.id}
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        exit={{ opacity: 0, x: 50, scale: 0.95 }} // 오른쪽으로 슈슉- 사라지기
+                        layout // 삭제 시 다른 아이템들이 스르륵 올라오는 마법
+                        transition={{ duration: 0.2 }}
+                        className="bg-white dark:bg-[#3A312B] p-5 rounded-3xl shadow-sm border border-gray-100 dark:border-white/5 flex justify-between items-center group transition-colors"
+                      >
+                      <div>
+                        <p className="font-bold text-gray-800 dark:text-[#F5E8D3]">{log.beverageName}</p>
+                        <p className="text-xs text-gray-400 dark:text-white/30 font-medium">{dayjs(log.intakeTime).format('A HH:mm')} 섭취</p>
+                      </div>
+                      
+                      <div className="flex items-center gap-4">
+                        <div className="text-right">
+                          <p className="font-black text-xl text-[#E57B3E]">{currentAmount}mg</p>
+                          <p className="text-[10px] text-gray-400 font-bold uppercase">잔존량</p>
+                        </div>
+                        
+                        {/* 삭제 버튼 */}
+                        <button 
+                          onClick={() => deleteLog(log.id)}
+                          className="text-gray-300 hover:text-red-500 transition-colors text-xl font-light"
+                        >
+                          ✕
+                        </button>
+                      </div>
+                    </motion.div>
+                  );
+                })}
+                </AnimatePresence>
+            </div>
+          </div>
+        ))
+      )}
+      {/* 4. 🚀 음료 추가 플로팅 버튼 (FAB) */}
+      <div className="fixed bottom-28 right-6 z-50">
+        <button 
+          onClick={() => navigate('/add')}
+          className="w-16 h-16 bg-[#E57B3E] dark:bg-[#D97706] text-white rounded-full shadow-2xl flex items-center justify-center hover:scale-110 active:scale-95 transition-all group"
+        >
+          <Plus size={32} strokeWidth={3} />
+          {/* 버튼 옆에 살짝 뜨는 라벨 (선택 사항) */}
+          <span className="absolute right-20 bg-[#5C3D2E] dark:bg-[#ECE0D1] text-white dark:text-[#3D3630] text-[10px] font-black px-3 py-1.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap shadow-sm">
+            음료 추가하기
+          </span>
+        </button>
+      </div>
+    </div>
+  );
+};
+
+==================================================FILE:.\src\pages\Onboarding\Onboarding.tsx
+==================================================
+
+import dayjs from "dayjs";
+import { useState } from 'react';
+import { useSetAtom } from 'jotai';
+import { userProfileAtom, dailyGoalAtom } from '../../hooks/useCaffeineStore';
+
+// DSM-5 기반 카페인 사용 장애 진단 문항
+const DSM5_QUESTIONS =[
+  "카페인을 끊거나 줄이려고 시도했지만 번번이 실패했다.",
+  "카페인을 마시지 않으면 두통, 피로, 우울감 등 금단 증상이 나타난다.",
+  "금단 증상을 피하거나 없애기 위해 다시 카페인을 찾게 된다.",
+  "위장장애, 불면증 등 신체/심리적 문제가 생겨도 계속 마신다.",
+  "평소보다 더 많은 양을 마셔야 예전과 같은 각성 효과를 느낀다.",
+  "카페인 섭취(커피 마시기 등)에 많은 시간과 돈을 소비한다.",
+  "카페인 때문에 중요한 업무, 학업, 여가 활동에 지장을 받은 적이 있다.",
+  "커피(카페인)에 대한 강한 갈망이나 욕구를 느낀다.",
+  "직장, 학교, 가정에서 맡은 바 책임을 다하지 못할 정도로 의존한다."
+];
+
+const Onboarding = () => {
+  const setUserProfile = useSetAtom(userProfileAtom);
+  const setDailyGoal = useSetAtom(dailyGoalAtom);
+
+  const [step, setStep] = useState(1);
+  const [nickname, setNickname] = useState('');
+  const [weight, setWeight] = useState<number | ''>('');
+  const [gender, setGender] = useState<'M' | 'F' | ''>('');
+  const [answers, setAnswers] = useState<boolean[]>(Array(9).fill(false));
+
+  const toggleAnswer = (index: number) => {
+    const newAnswers =[...answers];
+    newAnswers[index] = !newAnswers[index];
+    setAnswers(newAnswers);
+  };
+
+  const handleComplete = (isTapering: boolean) => {
+    const score = answers.filter(Boolean).length;
+    // 몸무게 비례 안전 권장량 세팅 (최대 400mg 제한)
+    const safeGoal = Math.min(Number(weight || 60) * 6, 400); 
+
+    setUserProfile({
+      nickname: nickname || '물괭이',
+      weight: Number(weight || 60),
+      gender,
+      dsm5Score: score,
+      isTapering,
+      taperingWeek: isTapering ? 1 : 0,
+      baseIntake: safeGoal,
+      hasCompletedOnboarding: true,
+      isMenstruating: false, // 온보딩 시에는 기본적으로 꺼둠
+      isDarkMode: false,     // 온보딩 시에는 기본적으로 라이트 모드
+      challengeStartedAt: dayjs().format('YYYY-MM-DD'),
+    });
+    setDailyGoal(isTapering ? safeGoal * 0.75 : safeGoal); // 감량 트랙이면 첫 주 75% 설정
+  };
+
+  const score = answers.filter(Boolean).length;
+  const severity = score >= 6 ? '중증 🚨' : score >= 4 ? '중등도 ⚠️' : score >= 2 ? '경도 🌱' : '정상 🌿';
+
+  return (
+   <div className="min-h-screen bg-[#FDFAF6] p-6 flex flex-col items-center">
+    
+      <div className="w-full max-w-lg">
+      
+      {/* 1단계: 기본 정보 입력 */}
+      {step === 1 && (
+        <div className="flex flex-col h-full animate-fade-in">
+          <div className="text-6xl mb-6 text-center mt-10">☕️</div>
+          <h2 className="text-2xl font-black text-center text-[#5C3D2E] mb-2">환영해요!</h2>
+          <p className="text-center text-gray-500 font-medium mb-10">안전한 커피 생활을 위해<br/>몇 가지 정보가 필요해요.</p>
+
+          <div className="space-y-6 flex-1">
+            <input 
+              type="text" placeholder="이름이나 애칭을 적어주세요" value={nickname} onChange={(e) => setNickname(e.target.value)}
+              className="w-full p-5 bg-white dark:bg-[#3D2B1F] border-gray-100 dark:border-white/5  rounded-2xl font-bold shadow-sm outline-none focus:ring-4 focus:ring-[#E57B3E]/30"
+            />
+            <div className="flex gap-4">
+              <button onClick={() => setGender('F')} className={`flex-1 py-4 rounded-2xl font-bold transition-all shadow-sm ${gender === 'F' ? 'bg-[#E57B3E] text-white' : 'bg-white text-gray-400'}`}>여성</button>
+              <button onClick={() => setGender('M')} className={`flex-1 py-4 rounded-2xl font-bold transition-all shadow-sm ${gender === 'M' ? 'bg-[#E57B3E] text-white' : 'bg-white text-gray-400'}`}>남성</button>
+            </div>
+            <div className="relative">
+              <input 
+                type="number" placeholder="몸무게를 적어주세요 (권장량 계산용)" value={weight} onChange={(e) => setWeight(Number(e.target.value))}
+                className="w-full p-5 bg-white dark:bg-[#3D2B1F] border-gray-100 dark:border-white/5  rounded-2xl font-bold shadow-sm outline-none focus:ring-4 focus:ring-[#E57B3E]/30"
+              />
+              <span className="absolute right-5 top-5 font-bold text-gray-400">kg</span>
+            </div>
+          </div>
+          
+          <button onClick={() => setStep(2)} disabled={!nickname || !weight || !gender} className="w-full bg-[#E57B3E] disabled:bg-gray-300 text-white py-5 rounded-2xl font-bold text-lg mt-8 shadow-sm">
+            다음으로
+          </button>
+        </div>
+      )}
+
+      {/* 2단계: 스마트 진단 (DSM-5) */}
+      {step === 2 && (
+        <div className="flex flex-col h-full animate-fade-in">
+          <div className="text-center mb-6 mt-6">
+            <span className="text-sm font-bold text-[#E57B3E] bg-[#E57B3E]/10 px-3 py-1 rounded-full">스마트 진단</span>
+          </div>
+          <h2 className="text-2xl font-black text-[#5C3D2E] mb-2 leading-tight">최근 1년 동안의<br/>경험을 체크해주세요</h2>
+          <p className="text-sm text-gray-500 font-medium mb-6">해당하는 항목을 모두 선택해주세요.</p>
+
+          <div className="flex-1 overflow-y-auto space-y-3 pb-8">
+            {DSM5_QUESTIONS.map((q, idx) => (
+              <button 
+                key={idx} onClick={() => toggleAnswer(idx)}
+                className={`w-full text-left p-4 rounded-2xl transition-all shadow-sm border ${answers[idx] ? 'bg-[#FFF4ED] border-[#E57B3E] text-[#5C3D2E]' : 'bg-white border-transparent text-gray-600'}`}
+              >
+                <div className="flex items-start gap-3">
+                  <div className={`mt-0.5 w-5 h-5 rounded-full border-2 flex-shrink-0 flex items-center justify-center ${answers[idx] ? 'border-[#E57B3E] bg-[#E57B3E]' : 'border-gray-300'}`}>
+                    {answers[idx] && <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>}
+                  </div>
+                  <span className="text-sm font-bold leading-relaxed">{q}</span>
+                </div>
+              </button>
+            ))}
+          </div>
+
+          <button onClick={() => setStep(3)} className="w-full bg-[#E57B3E] text-white py-5 rounded-2xl font-bold text-lg mt-4 shadow-sm shrink-0">
+            진단 결과 보기
+          </button>
+        </div>
+      )}
+
+      {/* 3단계: 결과 및 목표 선택 */}
+      {step === 3 && (
+        <div className="flex flex-col h-full animate-fade-in">
+          <div className="text-6xl mb-6 text-center mt-10">
+            {score >= 6 ? '🤯' : score >= 4 ? '😵‍💫' : '☕'}
+          </div>
+          <h2 className="text-3xl font-black text-center text-[#5C3D2E] mb-2">진단 완료!</h2>
+          
+          <div className="bg-white p-6 rounded-[30px] shadow-sm text-center my-6 border border-gray-100">
+            <p className="text-gray-500 font-medium mb-1">나의 카페인 사용 장애 수준</p>
+            <div className="text-2xl font-black text-[#E57B3E] mb-3">{severity}</div>
+            <p className="text-sm text-gray-600 font-medium bg-gray-50 p-3 rounded-xl">
+              {score >= 4 ? '관리가 필요한 상태예요. 안전한 감량 계획을 추천합니다.' : '아직 괜찮은 편이지만, 안전한 루틴을 만들어봐요!'}
+            </p>
+          </div>
+
+          <div className="space-y-4 mt-auto mb-8">
+            <button onClick={() => handleComplete(true)} className="w-full bg-[#5C3D2E] hover:bg-[#4a3125] text-white p-6 rounded-3xl text-left shadow-md transition-transform active:scale-95">
+              <div className="font-black text-xl mb-1">👋 이별 트랙 시작하기</div>
+              <div className="text-sm text-white/80 font-medium">4주 동안 천천히 건강하게 줄여볼래요</div>
+            </button>
+            <button onClick={() => handleComplete(false)} className="w-full bg-white hover:bg-gray-50 border border-gray-200 text-[#5C3D2E] p-6 rounded-3xl text-left shadow-sm transition-transform active:scale-95">
+              <div className="font-black text-xl mb-1">🌿 안전 트랙 유지하기</div>
+              <div className="text-sm text-gray-500 font-medium">지금처럼 마시되 내 몸의 신호만 확인할래요</div>
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  </div>
+  );
+};
+
+export default Onboarding;
+
+==================================================FILE:.\src\pages\Settings\Settings.tsx
+==================================================
+
+import { useAtom, useSetAtom } from 'jotai';
+import { dailyGoalAtom, userProfileAtom, caffeineLogsAtom } from '../../hooks/useCaffeineStore';
+import { RotateCcw }  from 'lucide-react';
+
+
+export const Settings = () => {
+    // userProfileAtom을 사용하여 전체 유저 정보를 가져오기.
+    const [userProfile, setUserProfile] = useAtom(userProfileAtom);
+    const [dailyGoal, setDailyGoal] = useAtom(dailyGoalAtom);
+    const setLogs = useSetAtom(caffeineLogsAtom);
+
+
+    // 초기화 함수
+    const handleResetAll = () => {
+        if (confirm("정말로 모든 카페인 기록을 삭제할까요? 이 작업은 되돌릴 수 없습니다.")) {
+            setLogs([]); // 기록 배열을 빈 배열로 초기화
+            alert("모든 기록이 초기화되었습니다.");
+        }
+    };
+
+    // 재진단 및 여정 초기화 함수
+    const handleRediagnosis = () => {
+        const message = "여정을 초기화하고 다시 진단하시겠습니까?\n\n현재 진행 중인 감량 주차와 진단 점수가 초기화되며, 첫 화면으로 이동합니다.";
+        
+        if (confirm(message)) {
+            setUserProfile((prev) => ({
+                ...prev,
+                hasCompletedOnboarding: false, // 이 값이 false가 되면 App.tsx에 의해 온보딩으로 이동함
+                dsm5Score: 0,
+                taperingWeek: 0,
+                isTapering: false,
+                challengeStartedAt: '', 
+            }));
+        }
+    };
+
+
+    // 닉네임만 따로 업데이트하기 위한 함수
+    const setNickname = (newName: string) => {
+        setUserProfile((prev) => ({ ...prev, nickname: newName }));
+    };
+
+    return (
+        <div className="flex flex-col min-h-full px-6 py-12 pb-32 max-w-2xl mx-auto">
+            
+            {/* 상단 귀여운 헤더 */}
+            <header className="flex flex-col items-center mb-12">
+                <div className="text-6xl mb-4 drop-shadow-sm">📋</div>
+                <h2 className="text-2xl font-black text-[#5C3D2E] dark:text-[#F5E8D3] mb-8">앱 설정</h2>
+                <p className="text-sm text-gray-500 dark:text-[#A3978F] mt-2 font-medium">나만의 커피 습관을 만들어봐요</p>
+            </header>
+
+            <div className="w-full space-y-6">
+                {/* 다크 모드 설정 박스 추가 */}
+                <div className="bg-[#F4F1EA] dark:bg-[#3A312B] p-6 rounded-[30px] flex items-center justify-between transition-colors">
+                    <div>
+                        <label className="block text-sm font-extrabold text-[#5C3D2E] dark:text-[#F5E8D3]">☕ 모카 다크 모드</label>
+                        <p className="text-[13px] text-gray-500 dark:text-[#A3978F] font-medium">눈이 편안한 원두색 테마로 바꿉니다</p>
+                    </div>
+                    <button 
+                        onClick={() => setUserProfile({...userProfile, isDarkMode: !userProfile.isDarkMode})}
+                        className={`w-14 h-8 rounded-full transition-all relative ${userProfile.isDarkMode ? 'bg-[#D97706]' : 'bg-gray-300'}`}
+                    >
+                        <div className={`absolute top-1 w-6 h-6 bg-white dark:bg-[#4A423B] border-gray-100 dark:border-white/5  rounded-full transition-all ${userProfile.isDarkMode ? 'left-7' : 'left-1'}`} />
+                    </button>
+                </div>
+                {/* 닉네임 설정 박스 */}
+                <div className="bg-[#F4F1EA] dark:bg-[#3A312B] p-6 rounded-[30px]">
+                    <label className="block text-sm font-extrabold text-[#5C3D2E] dark:text-[#F5E8D3] mb-3 ml-2">
+                        내 이름 (또는 애칭)
+                    </label>
+                    <input 
+                        type="text" 
+                        value={userProfile.nickname} 
+                        onChange={(e) => setNickname(e.target.value)} 
+                        placeholder="이름을 입력해주세요"
+                        className="w-full p-4 bg-white dark:bg-[#29221e] rounded-2xl text-gray-800 dark:text-[#F5E8D3] font-bold focus:outline-none focus:ring-4 focus:ring-[#F08B46]/30 transition-all border-none shadow-sm"
+                    />
+                </div>
+        
+                {/* 하루 목표 설정 박스 */}
+                <div className="bg-[#F4F1EA] dark:bg-[#3A312B] p-6 rounded-[30px]">
+                    <label className="block text-sm font-extrabold text-[#5C3D2E] dark:text-[#F5E8D3] mb-3 ml-2">
+                        하루 카페인 목표량
+                    </label>
+                    <div className="relative">
+                        <input 
+                            type="number" 
+                            value={dailyGoal} 
+                            onChange={(e) => setDailyGoal(Number(e.target.value))} 
+                            className="w-full p-4 bg-white dark:bg-[#29221e] rounded-2xl text-gray-800 dark:text-[#F5E8D3] font-bold focus:outline-none focus:ring-4 focus:ring-[#F08B46]/30 transition-all border-none shadow-sm"                        />
+                        <span className="absolute right-5 top-4 text-gray-400 dark:text-[#A3978F] font-bold">mg</span>
+                    </div>
+                    <p className="text-xs text-gray-500 mt-3 dark:text-[#A3978F] text-[13px] font-medium flex items-center gap-1 ml-2">
+                        💡 성인 일일 카페인 최대 권장량은 400mg 입니다.
+                    </p>
+                </div>
+            </div>
+
+            {/*생리모드 토글 스위치*/}
+            {userProfile.gender === 'F' && (
+            <div className="bg-[#F4F1EA] dark:bg-[#3A312B] p-6 mt-6 rounded-[30px] flex items-center justify-between">
+                <div>
+                <label className="block text-sm font-extrabold text-[#5C3D2E] dark:text-[#F5E8D3]">🩸 생리 모드</label>
+                <p className="text-[13px] text-gray-500 dark:text-[#A3978F] font-medium">카페인 분해 능력이 떨어지는 기간이에요</p>
+                </div>
+                <button 
+                onClick={() => setUserProfile({...userProfile, isMenstruating: !userProfile.isMenstruating})}
+                className={`w-14 h-8 rounded-full transition-all relative ${userProfile.isMenstruating ? 'bg-[#F87171]' : 'bg-gray-300'}`}
+                >
+                <div className={`absolute top-1 w-6 h-6 bg-white dark:bg-[#4A423B] border-gray-100 dark:border-white/5  rounded-full transition-all ${userProfile.isMenstruating ? 'left-7' : 'left-1'}`} />
+                </button>
+            </div>
+            )}
+
+                <div className="mt-8">
+                    <p className="text-xs font-black text-gray-400 dark:text-[#A3978F] uppercase tracking-widest ml-4 mb-3">여정 관리</p>
+                    <button 
+                        onClick={handleRediagnosis}
+                        className="w-full p-5 flex items-center justify-between bg-[#F4F1EA] dark:bg-[#3A312B] rounded-[30px] active:scale-[0.98] transition-all shadow-sm"
+                    >
+                        <div className="flex items-center gap-4">
+                            <div className="w-10 h-10 rounded-full bg-white dark:bg-[#4A423B] flex items-center justify-center">
+                                <RotateCcw size={18} className="text-[#E57B3E]" />
+                            </div>
+                            <div className="text-left">
+                                <p className="text-sm font-black dark:text-[#ECE0D1]">의존도 재진단하기</p>
+                                <p className="text-[11px] text-gray-500 dark:text-[#A3978F]">내 상태를 다시 체크하고 트랙을 변경합니다</p>
+                            </div>
+                        </div>
+                    </button>
+                </div>
+
+            {/* 초기화 버튼 */}
+            <div className="mt-12">
+                <button 
+                    className="w-full py-5 rounded-3xl font-black text-lg bg-[#FFEAE8] text-[#E05252] hover:bg-[#FFD8D6] dark:bg-[#4A2723] dark:text-[#F87171] dark:hover:bg-[#5C332D]  active:scale-[0.98] transition-all shadow-sm"
+                    onClick={handleResetAll} // 함수 연결
+                >
+                    모든 기록 초기화하기
+                </button>
+            </div>
+        </div>
+    );
+};
+
+==================================================FILE:.\src\pages\Stats\Stats.tsx
+==================================================
+
+import { useAtomValue } from 'jotai';
+import { useState, useEffect } from 'react';
+import { caffeineLogsAtom, symptomLogsAtom, userProfileAtom } from '../../hooks/useCaffeineStore';
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell, ReferenceLine } from 'recharts';
+import { Activity, AlertCircle, Coffee, Moon, Sun } from 'lucide-react';
+import { analyzeSymptomCorrelation } from '../../lib/utiles';
+import dayjs from 'dayjs';
+
+
+export const Stats = () => {
+  const [isMounted, setIsMounted] = useState(false);
+  const logs = useAtomValue(caffeineLogsAtom);
+  const symptoms = useAtomValue(symptomLogsAtom);
+  const user = useAtomValue(userProfileAtom);//user 객체를 가져오기
+  const isDark = user.isDarkMode; 
+
+  useEffect(() => {
+  const timer = setTimeout(() => setIsMounted(true), 100);
+    return () => clearTimeout(timer);
+  }, []);
+
+
+  // 최근 7일 데이터 가공
+  const chartData = Array.from({ length: 7 }).map((_, i) => {
+    const dateStr = dayjs().subtract(6 - i, 'day').format('MM/DD');
+    const fullDate = dayjs().subtract(6 - i, 'day').format('YYYY-MM-DD');
+    
+    const dailyLogs = logs.filter(l => dayjs(l.intakeTime).format('YYYY-MM-DD') === fullDate);
+    const dailyCaffeine = dailyLogs.reduce((sum, l) => sum + l.caffeineAmount, 0);
+    
+    // 해당 날짜에 기록된 증상이 있는지 확인
+    const dailySymptoms = symptoms.filter(s => dayjs(s.recordTime).format('YYYY-MM-DD') === fullDate);
+    
+    return { 
+      date: dateStr, 
+      total: dailyCaffeine,
+      hasSymptom: dailySymptoms.length > 0,
+      symptomCount: dailySymptoms.length,
+      // 오후 3시(15시) 이후 섭취량 계산
+      lateIntake: dailyLogs.filter(l => dayjs(l.intakeTime).hour() >= 15).length > 0,
+       // 오전에만 마셨는지 여부
+      onlyMorning: dailyLogs.length > 0 && dailyLogs.every(l => dayjs(l.intakeTime).hour() < 15)
+    };
+  });
+
+  // 2. 인사이트 데이터 계산
+  const avgCaffeine = Math.round(chartData.reduce((acc, curr) => acc + curr.total, 0) / 7);
+  const lateDays = chartData.filter(d => d.lateIntake).length;
+  const morningOnlyDays = chartData.filter(d => d.onlyMorning).length;
+  const symptomDays = chartData.filter(d => d.hasSymptom).length;
+
+  // 💡 증상 상관관계 분석 텍스트
+  const correlationText = analyzeSymptomCorrelation(logs, symptoms);
+
+
+   return (
+    <div className="p-6 pb-32 max-w-2xl mx-auto min-h-screen transition-colors font-sans">
+      <header className="mb-10 px-2">
+        <h2 className="text-3xl font-black text-[#5C3D2E] dark:text-[#F5E8D3]">{user.nickname}님의 분석 리포트</h2>
+        <p className="text-gray-500 dark:text-white/40 font-medium mt-1">최근 7일간의 카페인과 몸의 반응입니다</p>
+      </header>
+
+      {/* 📊 메인 차트 카드 */}
+      <div className="bg-white dark:bg-[#3A312B] p-6 rounded-[35px] shadow-sm border border-gray-100 dark:border-white/5 mb-8 relative">
+        <div className="flex justify-between items-center mb-8 px-2">
+          <h4 className="text-sm font-black dark:text-[#ECE0D1] flex items-center gap-2">
+            <Activity size={16} className="text-[#E57B3E]" /> 주간 섭취 추이
+          </h4>
+          <span className="text-[10px] font-bold opacity-40 dark:text-white uppercase">Last 7 Days</span>
+        </div>
+
+        <div className="h-64 w-full" style={{ minHeight: '256px', width: '100%', height: '256px', position: 'relative' }}>
+          {isMounted && (
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={chartData} margin={{ top: 20, right: 10, left: -20, bottom: 0 }}>
+                <XAxis dataKey="date" fontSize={11} axisLine={false} tickLine={false} />
+                <YAxis fontSize={11} axisLine={false} tickLine={false} /> 
+                <Tooltip 
+                  cursor={{ fill: isDark ? 'rgba(255,255,255,0.05)' : '#F4F1EA' }}
+                  contentStyle={{ backgroundColor: isDark ? '#2C1B12' : '#FFFFFF', borderRadius: '20px', border: 'none', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)' }}
+                />
+                {/* 권장량 가이드라인 */}
+                <ReferenceLine y={400} stroke="#E05252" strokeDasharray="3 3" opacity={0.5} />
+                
+                <Bar dataKey="total" radius={[10, 10, 10, 10]} barSize={24}>
+                  {chartData.map((entry, index) => (
+                    <Cell 
+                      key={index} 
+                      fill={entry.total > 400 ? '#E05252' : entry.hasSymptom ? '#D97706' : '#E57B3E'} 
+                      opacity={entry.total === 0 ? 0.2 : 1}
+                    />
+                  ))}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+            )}
+        </div>   
+             
+        <p className="text-[10px] text-center text-gray-400 mt-4 font-bold">
+           💡 <span className="text-[#D97706]">진한 주황색</span>은 신체 증상이 기록된 날입니다.
+        </p>
+      </div>
+
+      {/* 💡 데이터 분석 인사이트 카드 섹션 */}
+      <div className="grid grid-cols-2 gap-4 mb-8">
+        <div className="bg-white dark:bg-[#3A312B] p-5 rounded-[30px] border border-gray-100 dark:border-white/5">
+          <p className="text-[10px] font-black opacity-40 uppercase mb-2 dark:text-white">일일 평균</p>
+          <div className="flex items-baseline gap-1">
+            <span className="text-2xl font-black dark:text-[#ECE0D1]">{avgCaffeine}</span>
+            <span className="text-xs font-bold opacity-40">mg</span>
+          </div>
+        </div>
+        <div className="bg-white dark:bg-[#3A312B] p-5 rounded-[30px] border border-gray-100 dark:border-white/5">
+          <p className="text-[10px] font-black opacity-40 uppercase mb-2 dark:text-white">증상 발현</p>
+          <div className="flex items-baseline gap-1">
+            <span className="text-2xl font-black text-[#D97706]">{symptomDays}</span>
+            <span className="text-xs font-bold opacity-40">일</span>
+          </div>
+        </div>
+      </div>
+
+      {/* 🧠 AI 컨디션 분석 가이드 */}
+      <div className="bg-[#F4F1EA] dark:bg-[#3A312B] p-6 rounded-[35px] border border-[#E57B3E]/10">
+        <h3 className="font-black text-[#5C3D2E] dark:text-[#ECE0D1] mb-4 flex items-center gap-2 text-sm uppercase tracking-wider">
+          <AlertCircle size={18} className="text-[#E57B3E]" /> 오늘의 패턴 분석
+        </h3>
+        <ul className="space-y-4">
+          {/* 1. 평균 섭취량 분석 (Coffee 아이콘 사용!) */}
+          <li className="flex gap-3">
+            <div className="w-8 h-8 rounded-full bg-white dark:bg-[#483C32] flex items-center justify-center flex-shrink-0 shadow-sm">
+              <Coffee size={14} className="text-[#E57B3E]" />
+            </div>
+            <p className="text-xs font-medium leading-relaxed dark:text-[#A3978F]">
+              {avgCaffeine > 300 
+                ? `평균 섭취량이 ${avgCaffeine}mg으로 권장량에 가깝습니다. 컨디션 기록을 통해 두통 여부를 체크해보세요.` 
+                : `하루 평균 ${avgCaffeine}mg으로 아주 건강한 섭취량을 유지하고 계시네요!`}
+            </p>
+          </li>
+
+          {/* 오전 섭취 강조 문구 추가 */}
+          {morningOnlyDays > 0 && (
+            <li className="flex gap-3">
+              <div className="w-8 h-8 rounded-full bg-white dark:bg-[#483C32] flex items-center justify-center flex-shrink-0 shadow-sm">
+                <Sun size={14} className="text-orange-400" />
+              </div>
+              <p className="text-xs font-medium leading-relaxed dark:text-[#A3978F]">
+                지난 7일 중 <strong>{morningOnlyDays}일</strong>이나 오전에만 카페인을 즐기셨네요! 숙면을 위한 최고의 습관입니다.
+              </p>
+            </li>
+          )}
+          <li className="flex gap-3">
+            <div className="w-8 h-8 rounded-full bg-white dark:bg-[#483C32] flex items-center justify-center flex-shrink-0 shadow-sm">
+              <Moon size={14} className="text-indigo-400" />
+            </div>
+            <p className="text-xs font-medium leading-relaxed dark:text-[#A3978F]">
+              오후 3시 이후 섭취는 <strong>{lateDays}일</strong>입니다. 
+              {lateDays >= 3 ? " 저녁 카페인이 수면을 방해할 수 있으니 주의하세요!" : " 오후 섭취를 아주 잘 조절하고 계시네요!"}
+            </p>
+          </li>
+        </ul>
+      </div>
+
+      {/* 인과관계 분석 리포트 카드 */}
+      <div className="bg-white dark:bg-[#3A312B] p-7 mt-10 rounded-[40px] shadow-sm border border-gray-100 dark:border-white/5 mb-8">
+        <div className="flex justify-between items-center mb-6">
+          <h4 className="font-black dark:text-[#ECE0D1] flex items-center gap-2 text-sm">
+            <Activity size={18} className="text-[#E57B3E]" /> 인과관계 추적 리포트
+          </h4>
+        </div>
+        <div className="p-5 bg-[#F4F1EA] dark:bg-[#483C32] rounded-[25px]">
+          <p className="text-xs font-bold text-[#5C3D2E] dark:text-[#ECE0D1] leading-relaxed italic">
+            "{correlationText}"
+          </p>
+        </div>
+        <p className="text-[10px] text-gray-400 mt-4 px-2">
+          * 이 분석은 회원님이 기록하신 카페인 섭취 시간과 신체 증상 기록을 대조하여 도출된 개인 맞춤형 결과입니다.
+        </p>
+      </div>
+      {/* 팁 섹션 */}
+      <div className="mt-8 px-4">
+        <p className="text-[10px] text-gray-400 font-medium leading-relaxed italic text-center">
+            * 증상 기록이 많아질수록 더 정확한 인과관계 분석이 가능해집니다. <br/>
+            컨디션이 평소와 다를 때 꼭 기록해 주세요!
+        </p>
+      </div>
+    </div>
+
+  );
+};
+
+==================================================FILE:.\styles\index.css
+==================================================
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html, body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+}
+
+#root {
+  width: 100%;
+  min-height: 100vh;
+}
+
+==================================================FILE:.\types\caffeine.d.ts
+==================================================
+
