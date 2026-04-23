@@ -82,7 +82,7 @@ $$C_{now} = C_{initial} \times 0.5^{\frac{t}{halfLife \times \alpha}}$$
 ### Backend (AI Engine)
 - **Database**: **Neo4j (Knowledge Graph)**, ChromaDB (Vector DB)
 - **Server**: FastAPI (Python)
-- **AI Engine**: LangChain, **GraphRAG**, **Tavily API (Web Search Agent)**, GPT-4o
+- **AI Engine**: LangChain, **GraphRAG**, **Tavily API (Web Search Agent)**
 
 ---
 
