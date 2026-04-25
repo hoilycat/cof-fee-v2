@@ -36,6 +36,45 @@
 
 ---
 
+## 🧠 System Architecture
+전체 시스템은 다음과 같은 흐름으로 동작합니다.
+
+```mermaid
+graph TD
+
+A[User Input<br/>섭취 / 증상 기록] --> B[Frontend<br/>React Dashboard]
+
+B --> C[FastAPI Backend]
+
+C --> D[Half-Life Engine<br/>카페인 잔존량 계산]
+C --> E[GraphRAG Engine]
+
+E --> F[Neo4j Graph DB<br/>사용자 패턴 저장]
+E --> G[Vector DB<br/>ChromaDB]
+
+E --> H[Agentic Search]
+H --> I[Tavily API<br/>논문 검색]
+
+I --> J[LLM Processing<br/>지식 추출]
+J --> F
+
+E --> K[Insight Generation<br/>AI 분석 결과]
+
+D --> K
+
+K --> L[Insight Card<br/>UI 출력]
+```
+---
+
+## 🎯 Data Flow
+1. 사용자 데이터 입력  
+2. 카페인 잔존량 계산  
+3. 그래프 기반 패턴 분석  
+4. 부족한 정보는 논문 검색으로 보완  
+5. AI가 인사이트 생성 후 UI 제공  
+
+---
+
 ## ✨ 핵심 기능 (Core Features)
 
 ### 1. 🧠 Agentic AI 카페인 탐정 (Self-Evolving GraphRAG)
@@ -120,4 +159,4 @@ src/
 ---
 
 ## 💡 탄생 배경
-* "커피는 죄가 없습니다. 잘못된 섭취 패턴이 고통을 만들 뿐입니다. Cof/fee는 사용자의 **데이터(Graph)**와 **의학적 지식(Agentic RAG)**을 연결하여, 당신에게 가장 완벽한 커피 경험을 설계합니다."
+* "커피는 죄가 없습니다. 잘못된 섭취 패턴이 고통을 만들 뿐입니다. Cof/fee는 사용자의 **데이터(Graph)** 와 **의학적 지식(Agentic RAG)** 을 연결하여, 당신에게 가장 완벽한 커피 경험을 설계합니다."
