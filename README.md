@@ -1,38 +1,26 @@
 # ☕️ Cof/fee v2
+![version](https://img.shields.io/badge/version-2.0-6F4E37?style=flat-square)
+![status](https://img.shields.io/badge/status-developing-C4956A?style=flat-square)
 
 > **"오늘 마신 커피가 내일의 두통이 되지 않게."**  
 > 사용자의 과거 패턴을 학습하고, **미지의 증상은 스스로 의학 논문을 탐색해 지식을 확장**하는 **Agentic GraphRAG** 기반 카페인 인과관계 추적 및 AI 코칭 시스템
 
+
+
+![React](https://img.shields.io/badge/React-4A2C2A?style=flat-square&logo=react&logoColor=C4956A)
+![FastAPI](https://img.shields.io/badge/FastAPI-6F4E37?style=flat-square&logo=fastapi&logoColor=white)
+![Neo4j](https://img.shields.io/badge/Neo4j-2C1A0E?style=flat-square&logo=neo4j&logoColor=C4956A)
+![Python](https://img.shields.io/badge/Python-3B1F0A?style=flat-square&logo=python&logoColor=C4956A)
+![LangChain](https://img.shields.io/badge/LangChain-6F4E37?style=flat-square&logo=chainlink&logoColor=white)
+![Gemini](https://img.shields.io/badge/Google_Gemini-4A2C2A?style=flat-square&logo=google&logoColor=C4956A)
 ---
 
-## 🎯 프로젝트 정체성 (Identity)
+## 💡 탄생 배경
+* "커피는 죄가 없습니다. 잘못된 섭취 패턴이 고통을 만들 뿐입니다. Cof/fee는 사용자의 **데이터(Graph)** 와 **의학적 지식(Agentic RAG)** 을 연결하여, 당신에게 가장 완벽한 커피 경험을 설계합니다."
 
 *   **핵심 가치**: 양(Quantity) 조절 + 시간(Time) 관리 = **부작용 없는 건강한 커피 생활**
 *   **슬로건**: 카페인, 마시는 시간까지 관리해야 진짜다.
 *   **핵심 타겟**: 카페인 중독 및 금단 현상(두통, 눈 통증 등) 예방을 원하는 초개인화 케어 사용자
-
----
-
-## 🚦 프로젝트 진척도 (Current Status & Roadmap)
-
-현재 **Phase 1(기반 구축)**을 완료하고, **Phase 2(Agentic AI 엔진 통합)** 단계에 있습니다.
-
-### ✅ Phase 1: Foundation (완료)
-- [x] **Core UI/UX 개발**: React + Tailwind 기반의 감성적인 대시보드 및 통계 인터페이스 구축
-- [x] **동적 반감기 엔진**: 사용자의 신체 조건 및 민감도를 반영한 실시간 잔존량 계산 로직 구현
-- [x] **섭취 & 증상 기록 시스템**: 브랜드별 데이터베이스 연동 및 개인 컨디션 기록 기능
-- [x] **4주 감량 로드맵**: 점진적 카페인 감량을 위한 이별 트랙 로직 설계
-
-### 🏗️ Phase 2: Intelligence (진행 중)
-- [ ] **Neo4j 그래프 DB 연동**: 사용자의 섭취 이력을 노드와 관계로 변환하는 데이터 파이프라인 구축
-- [ ] **개인 온톨로지 자동 생성**: LLM을 활용해 사용자 고유의 부작용 패턴(`콜라` -> `두통`)을 스스로 학습
-- [ ] **Agentic RAG 파이프라인**: 미식별 증상 감지 시 AI가 스스로 의학 논문을 웹 검색(Tavily)하여 지식을 자동 확장하는 에이전트 구현
-- [ ] **원탭 AI 브리핑 (Insight Card)**: 사용자가 질문을 입력할 필요 없이, AI가 최근 데이터와 웹 검색(논문) 결과를 분석하여 "오늘의 컨디션 인과관계 리포트"를 카드 형태로 자동 생성해 제공합니다.
-
-### 🚀 Phase 3: Advanced Experience (예정)
-- [ ] **미래 예측 시뮬레이터**: 음료 섭취 전 내일의 컨디션을 미리 시뮬레이션하는 What-if 기능
-- [ ] **인과관계 시각화 UI**: AI가 왜 그런 조언을 했는지 그래프 경로를 통해 보여주는 XAI 기능
-- [ ] **스마트 푸시 알림**: 리바운드 발생 예상 시간에 맞춰 선제적으로 발송되는 케어 알림
 
 ---
 
@@ -41,39 +29,35 @@
 
 ```mermaid
 graph TD
-
 A[User Input<br/>섭취 / 증상 기록] --> B[Frontend<br/>React Dashboard]
-
 B --> C[FastAPI Backend]
-
 C --> D[Half-Life Engine<br/>카페인 잔존량 계산]
 C --> E[GraphRAG Engine]
-
 E --> F[Neo4j Graph DB<br/>사용자 패턴 저장]
 E --> G[Vector DB<br/>ChromaDB]
-
 E --> H[Agentic Search]
 H --> I[Tavily API<br/>논문 검색]
-
 I --> J[LLM Processing<br/>지식 추출]
 J --> F
-
 E --> K[Insight Generation<br/>AI 분석 결과]
-
 D --> K
-
 K --> L[Insight Card<br/>UI 출력]
+ 
+style A fill:#4A2C2A,color:#fff
+style B fill:#6F4E37,color:#fff
+style C fill:#6F4E37,color:#fff
+style D fill:#8B6347,color:#fff
+style E fill:#8B6347,color:#fff
+style F fill:#A0785A,color:#fff
+style G fill:#A0785A,color:#fff
+style H fill:#C4956A,color:#fff
+style I fill:#C4956A,color:#fff
+style J fill:#D4A574,color:#000
+style K fill:#E8C99A,color:#000
+style L fill:#F5E6D0,color:#000
 ```
 ---
 
-## 🎯 Data Flow
-1. 사용자 데이터 입력  
-2. 카페인 잔존량 계산  
-3. 그래프 기반 패턴 분석  
-4. 부족한 정보는 논문 검색으로 보완  
-5. AI가 인사이트 생성 후 UI 제공  
-
----
 
 ## ✨ 핵심 기능 (Core Features)
 
@@ -157,6 +141,25 @@ src/
 * 커피를 참아 아낀 돈을 실시간으로 계산하여 '치킨 마리 수'로 환산해 줍니다. 지갑 건강까지 케어하는 스마트한 동기부여 시스템입니다.
 
 ---
+## 🚦 프로젝트 진척도 (Current Status & Roadmap)
 
-## 💡 탄생 배경
-* "커피는 죄가 없습니다. 잘못된 섭취 패턴이 고통을 만들 뿐입니다. Cof/fee는 사용자의 **데이터(Graph)** 와 **의학적 지식(Agentic RAG)** 을 연결하여, 당신에게 가장 완벽한 커피 경험을 설계합니다."
+현재 **Phase 1(기반 구축)**을 완료하고, **Phase 2(Agentic AI 엔진 통합)** 단계에 있습니다.
+
+### ✅ Phase 1: Foundation (완료)
+- [x] **Core UI/UX 개발**: React + Tailwind 기반의 감성적인 대시보드 및 통계 인터페이스 구축
+- [x] **동적 반감기 엔진**: 사용자의 신체 조건 및 민감도를 반영한 실시간 잔존량 계산 로직 구현
+- [x] **섭취 & 증상 기록 시스템**: 브랜드별 데이터베이스 연동 및 개인 컨디션 기록 기능
+- [x] **4주 감량 로드맵**: 점진적 카페인 감량을 위한 이별 트랙 로직 설계
+
+### 🏗️ Phase 2: Intelligence (진행 중)
+- [ ] **Neo4j 그래프 DB 연동**: 사용자의 섭취 이력을 노드와 관계로 변환하는 데이터 파이프라인 구축
+- [ ] **개인 온톨로지 자동 생성**: LLM을 활용해 사용자 고유의 부작용 패턴(`콜라` -> `두통`)을 스스로 학습
+- [ ] **Agentic RAG 파이프라인**: 미식별 증상 감지 시 AI가 스스로 의학 논문을 웹 검색(Tavily)하여 지식을 자동 확장하는 에이전트 구현
+- [ ] **원탭 AI 브리핑 (Insight Card)**: 사용자가 질문을 입력할 필요 없이, AI가 최근 데이터와 웹 검색(논문) 결과를 분석하여 "오늘의 컨디션 인과관계 리포트"를 카드 형태로 자동 생성해 제공합니다.
+
+### 🚀 Phase 3: Advanced Experience (예정)
+- [ ] **미래 예측 시뮬레이터**: 음료 섭취 전 내일의 컨디션을 미리 시뮬레이션하는 What-if 기능
+- [ ] **인과관계 시각화 UI**: AI가 왜 그런 조언을 했는지 그래프 경로를 통해 보여주는 XAI 기능
+- [ ] **스마트 푸시 알림**: 리바운드 발생 예상 시간에 맞춰 선제적으로 발송되는 케어 알림
+
+
