@@ -5,9 +5,6 @@
 > **"오늘 마신 커피가 내일의 두통이 되지 않게."**  
 > 사용자의 과거 패턴을 학습하고, **미지의 증상은 스스로 의학 논문을 탐색해 지식을 확장**하는 **Agentic GraphRAG** 기반 카페인 인과관계 추적 및 AI 코칭 시스템
 
-![메인 데모](./cof-fee/public/assets/gifs/galaxy_night_mode_flow_1777893003897_2x.webp)
-
-
 
 ![React](https://img.shields.io/badge/React-4A2C2A?style=flat-square&logo=react&logoColor=C4956A)
 ![FastAPI](https://img.shields.io/badge/FastAPI-6F4E37?style=flat-square&logo=fastapi&logoColor=white)
@@ -70,8 +67,6 @@ style L fill:#F5E6D0,color:#000
 ### 2. ⏳ 실시간 잔존량 및 동적 반감기 시뮬레이션
 *   **반감기 로직 적용**: 체내 카페인 농도를 실시간 시각화하며, 성별/체중/민감도 및 **생리 모드(대사 1.5배 저하)** 변수를 반영합니다.
 *   **미래 예측 (What-if)**: 음료를 마시기 전, 내일 오전의 예상 잔존량과 부작용 발생 확률을 미리 시뮬레이션합니다.
-
-![색상 변화 쇼케이스](./cof-fee/public/assets/gifs/galaxy_color_transition_showcase_2x.webp)
 
 ### 3. ☔ 두통 및 금단 예보 (Headache Forecast)
 *   **리바운드 골든타임 알림**: 마지막 섭취 후 12~24시간 뒤 발생하는 금단 증상 위험 시간을 예측하여 선제적으로 대응하게 합니다.
@@ -155,7 +150,6 @@ src/
 - [x] **섭취 & 증상 기록 시스템**: 브랜드별 데이터베이스 연동 및 개인 컨디션 기록 기능
 - [x] **4주 감량 로드맵**: 점진적 카페인 감량을 위한 이별 트랙 로직 설계
 
-![통합 타임라인 분석](./cof-fee/public/assets/gifs/caffeine_timeline_final_2x.webp)
 
 ### 🏗️ Phase 2: Intelligence (진행 중)
 - [ ] **Neo4j 그래프 DB 연동**: 사용자의 섭취 이력을 노드와 관계로 변환하는 데이터 파이프라인 구축
