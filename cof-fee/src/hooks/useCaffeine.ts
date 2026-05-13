@@ -9,7 +9,6 @@ import { getTotalRemainingCaffeine,
 import { predictSleepReadyTime, getHoursSinceLastDrink, getWithdrawalWarning } from '../lib/utiles';
 
 
-
 export const useCaffeine = () => {
     const logs = useAtomValue(caffeineLogsAtom);
     const user = useAtomValue(userProfileAtom); // 1. 유저 정보를 가져오기.
