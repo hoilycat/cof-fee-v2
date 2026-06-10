@@ -169,4 +169,11 @@ src/
 - [ ] **스마트 푸시 알림**: 리바운드 발생 예상 시간에 맞춰 선제적으로 발송되는 케어 알림
 
 
->>>>>>> 01c27c5144db7f1e253a03d7a7073ecd534f8a06
+
+---
+
+## 🫘 캐릭터 소개
+
+| busybeen | composedbeen | funnybeen | relaxbeen |
+|:---:|:---:|:---:|:---:|
+| ![busybeen](https://raw.githubusercontent.com/hoilycat/cof-fee-v2/main/cof-fee/src/assets/characters/busybeen.png) | ![composedbeen](https://raw.githubusercontent.com/hoilycat/cof-fee-v2/main/cof-fee/src/assets/characters/composedbeen.png) | ![funnybeen](https://raw.githubusercontent.com/hoilycat/cof-fee-v2/main/cof-fee/src/assets/characters/funnybeen.png) | ![relaxbeen](https://raw.githubusercontent.com/hoilycat/cof-fee-v2/main/cof-fee/src/assets/characters/relaxbeen.png) |
