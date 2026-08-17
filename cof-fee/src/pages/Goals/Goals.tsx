@@ -61,7 +61,7 @@ export const Goals = () => {
           </div>
           {/* 시작일 표시 섹션 */}
           <div className="text-right pb-1">
-            <p className="text-[10px] font-black opacity-30 uppercase dark:text-white">Started At</p>
+            <p className="text-[10px] font-black opacity-30 uppercase dark:text-white">시작일</p>
             <p className="text-xs font-bold text-[#E57B3E]">{user.challengeStartedAt || '기록 없음'}</p>
           </div>
         </header>
@@ -72,7 +72,7 @@ export const Goals = () => {
         <div className="z-10">
           <div className="flex items-center gap-2 mb-1">
             <span className="px-2 py-0.5 bg-white/20 rounded-md text-[10px] font-black">D+{daysSinceStart}</span>
-          <p className="text-[11px] font-black opacity-80 uppercase tracking-widest mb-1">Clean Streak</p>
+          <p className="text-[11px] font-black opacity-80 uppercase tracking-widest mb-1">클린 연속일</p>
           </div>
           <h3 className="text-4xl font-black">{streak}일째</h3>
           <p className="text-xs font-bold opacity-90 mt-1">
@@ -108,7 +108,7 @@ export const Goals = () => {
           <div className="flex justify-between items-center mb-8 px-1">
             <h4 className="font-black dark:text-[#ECE0D1]">4주 감량 로드맵</h4>
             <div className="flex flex-col items-end">
-               <span className="text-[10px] font-black text-[#E57B3E] uppercase tracking-tighter">My Base</span>
+               <span className="text-[10px] font-black text-[#E57B3E] uppercase tracking-tighter">기준 섭취량</span>
                <span className="text-xs font-bold dark:text-[#A3978F]">{user.baseIntake}mg</span>
             </div>
           </div>

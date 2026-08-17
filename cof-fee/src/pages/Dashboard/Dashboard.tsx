@@ -267,12 +267,12 @@ const Dashboard = () => {
             backgroundColor: isDark ? 'rgba(255,255,255,0.1)' : (isTapering ? '#5C3D2E' : '#DCFCE7'), 
             color: isDark ? theme.text : (isTapering ? 'white' : '#15803D') 
           }}>
-          {isTapering ? 'Tapering Track' : 'Safe Track'}
+          {isTapering ? '감량 트랙' : '안전 트랙'}
         </span>
         {/* 💡 생리 모드 활성화 시 배지 추가 */}
           {isMenstruating && (
             <span className="px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest shadow-sm bg-rose-500 text-white animate-pulse">
-              Period Mode On 🩸
+              생리 모드 🩸
             </span>
           )}
       </div>
@@ -323,7 +323,7 @@ const Dashboard = () => {
         {/* 카페인 각성 단계 바 추가 */}
         <div className="w-full max-w-[280px] mt-4 mb-2 z-20 mx-auto">
           <div className="flex justify-between items-end mb-2">
-            <span className="text-[10px] font-black uppercase opacity-40 dark:text-white">Current State</span>
+            <span className="text-[10px] font-black uppercase opacity-40 dark:text-white">현재 상태</span>
             <span className="text-xs font-bold" style={{ color: arousal.color }}>{arousal.label}</span>
           </div>
           <div className="h-1.5 w-full bg-gray-200 dark:bg-[#4A423B] rounded-full overflow-hidden">
@@ -408,7 +408,7 @@ const Dashboard = () => {
               </button>
 
               <div className="flex justify-between items-center mb-3">
-                <span className="text-[10px] font-black opacity-30 uppercase tracking-widest">Sleep Safety</span>
+                <span className="text-[10px] font-black opacity-30 uppercase tracking-widest">수면 안전</span>
                 {/* 아이콘: 그룹 호버 시 흐릿해짐 */}
                 <Moon size={22} className="text-indigo-400 group-hover:opacity-20 transition-opacity duration-300" />
               </div>
@@ -445,7 +445,7 @@ const Dashboard = () => {
               </button>
 
               <div className="flex justify-between items-center mb-3">
-                <span className="text-[10px] font-black opacity-60 uppercase tracking-widest">Next Drink</span>
+                <span className="text-[10px] font-black opacity-60 uppercase tracking-widest">다음 음료</span>
                 {/* 💡 아이콘: 그룹 호버 시 흐릿해짐 */}
                 <Coffee size={22} className="opacity-50 group-hover:opacity-20 transition-opacity duration-300" />
               </div>
@@ -480,7 +480,7 @@ const Dashboard = () => {
                 <Activity size={18} className="text-[#E57B3E]" />
                 <span className="text-sm font-bold dark:text-[#ECE0D1]">지금 컨디션 기록하기</span>
             </div>
-            <span className="text-xs opacity-30 dark:text-white">GO</span>
+            <span className="text-xs opacity-30 dark:text-white">기록</span>
           </button>
 
         </div>

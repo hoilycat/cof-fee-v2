@@ -94,7 +94,7 @@ export const Stats = () => {
           <h4 className="text-sm font-black dark:text-[#ECE0D1] flex items-center gap-2">
             <Activity size={16} className="text-[#E57B3E]" /> 주간 섭취 추이
           </h4>
-          <span className="text-[10px] font-bold opacity-40 dark:text-white uppercase">Last 7 Days</span>
+          <span className="text-[10px] font-bold opacity-40 dark:text-white uppercase">최근 7일</span>
         </div>
 
         <div className="h-64 w-full" style={{ minHeight: '256px', width: '100%', height: '256px', position: 'relative' }}>
