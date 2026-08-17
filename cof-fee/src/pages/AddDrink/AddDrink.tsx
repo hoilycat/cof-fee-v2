@@ -234,7 +234,7 @@ const { scrollRef, onDragStart, onDragEnd, onDragMove } = useDragScroll();
 
           <div className="space-y-3">
             <p className="text-xs font-black text-gray-400 uppercase tracking-widest ml-2 mb-2">
-              {searchTerm ? 'Search Results' : 'Your Favorites ⭐'}
+              {searchTerm ? '검색 결과' : '자주 마시는 음료 ⭐'}
             </p>
             {filteredMenus.length > 0 ? (
               filteredMenus.map(({ brandName, menu, isFav, key }) => (
@@ -294,7 +294,7 @@ const { scrollRef, onDragStart, onDragEnd, onDragMove } = useDragScroll();
                   {/* ⚠️ 스마트 배지: 버튼 귀퉁이에 표시 */}
                   <div className="absolute -top-2 -right-1 flex gap-1 z-10">
                     {willExceed && (
-                      <span className="bg-red-500 text-white text-[8px] px-1.5 py-0.5 rounded-full font-black animate-pulse shadow-sm">OVER</span>
+                      <span className="bg-red-500 text-white text-[8px] px-1.5 py-0.5 rounded-full font-black animate-pulse shadow-sm">초과</span>
                     )}
                     {user.isMenstruating && (
                       <span className="bg-rose-400 text-white text-[8px] px-1.5 py-0.5 rounded-full font-black shadow-sm">대사저하🩸</span>
@@ -327,7 +327,7 @@ const { scrollRef, onDragStart, onDragEnd, onDragMove } = useDragScroll();
         <div className="bg-white dark:bg-[#3A312B] p-5 rounded-[25px] shadow-xl border border-gray-100 dark:border-white/5 space-y-4">
           <div>
             <div className="flex justify-between items-end mb-2 ml-1">
-              <label className="text-[10px] font-black opacity-40 uppercase tracking-widest">Consumption Time</label>
+              <label className="text-[10px] font-black opacity-40 uppercase tracking-widest">섭취 시간</label>
               <span className="text-[10px] font-bold text-[#E57B3E]">날짜를 눌러 변경</span>
             </div>
             
